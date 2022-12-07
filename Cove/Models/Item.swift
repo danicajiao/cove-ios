@@ -9,13 +9,14 @@ import Foundation
 import SwiftUI
 
 class Item: Identifiable, ObservableObject {
+    @Published var imgData: Data = Data()
+    @Published var favorited = false
+    
     let id: String
     let brand: String
     let name: String
     let price: Float
     let imgPath: String
-    @Published var imgData: Data = Data()
-    @Published var favorited = false
     
     init(id: String, brand: String, name: String, price: Float, imgPath: String) {
         self.id = id

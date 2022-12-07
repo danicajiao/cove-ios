@@ -28,19 +28,17 @@ class HomeViewModel: ObservableObject {
                 // No errors
                 if let snapshot = snapshot {
                     // Update the item property in the main thread
-//                    DispatchQueue.main.sync {
-                        // Get all the documents and create items
-                        self.items = snapshot.documents.map { d in
-                            // Create an Item for each document returned
-                            let item = Item(id: d.documentID,
-                                            brand: d["roastery"] as? String ?? "",
-                                            name: d["name"] as? String ?? "",
-                                            price: d["price"] as? Float ?? 0,
-                                            imgPath: d["imgPath"] as? String ?? "")
-                            item.printItem()
-                            return item
-                        }
-//                    }
+                    // Get all the documents and create items
+                    self.items = snapshot.documents.map { d in
+                        // Create an Item for each document returned
+                        let item = Item(id: d.documentID,
+                                        brand: d["roastery"] as? String ?? "",
+                                        name: d["name"] as? String ?? "",
+                                        price: d["price"] as? Float ?? 0,
+                                        imgPath: d["imgPath"] as? String ?? "")
+                        item.printItem()
+                        return item
+                    }
                     
                     for item in self.items {
                         // Specify the path
@@ -52,9 +50,7 @@ class HomeViewModel: ObservableObject {
                             if error == nil && data != nil {
                                 // Create a UIImage
                                 if let data = data {
-//                                    DispatchQueue.main.async {
-                                        item.imgData = data
-//                                    }
+                                    item.imgData = data
                                 }
                             }
                         }

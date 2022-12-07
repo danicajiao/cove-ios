@@ -156,8 +156,9 @@
 		D02B2FCC27BDB1C8004732CB /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				D06B593328284D5500B26053 /* ItemView.swift */,
+				D069A31827D9C9B300C5FFCF /* MainView.swift */,
 				D02B2FB727BD7E61004732CB /* HomeView.swift */,
+				D06B593328284D5500B26053 /* ItemView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -168,7 +169,6 @@
 				D02B2FB527BD7E61004732CB /* CoveApp.swift */,
 				D02B2FC927BD7FC3004732CB /* Info.plist */,
 				D0502BFC293FD00000AC1255 /* GoogleService-Info.plist */,
-				D069A31827D9C9B300C5FFCF /* MainView.swift */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";

@@ -10,8 +10,6 @@ import FirebaseStorage
 
 struct ItemCardView: View {
     @StateObject var item: Item
-    @EnvironmentObject var tabState: TabState
-//    @State private var rectHeight = CGFloat.random(in: 150...180)
     
     var body: some View {
         ZStack(alignment: .topTrailing) {

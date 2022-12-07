@@ -10,7 +10,7 @@ import FirebaseFirestore
 import FirebaseStorage
 
 struct HomeView: View {
-    @StateObject var homeViewModel = HomeViewModel()
+    @StateObject private var homeViewModel = HomeViewModel()
     
     private var columns: [GridItem] = [
         GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
@@ -39,10 +39,10 @@ struct HomeView: View {
                 TextField("\(Image(systemName: "magnifyingglass")) Espresso, light roast, floral", text: /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Value@*/.constant("")/*@END_MENU_TOKEN@*/)
                     .font(Font.custom("Poppins-Regular", size: 14))
                     .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
-                    .overlay(
+                    .overlay {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.secondaryColor, lineWidth: 1)
-                    )
+                    }
                     .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 
                 VStack {
@@ -127,8 +127,8 @@ struct HomeView: View {
     }
 }
 
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        HomeView()
-//    }
-//}
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView()
+    }
+}

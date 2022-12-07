@@ -9,33 +9,13 @@ import SwiftUI
 import FirebaseFirestore
 import FirebaseStorage
 
-extension Color {
-    static let backgroundColor = Color("BackgroundColor")
-    static let primaryColor = Color("PrimaryColor")
-    static let secondaryColor = Color("SecondaryColor")
-    static let tertiaryColor = Color("TertiaryColor")
-    static let quaternaryColor = Color("QuaternaryColor")
-    static let dropShadowColor = Color("DropShadowColor")
-    static let backdropColor = Color("BackdropColor")
-    static let fruityGradient = Color("FruityGradient")
-    static let chocoGradient = Color("ChocoGradient")
-    static let citrusGradient = Color("CitrusGradient")
-    static let earthyGradient = Color("EarthyGradient")
-    static let floralGradient = Color("FloralGradient")
-    static let bannerGradient = Color("BannerGradient")
-}
-
 struct HomeView: View {
-    
-    @State var items = [Item]()
-    
-    let categories = ["Fruity", "Choco", "Citrus", "Earthy", "Floral"]
-    let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
+    @StateObject var homeViewModel = HomeViewModel()
     
     private var columns: [GridItem] = [
         GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
         GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20)
-        ]
+    ]
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -79,7 +59,7 @@ struct HomeView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(categories, id: \.self) { category in
+                            ForEach(homeViewModel.categories, id: \.self) { category in
                                 CategoryButton(category: category)
                             }
                         }
@@ -107,12 +87,12 @@ struct HomeView: View {
                         spacing: 20,
                         pinnedViews: [.sectionHeaders, .sectionFooters]
                     ) {
-                        ForEach(items) { item in
+                        ForEach(homeViewModel.items) { item in
                             ItemCardView(item: item)
                         }
                     }
                     .onAppear {
-                        getItemData()
+                        homeViewModel.getItemData()
                     }
                     
                 }
@@ -135,7 +115,7 @@ struct HomeView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(origins, id: \.self) { origin in
+                            ForEach(homeViewModel.origins, id: \.self) { origin in
                                 OriginButton(origin: origin)
                             }
                         }
@@ -145,63 +125,10 @@ struct HomeView: View {
             }
         }
     }
-    
-    func getItemData() {
-        
-        // Get a reference to firestore
-        let db = Firestore.firestore()
-        
-        // Get a reference to storage
-        let storageRef = Storage.storage().reference()
-        
-        // Read the documents at a specific path
-        db.collection("coffees").limit(to: 4).getDocuments { snapshot, error in
-            if error == nil {
-                // No errors
-                if let snapshot = snapshot {
-                    // Update the item property in the main thread
-//                    DispatchQueue.main.sync {
-                        // Get all the documents and create items
-                        items = snapshot.documents.map { d in
-                            // Create an Item for each document returned
-                            let item = Item(id: d.documentID,
-                                            brand: d["roastery"] as? String ?? "",
-                                            name: d["name"] as? String ?? "",
-                                            price: d["price"] as? Float ?? 0,
-                                            imgPath: d["imgPath"] as? String ?? "")
-                            item.printItem()
-                            return item
-                        }
-//                    }
-                    
-                    for item in items {
-                        // Specify the path
-                        let fileRef = storageRef.child(item.imgPath)
-
-                        // Retrieve the data
-                        fileRef.getData(maxSize: 1 * 1024 * 1024 as Int64) { data, error in
-                            // Check for errors
-                            if error == nil && data != nil {
-                                // Create a UIImage
-                                if let data = data {
-//                                    DispatchQueue.main.async {
-                                        item.imgData = data
-//                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                // Handle the error
-            }
-        }
-    }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
-    }
-}
+//struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        HomeView()
+//    }
+//}

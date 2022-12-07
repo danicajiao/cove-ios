@@ -27,7 +27,8 @@
 		D069A31727D95E2700C5FFCF /* BannerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31627D95E2700C5FFCF /* BannerButton.swift */; };
 		D069A31927D9C9B300C5FFCF /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31827D9C9B300C5FFCF /* MainView.swift */; };
 		D06B593428284D5500B26053 /* ItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06B593328284D5500B26053 /* ItemView.swift */; };
-		D0AA49492823BE0400954DFE /* Waterfall.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AA49482823BE0400954DFE /* Waterfall.swift */; };
+		D08608EC2940223200C30E87 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608EB2940223200C30E87 /* ColorExtension.swift */; };
+		D08608EE294023D900C30E87 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608ED294023D900C30E87 /* HomeViewModel.swift */; };
 		D0D3C27527D5531D00BD4E39 /* ItemCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3C27427D5531D00BD4E39 /* ItemCardView.swift */; };
 		D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */; };
 /* End PBXBuildFile section */
@@ -51,7 +52,8 @@
 		D069A31627D95E2700C5FFCF /* BannerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerButton.swift; sourceTree = "<group>"; };
 		D069A31827D9C9B300C5FFCF /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		D06B593328284D5500B26053 /* ItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemView.swift; sourceTree = "<group>"; };
-		D0AA49482823BE0400954DFE /* Waterfall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Waterfall.swift; sourceTree = "<group>"; };
+		D08608EB2940223200C30E87 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		D08608ED294023D900C30E87 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		D0D3C27427D5531D00BD4E39 /* ItemCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardView.swift; sourceTree = "<group>"; };
 		D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomUIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -90,6 +92,7 @@
 		D02B2FB427BD7E61004732CB /* Cove */ = {
 			isa = PBXGroup;
 			children = (
+				D08608EA294021D200C30E87 /* Extensions */,
 				D02B2FCB27BDB1C3004732CB /* Models */,
 				D02B2FCA27BDB1AF004732CB /* Components */,
 				D02B2FCC27BDB1C8004732CB /* Views */,
@@ -135,7 +138,6 @@
 				D069A31427D9391C00C5FFCF /* CategoryButton.swift */,
 				D069A31627D95E2700C5FFCF /* BannerButton.swift */,
 				D0265B3227DC1ECD004E23F9 /* OriginButton.swift */,
-				D0AA49482823BE0400954DFE /* Waterfall.swift */,
 				D048F6B32829A731009CD571 /* RatingView.swift */,
 			);
 			path = Components;
@@ -146,6 +148,7 @@
 			children = (
 				D011D2EA27D735FA00E280CE /* Item.swift */,
 				D04D2EC128277B7D001ED21A /* TabState.swift */,
+				D08608ED294023D900C30E87 /* HomeViewModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -168,6 +171,14 @@
 				D069A31827D9C9B300C5FFCF /* MainView.swift */,
 			);
 			path = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D08608EA294021D200C30E87 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				D08608EB2940223200C30E87 /* ColorExtension.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,14 +268,15 @@
 				D069A31727D95E2700C5FFCF /* BannerButton.swift in Sources */,
 				D02B2FB827BD7E61004732CB /* HomeView.swift in Sources */,
 				D0D3C27527D5531D00BD4E39 /* ItemCardView.swift in Sources */,
+				D08608EC2940223200C30E87 /* ColorExtension.swift in Sources */,
 				D04D2EC228277B7D001ED21A /* TabState.swift in Sources */,
 				D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */,
-				D0AA49492823BE0400954DFE /* Waterfall.swift in Sources */,
 				D011D2EB27D735FA00E280CE /* Item.swift in Sources */,
 				D06B593428284D5500B26053 /* ItemView.swift in Sources */,
 				D0265B3327DC1ECD004E23F9 /* OriginButton.swift in Sources */,
 				D02B2FB627BD7E61004732CB /* CoveApp.swift in Sources */,
 				D069A31327D9126400C5FFCF /* LikeButton.swift in Sources */,
+				D08608EE294023D900C30E87 /* HomeViewModel.swift in Sources */,
 				D048F6B42829A731009CD571 /* RatingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

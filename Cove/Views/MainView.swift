@@ -11,7 +11,7 @@ struct MainView: View {
     @StateObject private var tabState = TabState()
     
     var body: some View {
-        NavigationStack {
+//        NavigationStack {
             TabView(selection: $tabState.currentTab) {
                 HomeView()
                     .onTapGesture {
@@ -65,7 +65,7 @@ struct MainView: View {
                     .tag("profile")
             }
             .environmentObject(tabState)
-        }
+//        }
     }
 }
 

@@ -25,7 +25,8 @@ struct CoveApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainView()
+            WelcomeView()
+//            MainView()
         }
     }
 }

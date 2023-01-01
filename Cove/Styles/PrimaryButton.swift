@@ -10,12 +10,13 @@ import SwiftUI
 struct PrimaryButton: ButtonStyle {
     let height: CGFloat?
     
-    init(height: CGFloat? = 50) {
+    init(height: CGFloat? = 55) {
         self.height = height
     }
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .font(.custom("Poppins-SemiBold", size: 14))
             .padding()
             .frame(maxWidth: .infinity)
             .frame(height: self.height)
@@ -24,7 +25,7 @@ struct PrimaryButton: ButtonStyle {
                     .foregroundColor(.black)
             }
             .foregroundColor(.white)
-//            .opacity(configuration.isPressed ? 0.5 : 1)
+            .opacity(configuration.isPressed ? 0.2 : 1)
     }
 }
 

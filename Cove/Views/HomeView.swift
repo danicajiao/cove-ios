@@ -22,7 +22,7 @@ struct HomeView: View {
             VStack(spacing: 20) {
                 HStack {
                     // TODO: Implement time-based greeting message
-                    Text("Good morning, Faith")
+                    Text("Good morning, Daniel")
                         .frame(maxWidth: 215, alignment: .leading)
                         .font(Font.custom("Poppins-SemiBold", size: 26))
                         .padding(EdgeInsets(top: 28, leading: 0, bottom: 0, trailing: 0))

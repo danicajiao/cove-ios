@@ -8,24 +8,67 @@
 import SwiftUI
 import UIKit
 import FirebaseCore
+import FirebaseAuth
+import GoogleSignIn
+import FBSDKCoreKit
 
 // no changes in your AppDelegate class
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        ApplicationDelegate.shared.application(
+            application,
+            didFinishLaunchingWithOptions: launchOptions
+        )
+        
+        print("delegate run")
         return true
+    }
+    
+    func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) -> Bool {
+        return ApplicationDelegate.shared.application(
+            application,
+            open: url,
+            sourceApplication: options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String,
+            annotation: options[UIApplication.OpenURLOptionsKey.annotation]
+            )
     }
 }
 
 @main
 struct CoveApp: App {
-    
     // Inject into SwiftUI life-cycle via adaptor
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject var appState = AppState()
+    
+    init() {
+        print("init run")
+    }
     
     var body: some Scene {
         WindowGroup {
-            MainView()
+            NavigationStack(path: self.$appState.path) {
+                // Root View
+                SplashView()
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .welcome:
+                            WelcomeView()
+                        case .login:
+                            LogInView()
+                        case .signup:
+                            SignUpView()
+                        case .main:
+                            MainView()
+                        case .home:
+                            HomeView()
+                        }
+                    }
+            }
+            .environmentObject(self.appState)
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
+            }
         }
     }
 }

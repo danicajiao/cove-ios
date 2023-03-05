@@ -2,10 +2,43 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string></string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.275561009145-2r639l9g20n60udu82f10t97pp6267gf</string>
+				<string>fb488431753433676</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>275561009145-2r639l9g20n60udu82f10t97pp6267gf.apps.googleusercontent.com</string>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<true/>
+	<key>FacebookAppID</key>
+	<string>488431753433676</string>
+	<key>FacebookClientToken</key>
+	<string>26054178fdd1f611fbafcd6495bec528</string>
+	<key>FacebookDisplayName</key>
+	<string>Cove</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<false/>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Regular.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
+		<string>Getaway.otf</string>
 	</array>
 </dict>
 </plist>

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C053146BB3AD1333A825C99A /* Pods_Cove.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC93EEC9F4D8247905F3CE0 /* Pods_Cove.framework */; };
+		D000C15729620255006FE2DA /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000C15629620255006FE2DA /* SignUpView.swift */; };
 		D0113351294BCDCA0055971A /* Getaway.otf in Resources */ = {isa = PBXBuildFile; fileRef = D0113350294BCDCA0055971A /* Getaway.otf */; };
 		D011D2EB27D735FA00E280CE /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = D011D2EA27D735FA00E280CE /* Item.swift */; };
 		D01DE260294993C200A64910 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D01DE25E294993C200A64910 /* Poppins-Regular.ttf */; };
@@ -32,7 +33,7 @@
 		D08608EC2940223200C30E87 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608EB2940223200C30E87 /* ColorExtension.swift */; };
 		D08608EE294023D900C30E87 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608ED294023D900C30E87 /* HomeViewModel.swift */; };
 		D08608F0294067E700C30E87 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608EF294067E700C30E87 /* WelcomeView.swift */; };
-		D08D5EAD294C492100D14DE6 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D5EAC294C492100D14DE6 /* LoginView.swift */; };
+		D08D5EAD294C492100D14DE6 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D5EAC294C492100D14DE6 /* LogInView.swift */; };
 		D08D5EB1294C64EE00D14DE6 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D5EB0294C64EE00D14DE6 /* AppState.swift */; };
 		D0D3C27527D5531D00BD4E39 /* ItemCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3C27427D5531D00BD4E39 /* ItemCardView.swift */; };
 		D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */; };
@@ -40,6 +41,7 @@
 
 /* Begin PBXFileReference section */
 		4DC93EEC9F4D8247905F3CE0 /* Pods_Cove.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Cove.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D000C15629620255006FE2DA /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 		D0113350294BCDCA0055971A /* Getaway.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Getaway.otf; sourceTree = "<group>"; };
 		D011D2EA27D735FA00E280CE /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		D01DE25E294993C200A64910 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Regular.ttf"; sourceTree = "<group>"; };
@@ -66,7 +68,7 @@
 		D08608EB2940223200C30E87 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		D08608ED294023D900C30E87 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		D08608EF294067E700C30E87 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
-		D08D5EAC294C492100D14DE6 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		D08D5EAC294C492100D14DE6 /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
 		D08D5EB0294C64EE00D14DE6 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D0D3C27427D5531D00BD4E39 /* ItemCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCardView.swift; sourceTree = "<group>"; };
 		D0E07CA62953BE7000C3CE17 /* Cove.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cove.entitlements; sourceTree = "<group>"; };
@@ -198,9 +200,10 @@
 				D02B2FB727BD7E61004732CB /* HomeView.swift */,
 				D06B593328284D5500B26053 /* ItemView.swift */,
 				D08608EF294067E700C30E87 /* WelcomeView.swift */,
-				D08D5EAC294C492100D14DE6 /* LoginView.swift */,
+				D08D5EAC294C492100D14DE6 /* LogInView.swift */,
 				D0785F9C294EBDEE0012D1F8 /* ProfileTabView.swift */,
 				D0291495294F08EA0013EAA9 /* SplashView.swift */,
+				D000C15629620255006FE2DA /* SignUpView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -371,7 +374,7 @@
 				D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */,
 				D011D2EB27D735FA00E280CE /* Item.swift in Sources */,
 				D06B593428284D5500B26053 /* ItemView.swift in Sources */,
-				D08D5EAD294C492100D14DE6 /* LoginView.swift in Sources */,
+				D08D5EAD294C492100D14DE6 /* LogInView.swift in Sources */,
 				D0265B3327DC1ECD004E23F9 /* OriginButton.swift in Sources */,
 				D02B2FB627BD7E61004732CB /* CoveApp.swift in Sources */,
 				D069A31327D9126400C5FFCF /* LikeButton.swift in Sources */,
@@ -379,6 +382,7 @@
 				D048F6B42829A731009CD571 /* RatingView.swift in Sources */,
 				D029149A29518DFD0013EAA9 /* SocialButton.swift in Sources */,
 				D0291496294F08EA0013EAA9 /* SplashView.swift in Sources */,
+				D000C15729620255006FE2DA /* SignUpView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,7 +440,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -491,7 +495,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

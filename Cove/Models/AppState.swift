@@ -14,11 +14,12 @@ import FBSDKLoginKit
 enum Path {
     case welcome
     case login
+    case signup
     case main
     case home
 }
 
-enum LoginInState {
+enum AuthState {
     case loggedIn
     case loggedOut
 }
@@ -32,8 +33,19 @@ enum AuthMethod: String {
 
 class AppState: ObservableObject {
     @Published var path: [Path] = []
-    @Published var state: LoginInState = .loggedOut
+    @Published var authState: AuthState = .loggedOut
     var authMethod: AuthMethod? = nil
+    
+    func emailSignUp(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
+        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+            if error != nil {
+                onFailure(error)
+            } else {
+                self.path.append(.main)
+                onSuccess()
+            }
+        }
+    }
     
     func emailLogIn(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
         Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
@@ -41,6 +53,7 @@ class AppState: ObservableObject {
                 onFailure(error)
 //                print(error?.localizedDescription ?? "")
             } else {
+                self.path.append(.main)
                 onSuccess()
             }
         }
@@ -138,7 +151,6 @@ class AppState: ObservableObject {
                 self.authenticateUser(for: result.user, with: error) { error in
                     onFailure(error)
                 }
-                self.path.append(.main)
             }
         }
     }
@@ -168,7 +180,8 @@ class AppState: ObservableObject {
                 self.authMethod = nil
                 print(error.localizedDescription)
             } else {
-                self.state = .loggedIn
+                self.authState = .loggedIn
+                self.path.append(.main)
             }
         }
     }
@@ -195,7 +208,7 @@ class AppState: ObservableObject {
                 print(error.localizedDescription)
                 onFailure(error)
             } else {
-                self.state = .loggedIn
+                self.authState = .loggedIn
                 self.path.append(.main)
             }
         }
@@ -216,7 +229,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 LoginManager().logOut()
                 self.authMethod = nil
-                self.state = .loggedOut
+                self.authState = .loggedOut
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }
@@ -226,7 +239,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 GIDSignIn.sharedInstance.signOut()
                 self.authMethod = nil
-                self.state = .loggedOut
+                self.authState = .loggedOut
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }
@@ -235,7 +248,7 @@ class AppState: ObservableObject {
             do {
                 try Auth.auth().signOut()
                 self.authMethod = nil
-                self.state = .loggedOut
+                self.authState = .loggedOut
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }

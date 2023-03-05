@@ -12,8 +12,6 @@ import FirebaseAuth
 import GoogleSignIn
 import FBSDKCoreKit
 
- var appState = AppState()
-
 // no changes in your AppDelegate class
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -41,7 +39,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct CoveApp: App {
     // Inject into SwiftUI life-cycle via adaptor
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @ObservedObject var appState = AppState()
+    @StateObject var appState = AppState()
     
     init() {
         print("init run")
@@ -57,7 +55,9 @@ struct CoveApp: App {
                         case .welcome:
                             WelcomeView()
                         case .login:
-                            LoginView()
+                            LogInView()
+                        case .signup:
+                            SignUpView()
                         case .main:
                             MainView()
                         case .home:

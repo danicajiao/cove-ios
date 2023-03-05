@@ -1,19 +1,23 @@
 //
-//  LogInView.swift
+//  SignUpView.swift
 //  Cove
 //
-//  Created by Daniel Cajiao on 12/16/22.
+//  Created by Daniel Cajiao on 1/1/23.
 //
 
 import SwiftUI
-import FirebaseAuth
 
-struct LogInView: View {
+private enum Field: Hashable {
+    case email
+    case password
+}
+
+struct SignUpView: View {
     @EnvironmentObject private var appState: AppState
     
     @State private var presentAlert = false
     @State private var errorMessage: String? = nil
-
+    
     enum Field: Hashable {
             case email
             case password
@@ -26,17 +30,19 @@ struct LogInView: View {
     @State var password = ""
     
     var body: some View {
+//        let _ = Self._printChanges()
+
         VStack(spacing: 20) {
             Text("Cove")
                 .font(.custom("Getaway", size: 50))
             
             VStack(spacing: 0) {
-                Text("Login")
+                Text("Sign Up")
                     .font(.custom("Poppins-SemiBold", size: 18))
             }
             
             if (showImage == true) {
-                Image("login-illustration")
+                Image("signup-illustration")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             }
@@ -75,7 +81,7 @@ struct LogInView: View {
             }
             
             Button {
-                self.appState.emailLogIn(email: self.email, password: self.password, onFailure: { error in
+                self.appState.emailSignUp(email: self.email, password: self.password, onFailure: { error in
                     self.presentAlert = true
                     self.errorMessage = error?.localizedDescription
                 }, onSuccess: {
@@ -83,21 +89,9 @@ struct LogInView: View {
                     self.password = ""
                 })
             } label: {
-                Text("Log in")
+                Text("Sign up")
             }
             .buttonStyle(PrimaryButton())
-            
-//            NavigationLink(destination: HomeView()) {
-//                RoundedRectangle(cornerRadius: 10)
-//                    .foregroundColor(.black)
-//                    .frame(maxWidth: .infinity)
-//                    .frame(height: 55)
-//                    .overlay {
-//                        Text("Login")
-//                            .font(.custom("Poppins-SemiBold", size: 14))
-//                            .foregroundColor(.white)
-//                    }
-//            }
             
             HStack {
                 Color.black.frame(height: 1)
@@ -118,13 +112,13 @@ struct LogInView: View {
             }
             
             HStack(spacing: 0) {
-                Text("Don't have an account? ")
+                Text("Already have an account? ")
                     .font(.custom("Poppins-Regular", size: 14))
                     .foregroundColor(.gray)
                 Button {
-                    self.appState.path.append(.signup)
+                    self.appState.path.append(.login)
                 } label: {
-                    Text("Sign up")
+                    Text("Log in")
                         .font(.custom("Poppins-Regular", size: 14))
                         .foregroundColor(.black)
                 }
@@ -149,14 +143,20 @@ struct LogInView: View {
                     .padding(10)
             }
         }
+        .alert(isPresented: $presentAlert) {
+            Alert(
+                title: Text("Verify login"),
+                message: Text(self.errorMessage ?? "")
+            )
+        }
         .onAppear {
             print(self.appState.path)
         }
     }
 }
 
-struct LogInView_Previews: PreviewProvider {
+struct SignUpView_Previews: PreviewProvider {
     static var previews: some View {
-        LogInView()
+        SignUpView()
     }
 }

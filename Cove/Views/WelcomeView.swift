@@ -25,7 +25,7 @@ struct WelcomeView: View {
                     .offset(x: 0, y: -5)
             }
             
-            Image("splash-illustration")
+            Image("welcome-illustration")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
             
@@ -79,12 +79,19 @@ struct WelcomeView: View {
             HStack(spacing: 0) {
                 Text("Don't have an account? ")
                     .font(.custom("Poppins-Regular", size: 14))
+                    .foregroundColor(.gray)
                 // TODO: Add Link to SignUp View
-                NavigationLink(destination: EmptyView()) {
-                    Text("Sign Up")
+//                NavigationLink(destination: EmptyView()) {
+//                    Text("Sign Up")
+//                        .font(.custom("Poppins-Regular", size: 14))
+//                }
+                Button {
+                    self.appState.path.append(.signup)
+                } label: {
+                    Text("Sign up")
                         .font(.custom("Poppins-Regular", size: 14))
+                        .foregroundColor(.black)
                 }
-                .foregroundColor(.gray)
             }
         }
         .padding(30)

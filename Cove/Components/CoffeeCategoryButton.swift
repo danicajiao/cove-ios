@@ -1,5 +1,5 @@
 //
-//  CategoryButton.swift
+//  CoffeeCategoryButton.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/9/22.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CategoryButton: View {
+struct CoffeeCategoryButton: View {
     let category: String
     
     var body: some View {
@@ -124,9 +124,9 @@ struct CategoryButton: View {
     }
 }
 
-struct CategoryButton_Previews: PreviewProvider {
+struct CoffeeCategoryButton_Previews: PreviewProvider {
     static var previews: some View {
-        CategoryButton(category: "Preview")
+        CoffeeCategoryButton(category: "Preview")
             .previewLayout(.sizeThatFits)
     }
 }

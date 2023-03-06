@@ -60,7 +60,7 @@ struct HomeView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(homeViewModel.categories, id: \.self) { category in
-                                CategoryButton(category: category)
+                                LargeButton(category: category)
                             }
                         }
                         .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))

@@ -12,7 +12,7 @@ import FirebaseStorage
 class HomeViewModel: ObservableObject {
     @Published var items = [Item]()
     
-    let categories = ["Fruity", "Choco", "Citrus", "Earthy", "Floral"]
+    let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
     let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
     
     func getItemData() {

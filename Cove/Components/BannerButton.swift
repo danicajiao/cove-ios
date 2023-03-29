@@ -10,6 +10,11 @@ import SwiftUI
 struct BannerButton: View {
     let bannerType: Int
     
+//    init(bannerType: Int) {
+//        self.bannerType = bannerType
+//        print("Banner init")
+//    }
+    
     var body: some View {
         
         switch bannerType {

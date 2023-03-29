@@ -8,7 +8,7 @@ target 'Cove' do
 
     # Pods for Cove
     pod 'FirebaseAuth'
-    pod 'FirebaseFirestore'
+    pod 'FirebaseFirestoreSwift'
     pod 'FirebaseStorage'
     pod 'FirebaseAnalytics'
     pod 'GoogleSignIn'

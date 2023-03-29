@@ -28,12 +28,13 @@ struct SplashView: View {
                 .font(.custom("Getaway", size: 80))
         }
         .onAppear {
+            print(self.appState.path)
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 guard Auth.auth().currentUser != nil else {
                     self.appState.path.append(.welcome)
                     return
                 }
-                self.appState.path.append(.welcome)
+//                self.appState.path.append(.welcome)
                 self.appState.path.append(.main)
             }
         }

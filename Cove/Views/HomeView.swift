@@ -7,10 +7,13 @@
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseFirestoreSwift
 import FirebaseStorage
 
 struct HomeView: View {
-    @StateObject private var homeViewModel = HomeViewModel()
+    @StateObject private var viewModel = HomeViewModel()
+    
+//    @FirestoreQuery(collectionPath: "products") var products: [Product]
     
     private var columns: [GridItem] = [
         GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
@@ -18,6 +21,7 @@ struct HomeView: View {
     ]
     
     var body: some View {
+        let _ = Self._printChanges()
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 HStack {
@@ -59,7 +63,7 @@ struct HomeView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(homeViewModel.categories, id: \.self) { category in
+                            ForEach(viewModel.categories, id: \.self) { category in
                                 LargeButton(category: category)
                             }
                         }
@@ -67,33 +71,45 @@ struct HomeView: View {
                     }
                 }
                 
-                BannerButton(bannerType: 1)
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                
                 VStack {
                     HStack {
-                        Text("Popular")
+                        Text("Featured")
                             .font(Font.custom("Poppins-SemiBold", size: 22))
                         Spacer()
-                        // TODO: Navigate to Browse scene
+                        // TODO: Navigate to Categories scene
                         Button("See all \(Image(systemName: "arrow.forward"))") {
                         }
                         .foregroundColor(.primaryColor)
                     }
+                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     
-                    LazyVGrid(
-                        columns: columns,
-                        alignment: .center,
-                        spacing: 20,
-                        pinnedViews: [.sectionHeaders, .sectionFooters]
-                    ) {
-                        ForEach(homeViewModel.items) { item in
-                            ItemCardView(item: item)
+                    BannerButton(bannerType: 1)
+                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                }
+                
+                VStack {
+                    HStack {
+                        Text("For You")
+                            .font(Font.custom("Poppins-SemiBold", size: 22))
+                        Spacer()
+//                        Button("See all \(Image(systemName: "arrow.forward"))") {
+//                        }
+//                        .foregroundColor(.primaryColor)
+                    }
+                    
+                    if !viewModel.products.isEmpty {
+                        LazyVGrid(
+                            columns: columns,
+                            alignment: .center,
+                            spacing: 20
+                        ) {
+                            ForEach(viewModel.products, id: \.id) { product in
+                                ProductCardView(product: product)
+//                                ProductCardView(product: product)
+                            }
                         }
                     }
-                    .onAppear {
-                        homeViewModel.getItemData()
-                    }
+                    
                     
                 }
                 .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
@@ -103,10 +119,9 @@ struct HomeView: View {
                 
                 VStack {
                     HStack {
-                        Text("Origins")
+                        Text("Our Favorite Brands")
                             .font(Font.custom("Poppins-SemiBold", size: 22))
                         Spacer()
-                        // TODO: Navigate to Browse scene
                         Button("See all \(Image(systemName: "arrow.forward"))") {
                         }
                         .foregroundColor(.primaryColor)
@@ -115,13 +130,56 @@ struct HomeView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(homeViewModel.origins, id: \.self) { origin in
-                                OriginButton(origin: origin)
+                            ForEach(viewModel.brands, id: \.id) { brand in
+                                VStack {
+                                    AsyncImage(url: URL(string: brand.imageURL)) { image in
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100, height: 100)
+                                    } placeholder: {
+                                        ProgressView()
+                                    }
+                                    Text(brand.name)
+                                        .font(Font.custom("Poppins-Regular", size: 14))
+                                        .foregroundColor(.secondaryColor)
+                                        .frame(width: 100)
+                                        .multilineTextAlignment(.center)
+                                }
                             }
                         }
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
+                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     }
                 }
+                
+//                VStack {
+//                    HStack {
+//                        Text("Origins")
+//                            .font(Font.custom("Poppins-SemiBold", size: 22))
+//                        Spacer()
+//                        // TODO: Navigate to Browse scene
+//                        Button("See all \(Image(systemName: "arrow.forward"))") {
+//                        }
+//                        .foregroundColor(.primaryColor)
+//                    }
+//                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+//
+//                    ScrollView(.horizontal, showsIndicators: false) {
+//                        HStack(spacing: 10) {
+//                            ForEach(viewModel.origins, id: \.self) { origin in
+//                                OriginButton(origin: origin)
+//                            }
+//                        }
+//                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
+//                    }
+//                }
+            }
+        }
+        .onAppear {
+            print("homeView appeared")
+            Task {
+                try await viewModel.fetchProducts()
+                try await viewModel.fetchBrands()
             }
         }
     }

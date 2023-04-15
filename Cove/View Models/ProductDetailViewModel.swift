@@ -1,37 +1,97 @@
 //
-//  HomeViewModel.swift
+//  ProductDetailViewModel.swift
 //  Cove
 //
-//  Created by Daniel Cajiao on 12/6/22.
+//  Created by Daniel Cajiao on 4/9/23.
 //
 
 import FirebaseFirestore
 import FirebaseFirestoreSwift
-import FirebaseStorage
 import FirebaseAuth
 
-class HomeViewModel: ObservableObject {
-    @Published var products = [any Product]()
-    @Published var brands = [Brand]()
+class ProductDetailViewModel : ObservableObject {
+    var product: (any Product)?
+    @Published var productDetails: ProductDetails?
+    @Published var detailSelection: DetailSelection
+    @Published var similarProducts: [any Product]
     var fetchedProductIDs = [String]()
-
-    let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
-    let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
     
-    /// Fetches products from Firebase and populates the products array used in the HomeView
-    func fetchProducts() async throws {
-        // Check if products have already been fetched
-        if !products.isEmpty {
+    enum DetailSelection {
+        case description
+        case about
+        
+        case specifications
+        case origin
+        case tracklist
+    }
+    
+    init(product: (any Product)?) {
+        self.product = product
+        self.detailSelection = .description
+        self.similarProducts = [any Product]()
+    }
+    
+    func fetchProductDetails() async throws {
+        // Check if product have already been fetched
+        guard let product = self.product else {
             return
         }
         
         // Get a reference to Firestore
-        print("Fetching products...")
+        print("Fetching product details...")
+        let db = Firestore.firestore()
+        
+        do {
+            // Fetch 'product detail' document from the 'product_details' collection
+            let snapshot = try await db.collection("product_details").document(product.productDetailsID).getDocument()
+
+            if product is MusicProduct {
+                let productDetails = try snapshot.data(as: MusicProductDetails.self)
+            
+                await MainActor.run(body: {
+                    self.productDetails = productDetails
+                })
+            } else if product is CoffeeProduct {
+                let productDetails = try snapshot.data(as: CoffeeProductDetails.self)
+                
+                await MainActor.run(body: {
+                    self.productDetails = productDetails
+                })
+            } else if product is ApparelProduct {
+                let productDetails = try snapshot.data(as: ApparelProductDetails.self)
+                
+                await MainActor.run(body: {
+                    self.productDetails = productDetails
+                })
+            }
+        } catch {
+            print(error)
+            throw error
+        }
+    }
+    
+    /// Fetches products from Firebase and populates the products array used in the HomeView
+    func fetchSimilarProducts() async throws {
+        // Check if products have already been fetched
+        if !similarProducts.isEmpty {
+            return
+        }
+        
+        // Check if product have already been fetched
+        guard let product = self.product else {
+            return
+        }
+        
+        // Get a reference to Firestore
+        print("Fetching similar products...")
         let db = Firestore.firestore()
         
         do {
             // Fetch 'product' documents from the 'products' collection
-            var snapshot = try await db.collection("products").getDocuments()
+            var snapshot = try await db.collection("products")
+                .whereField("categoryID", isEqualTo: product.categoryID)
+                .limit(to: 5)
+                .getDocuments()
             
             // Map fetched documents to the `products` array
             var products: [any Product] = snapshot.documents.compactMap { d in
@@ -99,46 +159,7 @@ class HomeViewModel: ObservableObject {
             // Ensure the products array wont change while being sent to the main thread by making it constant
             let sendableProducts = products
             await MainActor.run(body: {
-                self.products = sendableProducts
-            })
-        } catch {
-            print(error)
-            throw error
-        }
-    }
-    
-    func fetchBrands() async throws {
-        // Check if products have already been fetched
-        if !brands.isEmpty {
-            return
-        }
-        
-        // Get a reference to Firestore
-        print("Fetching brands...")
-        let db = Firestore.firestore()
-        
-        do {
-            // Fetch 'brand' documents from the 'brands' collection
-            var snapshot = try await db.collection("brands").getDocuments()
-            
-            // Map fetched documents to the `brands` array
-            let brands: [Brand] = snapshot.documents.compactMap { d in
-                do {
-                    return try d.data(as: Brand.self)
-                } catch {
-                    print(error)
-                    return nil
-                }
-            }
-            
-            // Check if no brands were fetched from last request
-            if brands.isEmpty {
-                print("No brands returned from request")
-                return
-            }
-            
-            await MainActor.run(body: {
-                self.brands = brands
+                self.similarProducts = sendableProducts
             })
         } catch {
             print(error)
@@ -146,5 +167,3 @@ class HomeViewModel: ObservableObject {
         }
     }
 }
-
-

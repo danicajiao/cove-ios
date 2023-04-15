@@ -62,6 +62,8 @@ struct CoveApp: App {
                             MainView()
                         case .home:
                             HomeView()
+                        case .product(let product):
+                            ProductDetailView(product: product)
                         }
                     }
             }

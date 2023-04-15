@@ -17,7 +17,7 @@ struct PrimaryButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.custom("Poppins-SemiBold", size: 14))
-            .padding()
+//            .padding()
             .frame(maxWidth: .infinity)
             .frame(height: self.height)
             .background {

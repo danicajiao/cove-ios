@@ -14,14 +14,14 @@ struct ProductCardView: View {
     var headerStr: String = "Header"
     var bodyStr: String = "Body"
     var price: Float = 9
+    
     @State var favorited: Bool
 
     init(product: any Product) {
-//        self._product = State(wrappedValue: product)
         self.product = product
 
 //        print("ProductCardView init: \(String(describing: product.id)) favorite: \(String(describing: product.isFavorite))")
-
+ 
         self._favorited = State(initialValue: product.isFavorite ?? false)
 
         if let coffeeProduct = product as? CoffeeProduct {
@@ -42,28 +42,9 @@ struct ProductCardView: View {
         }
     }
     
-//    var body: some View {
-//        VStack {
-//            let imageURL = URL(string: product.defaultImageURL)
-//            AsyncImage(url: imageURL) { phase in
-//                switch phase {
-//                case .success(let image):
-//                    image
-//                        .resizable()
-//                        .scaledToFill()    // << for image !!
-//                case .failure(let error):
-//                    Text(error.localizedDescription)
-//                default:
-//                    Image(systemName: "photo")
-//                }
-//            }
-//
-//        }
-//    }
-
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            NavigationLink(destination: ProductDetailView(product: product)) {
+            NavigationLink(value: Path.product(product)) {
                 VStack {
                     Rectangle()
                         .foregroundColor(.backgroundColor)
@@ -77,20 +58,20 @@ struct ProductCardView: View {
                             } placeholder: {
                                 ProgressView()
                             }
-
+                            
                         }
-
+                    
                     VStack {
                         Text(headerStr)
                             .font(Font.custom("Poppins-SemiBold", size: 14))
                             .foregroundColor(.secondaryColor)
                             .frame(maxWidth: .infinity, alignment: .leading)
-
+                        
                         Text(bodyStr)
                             .font(Font.custom("Poppins-Regular", size: 14))
                             .foregroundColor(.secondaryColor)
                             .frame(maxWidth: .infinity, alignment: .leading)
-
+                        
                         Text("$" + String(self.price))
                             .font(Font.custom("Poppins-Regular", size: 16))
                             .fontWeight(.bold)
@@ -108,12 +89,68 @@ struct ProductCardView: View {
                 .frame(width: 160, height: 250)
             }
             .buttonStyle(PlainButtonStyle())
-
+            
             LikeButton(enabled: self.favorited)
                 .shadow(color: .dropShadowColor, radius: 20)
                 .padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 5))
+
         }
+        
     }
+
+//    var body: some View {
+//        ZStack(alignment: .topTrailing) {
+//            NavigationLink(destination: ProductDetailView(product: product)) {
+//                VStack {
+//                    Rectangle()
+//                        .foregroundColor(.backgroundColor)
+//                        .cornerRadius(8)
+//                        .overlay {
+//                            let imageURL = URL(string: product.defaultImageURL)
+//                            AsyncImage(url: imageURL) { image in
+//                                image
+//                                    .resizable()
+//                                    .aspectRatio(contentMode: .fit)
+//                            } placeholder: {
+//                                ProgressView()
+//                            }
+//
+//                        }
+//
+//                    VStack {
+//                        Text(headerStr)
+//                            .font(Font.custom("Poppins-SemiBold", size: 14))
+//                            .foregroundColor(.secondaryColor)
+//                            .frame(maxWidth: .infinity, alignment: .leading)
+//
+//                        Text(bodyStr)
+//                            .font(Font.custom("Poppins-Regular", size: 14))
+//                            .foregroundColor(.secondaryColor)
+//                            .frame(maxWidth: .infinity, alignment: .leading)
+//
+//                        Text("$" + String(self.price))
+//                            .font(Font.custom("Poppins-Regular", size: 16))
+//                            .fontWeight(.bold)
+//                            .frame(maxWidth: .infinity, alignment: .leading)
+//                    }
+//                    .padding(EdgeInsets(top: 0, leading: 10, bottom: 10, trailing: 5))
+//                }
+//                .background(alignment: .bottom) {
+//                    Rectangle()
+//                        .frame(height: 160)
+//                        .cornerRadius(8)
+//                        .foregroundColor(.white)
+//                        .shadow(color: .dropShadowColor, radius: 20)
+//                }
+//                .frame(width: 160, height: 250)
+//            }
+//            .buttonStyle(PlainButtonStyle())
+//
+//            LikeButton(enabled: self.favorited)
+//                .shadow(color: .dropShadowColor, radius: 20)
+//                .padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 5))
+//        }
+//    }
 }
 
 //struct ProductCardView_Previews: PreviewProvider {

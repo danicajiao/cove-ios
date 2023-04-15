@@ -11,12 +11,47 @@ import FirebaseAuth
 import GoogleSignIn
 import FBSDKLoginKit
 
-enum Path {
+enum Path : Hashable {
     case welcome
     case login
     case signup
     case main
     case home
+    case product(any Product)
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .welcome:
+            hasher.combine(0)
+        case .login:
+            hasher.combine(1)
+        case .signup:
+            hasher.combine(2)
+        case .main:
+            hasher.combine(3)
+        case .home:
+            hasher.combine(4)
+        case .product(let product):
+            hasher.combine(5)
+            if let coffeeProduct = product as? CoffeeProduct {
+                hasher.combine(coffeeProduct)
+            } else if let musicProduct = product as? MusicProduct {
+                hasher.combine(musicProduct)
+            } else if let apparelProduct = product as? ApparelProduct {
+                hasher.combine(apparelProduct)
+            }
+            // add more cases as needed for other types
+        }
+    }
+    
+    static func == (lhs: Path, rhs: Path) -> Bool {
+        switch (lhs, rhs) {
+        case (.welcome, .welcome), (.login, .login), (.signup, .signup), (.main, .main), (.home, .home), (.product, .product):
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 enum AuthState {

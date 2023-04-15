@@ -16,6 +16,7 @@ struct MusicProduct: Product {
     var defaultImageURL: String
     var info: MusicInfo
     var isFavorite: Bool?
+    var productDetailsID: String
 
     struct MusicInfo : Codable {
         var artist: String
@@ -27,5 +28,13 @@ struct MusicProduct: Product {
             var imageURL: String
             var price: Float
         }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: MusicProduct, rhs: MusicProduct) -> Bool {
+        return lhs.id == rhs.id
     }
 }

@@ -10,93 +10,156 @@ import FirebaseFirestore
 import FirebaseStorage
 
 struct ProductDetailView: View {
-    @State var product: any Product
-    @State var count = 1
-    @State var detailSelection = "description"
-
+    @EnvironmentObject private var appState: AppState
+    @StateObject var viewModel: ProductDetailViewModel
+    
+    var product: (any Product)?
     var headerStr: String = "Header"
     var bodyStr: String = "Body"
     var price: Float = 9
-
-
+    
+    @State var count: Int = 1
+//    @State var detailSelection: ProductDetailViewModel.DetailSelection
+    
+    @State private var index = 0
+    @State var viewPagerSize: CGSize = .zero
+    
     init(product: any Product) {
-        self._product = State(wrappedValue: product)
+        if let coffeeProduct = product as? CoffeeProduct {
+            // Product is a CoffeeProduct
+            self.product = coffeeProduct
+            self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: coffeeProduct))
 
-//        if let coffeeItem = item as? CoffeeItem {
-//            // item is a CoffeeItem. Do something with coffeeItem
-//            self.headerStr = coffeeItem.info.name
-//        }
-//        else if let musicItem = item as? MusicItem {
-//            // item is a MusicItem. Do something with musicItem
-//            self.headerStr = musicItem.artist
-//        }
+            self.headerStr = coffeeProduct.info.roastery
+            self.bodyStr = coffeeProduct.info.name
+            self.price = coffeeProduct.defaultPrice
+        } else if let musicProduct = product as? MusicProduct {
+            // Product is a MusicProduct
+            self.product = musicProduct
+            self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: musicProduct))
+
+            self.headerStr = musicProduct.info.artist
+            self.bodyStr = musicProduct.info.album
+            self.price = musicProduct.defaultPrice
+        } else if let apparelProduct = product as? ApparelProduct {
+            // Product is a ApparelProduct
+            self.product = apparelProduct
+            self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: apparelProduct))
+
+            self.headerStr = apparelProduct.info.brand
+            self.bodyStr = apparelProduct.info.name
+            self.price = apparelProduct.defaultPrice
+        } else {
+            self.product = nil
+            self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: nil))
+        }
     }
-
-//    @State var similarItems = [Item]()
-
+    
     var rows: [GridItem] = [
         GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
     ]
-
-    @ViewBuilder
+    
+    func getSafeAreaTop() -> CGFloat {
+        let keyWindow = UIApplication.shared.connectedScenes
+            .filter({$0.activationState == .foregroundActive})
+            .map({$0 as? UIWindowScene})
+            .compactMap({$0})
+            .first?.windows
+            .filter({$0.isKeyWindow}).first
+        
+        return (keyWindow?.safeAreaInsets.top)!
+    }
+    
+    /// A preference key to store a view's rect
+    public struct ViewSizeKey: PreferenceKey {
+        public typealias Value = CGSize
+        public static var defaultValue = CGSize.zero
+        public static func reduce(value: inout Value, nextValue: () -> Value) {
+        }
+    }
+    
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                LazyVStack(pinnedViews: [.sectionHeaders]) {
-
-//                    Section(header: Text("------------------------------------")) { }
-
-                    ZStack {
-                        Rectangle()
-                            .foregroundColor(.backdropColor)
-                            .scaleEffect(1.5)
-//                        Image(uiImage: UIImage(data: product.imgData) ?? UIImage())
-//                            .resizable()
-//                            .aspectRatio(contentMode: .fit)
-//                            .frame(maxWidth: 250)
+        ScrollView {
+            VStack(spacing: 0) {
+                if let product = self.product {
+                    AsyncImage(url: URL(string: product.defaultImageURL)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .cornerRadius(10)
+                            .padding([.leading, .trailing], getSafeAreaTop())
+                            .padding(.bottom, 20)
+                            .background {
+                                AsyncImage(url: URL(string: product.defaultImageURL)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .padding(-getSafeAreaTop())
+                                        .blur(radius: 200)
+                                } placeholder: { }
+                            }
+                    } placeholder: {
+                        ProgressView()
                     }
+                    .frame(height: 300)
+                }
 
+                Group {
                     VStack(spacing: 20) {
-                        VStack(spacing: 10) {
+                        VStack(spacing: 8) {
                             Text(headerStr)
                                 .font(Font.custom("Poppins-Regular", size: 22))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(EdgeInsets(top: 20, leading: 20, bottom: 0, trailing: 20))
 
                             HStack {
                                 Text("$\(Int(self.price))")
                                     .font(Font.custom("Poppins-SemiBold", size: 22))
+                                    .foregroundColor(.primaryColor)
 
                                 Spacer()
 
-                                Button("-") {
+                                Button {
                                     if count > 1 {
                                         count = count - 1
                                     }
+                                } label: {
+                                    Image(systemName: "minus.square")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
                                 }
                                 .foregroundColor(.primaryColor)
+                                .disabled(count == 1 ? true : false)
 
                                 Text(String(count))
+                                    .font(Font.custom("Poppins-Regular", size: 14))
+                                    .frame(width: 30, height: 20)
 
-                                Button("+") {
+                                Button {
                                     if count < 15 {
                                         count = count + 1
                                     }
+                                } label: {
+                                    Image(systemName: "plus.square")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
                                 }
                                 .foregroundColor(.primaryColor)
+                                .disabled(count == 15 ? true : false)
                             }
-                            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                         }
 
-                        NavigationLink(destination: Text("Item Reviews!")) {
 
+                        NavigationLink(destination: Text("Item Reviews!")) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 10) {
                                     HStack {
                                         RatingView(rating: 4)
                                         Text("4.3")
+                                            .font(Font.custom("Poppins-Regular", size: 14))
                                     }
                                     Text("22 Reviews \(Image(systemName: "chevron.right"))")
+                                        .font(Font.custom("Poppins-Regular", size: 14))
+                                        .foregroundColor(.secondaryColor)
                                 }
 
                                 Spacer()
@@ -114,165 +177,85 @@ struct ProductDetailView: View {
                             .padding(10)
                             .background {
                                 Rectangle()
-                                    .foregroundColor(.backgroundColor)
+                                    .foregroundColor(.tertiaryColor)
                             }
                             .cornerRadius(8)
-                            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-
                         }
                         .buttonStyle(PlainButtonStyle())
-
-                        HStack(spacing: 20) {
-                            Text("Description")
-                                .font(Font.custom("Poppins-Regular", size: 16))
-                                .onTapGesture {
-                                    detailSelection = "description"
-                                }
-
-                            Text("Notes")
-                                .font(Font.custom("Poppins-Regular", size: 16))
-                                .onTapGesture {
-                                    detailSelection = "notes"
-                                }
-
-                            Text("Origin")
-                                .font(Font.custom("Poppins-Regular", size: 16))
-                                .onTapGesture {
-                                    detailSelection = "origin"
-                                }
-
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-
-                        if detailSelection == "description" {
-                            Text("DESCRIPTION")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                        }
-                        else if detailSelection == "notes" {
-                            Text("NOTES")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                        }
-                        else if detailSelection == "origin" {
-                            Text("ORIGIN")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                        }
-
-        //                Divider()
+                        
+                        ProductDetailTabs(viewModel: self.viewModel)
 
                         Text("Similar Products")
                             .font(Font.custom("Poppins-SemiBold", size: 18))
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-
-        //                ScrollView(.horizontal, showsIndicators: false) {
-        //                    HStack(spacing: 20) {
-        //                        ForEach(similarItems) { item in
-        //                            ItemCardView(item: item)
-        //                        }
-        //                    }
-        //                }
-        //                .onAppear {
-        //                    getItemData()
-        //                }
-
-//                        ScrollView(.horizontal, showsIndicators: false) {
-//                            LazyHGrid(
-//                                rows: rows,
-//                                alignment: .bottom,
-//                                spacing: 20,
-//                                pinnedViews: [.sectionHeaders, .sectionFooters]
-//                            ) {
-//                                ForEach(similarItems) { item in
-//                                    ItemCardView(item: item)
-//                                }
-//                            }
-//                            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-//                        }
-//                        .onAppear {
-////                            getItemData()
-//                        }
+                        
+                        ScrollView(.horizontal) {
+                            HStack(spacing: 20) {
+                                ForEach(self.viewModel.similarProducts, id: \.id) { product in
+                                    ProductCardView(product: product)
+                                }
+                            }
+                            .padding(20)
+                        }
+                        .padding(-20)
+                        
                     }
-                    .background {
-                        Color.white
-                    }
-                    .cornerRadius(20)
+                    .padding(20)
                 }
-                .safeAreaInset(edge: .top, spacing: geometry.safeAreaInsets.top) { }
+                .background {
+                    Color.white
+                }
+                .cornerRadius(20)
             }
-//            .background {
-//                Color.backdropColor
-//            }
-            .edgesIgnoringSafeArea(.top)
-//            .safeAreaInset(edge: .top, spacing: geometry.safeAreaInsets.top) { }
-
+        }
+        .overlay(alignment: .top) {
+            HStack {
+                Button {
+                    _ = self.appState.path.popLast()
+                } label: {
+                    RoundedRectangle(cornerRadius: 5)
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.black)
+                        .opacity(0.2)
+                        .overlay {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                        }
+                }
+                Spacer()
+            }
+            .padding([.leading, .trailing], 20)
+        }
+        .safeAreaInset(edge: .bottom) {
+            HStack {
+                if let product = self.product {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.backgroundColor, lineWidth: 1)
+                        .frame(width: 55, height: 55)
+                        .overlay {
+                            LikeButton(enabled: product.isFavorite ?? false)
+                        }
+                }
+                
+                Button {
+                } label: {
+                    Text("Add to bag")
+                }
+                .buttonStyle(PrimaryButton())
+            }
+            .padding([.top, .leading, .trailing])
+            .background {
+                Color.white.ignoresSafeArea()
+            }
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.backgroundColor), alignment: .top)
         }
         .navigationBarHidden(true)
+        .onAppear {
+            print(self.appState.path)
+            Task {
+                try await self.viewModel.fetchProductDetails()
+                try await self.viewModel.fetchSimilarProducts()
+            }
+        }
     }
-    
-//    func getItemData() {
-//
-//        // Get a reference to the database
-//        let db = Firestore.firestore()
-//
-//        // Get a reference to storage
-//        let storageRef = Storage.storage().reference()
-//
-//        // Read the documents at a specific path
-//        db.collection("items").limit(to: 4).getDocuments { snapshot, error in
-//            if error == nil {
-//                // No errors
-//                if let snapshot = snapshot {
-//                    // Update the item property in the main thread
-////                    DispatchQueue.main.sync {
-//                        // Get all the documents and create items
-//                        similarItems = snapshot.documents.map { d in
-//                            // Create an Item for each document returned
-//                            let item = CoffeeItem(id: d.documentID,
-//                                            brand: d["brand"] as? String ?? "",
-//                                            name: d["name"] as? String ?? "",
-//                                            price: d["price"] as? Float ?? 0,
-//                                            imgPath: d["imgPath"] as? String ?? "")
-//                            item.printItem()
-//                            return item
-//                        }
-////                    }
-//
-//                    for item in similarItems {
-//                        // Specify the path
-//                        let fileRef = storageRef.child(item.imgPath)
-//
-//                        // Retrieve the data
-//                        fileRef.getData(maxSize: 1 * 1024 * 1024 as Int64) { data, error in
-//                            // Check for errors
-//                            if error == nil && data != nil {
-//                                // Create a UIImage
-//                                if let data = data {
-////                                    DispatchQueue.main.async {
-//                                        item.imgData = data
-////                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            else {
-//                // Handle the error
-//            }
-//        }
-//    }
 }
-
-//struct ProductDetailView_Previews: PreviewProvider {
-//    static let asset = UIImage(named: "WST-1011_2")
-//
-//    static let product = CoffeeItem(id: "12345aaaa", brand: "Wonderstate Coffee", name: "Star Valley Decaf", price: 23, imgPath: "item-images/WST-1011_2.jpeg", imgData: (asset?.jpegData(compressionQuality: 1))!)
-//
-//    static var previews: some View {
-//        ProductDetailView(product: product)
-//    }
-//}

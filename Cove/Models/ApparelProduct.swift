@@ -16,6 +16,7 @@ struct ApparelProduct: Product {
     var defaultImageURL: String
     var info: ApparelInfo
     var isFavorite: Bool?
+    var productDetailsID: String
 
     struct ApparelInfo : Codable {
         var brand: String
@@ -33,5 +34,13 @@ struct ApparelProduct: Product {
                 var size: String
             }
         }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: ApparelProduct, rhs: ApparelProduct) -> Bool {
+        return lhs.id == rhs.id
     }
 }

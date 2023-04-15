@@ -8,7 +8,7 @@
 import FirebaseFirestore
 import FirebaseFirestoreSwift
 
-protocol Product : Codable, Identifiable {
+protocol Product : Codable, Identifiable, Hashable {
 //    @Published var imgData: Data = Data()
 //    @Published var favorited = false
     
@@ -18,6 +18,7 @@ protocol Product : Codable, Identifiable {
     var defaultPrice: Float { get }
     var defaultImageURL: String { get }
     var isFavorite: Bool? { get set }
+    var productDetailsID: String { get }
     
 //    associatedtype CodingKeys: RawRepresentable where CodingKeys.RawValue: StringProtocol
     

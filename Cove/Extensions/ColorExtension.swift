@@ -15,6 +15,7 @@ extension Color {
     static let quaternaryColor = Color("QuaternaryColor")
     static let dropShadowColor = Color("DropShadowColor")
     static let backdropColor = Color("BackdropColor")
+    static let starColor = Color("StarColor")
     static let fruityGradient = Color("FruityGradient")
     static let chocoGradient = Color("ChocoGradient")
     static let citrusGradient = Color("CitrusGradient")

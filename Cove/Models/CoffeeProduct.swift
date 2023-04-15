@@ -16,6 +16,7 @@ struct CoffeeProduct : Product {
     var defaultImageURL: String
     var info: CoffeeInfo
     var isFavorite: Bool?
+    var productDetailsID: String
 
 //    internal enum CodingKeys : String, CodingKey {
 //        case id
@@ -35,6 +36,14 @@ struct CoffeeProduct : Product {
 //            case name
 //            case roastery
 //        }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: CoffeeProduct, rhs: CoffeeProduct) -> Bool {
+        return lhs.id == rhs.id
     }
     
 //    init(from decoder: Decoder) throws {

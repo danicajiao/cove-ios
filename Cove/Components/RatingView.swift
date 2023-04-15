@@ -19,10 +19,10 @@ struct RatingView: View {
     var onImage = Image(systemName: "star.fill")
 
     var offColor = Color.gray
-    var onColor = Color.yellow
+    var onColor = Color.starColor
     
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             if label.isEmpty == false {
                 Text(label)
             }

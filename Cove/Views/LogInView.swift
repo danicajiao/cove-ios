@@ -85,7 +85,7 @@ struct LogInView: View {
             } label: {
                 Text("Log in")
             }
-            .buttonStyle(PrimaryButton())
+            .buttonStyle(PrimaryButton(width: .infinity))
             
 //            NavigationLink(destination: HomeView()) {
 //                RoundedRectangle(cornerRadius: 10)

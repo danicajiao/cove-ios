@@ -29,7 +29,7 @@ struct WelcomeView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
             
-            Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nec elit nec.")
+            Text("Use your purchasing power to support ethical trade.")
                 .font(.custom("Poppins-Regular", size: 14))
                 .multilineTextAlignment(.center)
             
@@ -44,20 +44,13 @@ struct WelcomeView: View {
 //                            .foregroundColor(.white)
 //                    }
 //            }
-
+            
             Button {
                 self.appState.path.append(.login)
             } label: {
-                RoundedRectangle(cornerRadius: 10)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 55)
-                    .overlay {
-                        Text("Login")
-                            .font(.custom("Poppins-SemiBold", size: 14))
-                            .foregroundColor(.white)
-                    }
+                Text("Login")
             }
+            .buttonStyle(PrimaryButton(width: .infinity))
             
             HStack {
                 Color.black.frame(height: 1)

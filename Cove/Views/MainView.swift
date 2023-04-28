@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var bag: Bag
     @StateObject private var tabState = TabState()
     
     var body: some View {
@@ -34,7 +35,7 @@ struct MainView: View {
                 }
                 .tag("browse")
             
-            Text("Bag View")
+            BagView()
                 .onTapGesture {
                     tabState.currentTab = "bag"
                 }
@@ -42,6 +43,7 @@ struct MainView: View {
                     Label("Bag", systemImage: tabState.currentTab == "bag" ? "bag.fill" : "bag")
                         .environment(\.symbolVariants, .none)
                 }
+                .badge(bag.totalItems)
                 .tag("bag")
             
             Text("Favorites View")

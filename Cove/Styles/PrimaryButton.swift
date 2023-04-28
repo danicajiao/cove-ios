@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct PrimaryButton: ButtonStyle {
+    let width: CGFloat?
     let height: CGFloat?
-    
-    init(height: CGFloat? = 55) {
+
+    init(width: CGFloat? = nil, height: CGFloat? = 55) {
+        self.width = width
         self.height = height
     }
     
@@ -18,8 +20,10 @@ struct PrimaryButton: ButtonStyle {
         configuration.label
             .font(.custom("Poppins-SemiBold", size: 14))
 //            .padding()
-            .frame(maxWidth: .infinity)
-            .frame(height: self.height)
+//            .border(Color.pink)
+            .frame(maxWidth: self.width)
+            .frame(maxHeight: self.height)
+//            .border(Color.pink)
             .background {
                 RoundedRectangle(cornerRadius: 10)
                     .foregroundColor(.black)

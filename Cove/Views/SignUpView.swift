@@ -91,7 +91,7 @@ struct SignUpView: View {
             } label: {
                 Text("Sign up")
             }
-            .buttonStyle(PrimaryButton())
+            .buttonStyle(PrimaryButton(width: .infinity))
             
             HStack {
                 Color.black.frame(height: 1)

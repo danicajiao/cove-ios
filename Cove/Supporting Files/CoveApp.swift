@@ -40,6 +40,7 @@ struct CoveApp: App {
     // Inject into SwiftUI life-cycle via adaptor
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var appState = AppState()
+    @StateObject var bag = Bag()
     
     init() {
         print("init run")
@@ -60,10 +61,12 @@ struct CoveApp: App {
                             SignUpView()
                         case .main:
                             MainView()
+                                .environmentObject(bag)
                         case .home:
                             HomeView()
                         case .product(let product):
                             ProductDetailView(product: product)
+                                .environmentObject(bag)
                         }
                     }
             }

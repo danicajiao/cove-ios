@@ -72,7 +72,7 @@ struct ProductCardView: View {
                             .foregroundColor(.secondaryColor)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text("$" + String(self.price))
+                        Text("$\(Int(self.price))")
                             .font(Font.custom("Poppins-Regular", size: 16))
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity, alignment: .leading)

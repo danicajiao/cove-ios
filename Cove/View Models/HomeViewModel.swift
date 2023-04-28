@@ -27,6 +27,9 @@ class HomeViewModel: ObservableObject {
         
         // Get a reference to Firestore
         print("Fetching products...")
+        
+        fetchedProductIDs = [String]()
+
         let db = Firestore.firestore()
         
         do {

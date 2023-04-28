@@ -1,101 +1,43 @@
 //
-//  ProductDetailViewModel.swift
+//  BagViewModel.swift
 //  Cove
 //
-//  Created by Daniel Cajiao on 4/9/23.
+//  Created by Daniel Cajiao on 4/24/23.
 //
 
+import FirebaseAuth
 import FirebaseFirestore
 import FirebaseFirestoreSwift
-import FirebaseAuth
 
-class ProductDetailViewModel : ObservableObject {
-    var product: (any Product)?
-    @Published var productDetails: ProductDetails?
-    @Published var detailSelection: DetailSelection
-    @Published var similarProducts: [any Product]
+class BagViewModel: ObservableObject {
+    @Published var similarProducts = [any Product]()
+    var tempCategories = [String]()
     var fetchedProductIDs = [String]()
-    
-    enum DetailSelection {
-        case description
-        case about
-        
-        case specifications
-        case origin
-        case tracklist
-    }
-    
-    init(product: (any Product)?) {
-        self.product = product
-        self.detailSelection = .description
-        self.similarProducts = [any Product]()
-    }
-    
-    func fetchProductDetails() async throws {
-        // Check if product have already been fetched
-        guard let product = self.product else {
-            return
-        }
-        
-        // Get a reference to Firestore
-        print("Fetching product details...")
-        let db = Firestore.firestore()
-        
-        do {
-            // Fetch 'product detail' document from the 'product_details' collection
-            let snapshot = try await db.collection("product_details").document(product.productDetailsID).getDocument()
 
-            if product is MusicProduct {
-                let productDetails = try snapshot.data(as: MusicProductDetails.self)
-            
-                await MainActor.run(body: {
-                    self.productDetails = productDetails
-                })
-            } else if product is CoffeeProduct {
-                let productDetails = try snapshot.data(as: CoffeeProductDetails.self)
-                
-                await MainActor.run(body: {
-                    self.productDetails = productDetails
-                })
-            } else if product is ApparelProduct {
-                let productDetails = try snapshot.data(as: ApparelProductDetails.self)
-                
-                await MainActor.run(body: {
-                    self.productDetails = productDetails
-                })
-            }
-        } catch {
-            print(error)
-            throw error
-        }
-    }
-    
-    /// Fetches products from Firebase and populates the products array used in the HomeView
-    func fetchSimilarProducts() async throws {
-        // Check if products have already been fetched
-        if !similarProducts.isEmpty {
+    /// Fetches similar products from Firebase and populates the similarProducts array used in the HomeView
+    func fetchSimilarProducts(categories: [String]) async throws {
+        if categories.isEmpty {
+            await MainActor.run(body: {
+                self.similarProducts = []
+            })
             return
         }
         
-        // Check if product have already been fetched
-        guard let product = self.product else {
+        if self.tempCategories == categories {
             return
         }
-        
+
         // Get a reference to Firestore
         print("Fetching similar products...")
         
         fetchedProductIDs = [String]()
-
-        let db = Firestore.firestore()
         
+        let db = Firestore.firestore()
+
         do {
             // Fetch 'product' documents from the 'products' collection
-            var snapshot = try await db.collection("products")
-                .whereField("categoryID", isEqualTo: product.categoryID)
-                .limit(to: 5)
-                .getDocuments()
-            
+            var snapshot = try await db.collection("products").whereField("categoryID", in: categories).getDocuments()
+
             // Map fetched documents to the `products` array
             var products: [any Product] = snapshot.documents.compactMap { d in
                 // Decode document's categoryID to determine what product type it is
@@ -123,22 +65,22 @@ class ProductDetailViewModel : ObservableObject {
                 }
                 return nil
             }
-            
+
             // Check if no products were fetched from last request
             if products.isEmpty {
                 print("No products returned from request")
                 return
             }
-            
+
             // Check if a user is logged in
             guard let user = Auth.auth().currentUser else {
                 print("Failed to get signed in user to fetch favorites")
                 return
             }
-            
+
             // Fetch 'favorite' documents from the logged in user's 'favorites' collection that were already fetched in the last request
             snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productID", in: fetchedProductIDs).getDocuments()
-            
+
             for document in snapshot.documents {
                 do {
                     // Decode as a FavoriteProduct
@@ -159,6 +101,8 @@ class ProductDetailViewModel : ObservableObject {
                 }
             }
             
+            self.tempCategories = categories
+
             // Ensure the products array wont change while being sent to the main thread by making it constant
             let sendableProducts = products
             await MainActor.run(body: {

@@ -105,7 +105,6 @@ struct HomeView: View {
                         ) {
                             ForEach(viewModel.products, id: \.id) { product in
                                 ProductCardView(product: product)
-//                                ProductCardView(product: product)
                             }
                         }
                     }

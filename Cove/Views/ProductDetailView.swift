@@ -11,6 +11,7 @@ import FirebaseStorage
 
 struct ProductDetailView: View {
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject var bag: Bag
     @StateObject var viewModel: ProductDetailViewModel
     
     var product: (any Product)?
@@ -195,9 +196,9 @@ struct ProductDetailView: View {
                                     ProductCardView(product: product)
                                 }
                             }
-                            .padding(20)
+                            .padding(50)
                         }
-                        .padding(-20)
+                        .padding(-50)
                         
                     }
                     .padding(20)
@@ -238,10 +239,44 @@ struct ProductDetailView: View {
                 }
                 
                 Button {
+                    
+                    if !self.bag.bagProducts.contains(where: { bagProduct in
+                        bagProduct.product.id == self.product!.id
+                    }) {
+                        self.bag.bagProducts.append(BagProduct(product: self.product!, quantity: count))
+                        self.bag.totalItems += self.count
+                    } else {
+                        // Get the index of the existing product that matches product being added
+                        let indexOfExisting = self.bag.bagProducts.firstIndex { bagProduct in
+                            bagProduct.product.id == self.product!.id
+                        }
+                        // If the index was not found, return
+                        guard let i = indexOfExisting else {
+                            print("Failed to get local index of existing product")
+                            return
+                        }
+                        self.bag.bagProducts[i].quantity += self.count
+                        self.bag.totalItems += self.count
+                    }
+                    
+                    if !self.bag.categories.contains(where: { category in
+                        category == self.product!.categoryID
+                    }) {
+                        self.bag.categories.append(self.product!.categoryID)
+                    }
+//                    let keyExists = self.bag.categories[self.product!.categoryID] != nil
+//
+//                    if keyExists {
+//                        self.bag.categories[self.product!.categoryID]! += 1
+//                    } else {
+//                        self.bag.categories[self.product!.categoryID] = 1
+//                    }
+                    
+                    print(self.bag.bagProducts)
                 } label: {
                     Text("Add to bag")
                 }
-                .buttonStyle(PrimaryButton())
+                .buttonStyle(PrimaryButton(width: .infinity))
             }
             .padding([.top, .leading, .trailing])
             .background {

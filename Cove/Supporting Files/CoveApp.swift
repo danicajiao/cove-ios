@@ -41,6 +41,7 @@ struct CoveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var appState = AppState()
     @StateObject var bag = Bag()
+    @State private var showSplash = true
     
     init() {
         print("init run")
@@ -50,25 +51,60 @@ struct CoveApp: App {
         WindowGroup {
             NavigationStack(path: self.$appState.path) {
                 // Root View
-                SplashView()
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .welcome:
-                            WelcomeView()
-                        case .login:
-                            LogInView()
-                        case .signup:
-                            SignUpView()
-                        case .main:
-                            MainView()
-                                .environmentObject(bag)
-                        case .home:
-                            HomeView()
-                        case .product(let product):
-                            ProductDetailView(product: product)
-                                .environmentObject(bag)
-                        }
+                ZStack {
+                    if showSplash {
+                        SplashView()
+                            .transition(.opacity)
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    showSplash.toggle()
+                                }
+                            }
+                    } else {
+                        WelcomeView()
                     }
+                }
+                .animation(.default, value: showSplash)  // << here !!
+                .navigationDestination(for: Path.self) { path in
+                    switch path {
+                    case .welcome:
+                        WelcomeView()
+                    case .login:
+                        LogInView()
+                    case .signup:
+                        SignUpView()
+                    case .main:
+                        MainView()
+                            .environmentObject(bag)
+                    case .home:
+                        HomeView()
+                    case .product(let product):
+                        ProductDetailView(product: product)
+                            .environmentObject(bag)
+                    }
+                }
+
+                
+                    
+//                SplashView()
+//                    .navigationDestination(for: Path.self) { path in
+//                        switch path {
+//                        case .welcome:
+//                            WelcomeView()
+//                        case .login:
+//                            LogInView()
+//                        case .signup:
+//                            SignUpView()
+//                        case .main:
+//                            MainView()
+//                                .environmentObject(bag)
+//                        case .home:
+//                            HomeView()
+//                        case .product(let product):
+//                            ProductDetailView(product: product)
+//                                .environmentObject(bag)
+//                        }
+//                    }
             }
             .environmentObject(self.appState)
             .onOpenURL { url in

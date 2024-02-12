@@ -15,22 +15,20 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 20) {
             Text("Cove")
-                .font(.custom("Getaway", size: 50))
+                .font(.custom("Getaway", size: 60))
+            
+            Spacer()
             
             VStack(spacing: 0) {
                 Text("For the conscious")
-                    .font(.custom("Poppins-SemiBold", size: 22))
+                    .font(.custom("Poppins-SemiBold", size: 25))
                 Text("shopper")
-                    .font(.custom("Poppins-SemiBold", size: 22))
+                    .font(.custom("Poppins-SemiBold", size: 25))
                     .offset(x: 0, y: -5)
             }
             
-            Image("welcome-illustration")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-            
-            Text("Use your purchasing power to support ethical trade.")
-                .font(.custom("Poppins-Regular", size: 14))
+            Text("Login with credentials or with an external provider")
+                .font(.custom("Poppins-Regular", size: 15))
                 .multilineTextAlignment(.center)
             
 //            NavigationLink(value: Path.login) {
@@ -89,7 +87,12 @@ struct WelcomeView: View {
         }
         .padding(30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.backdropColor)
+        .background {
+            Image("welcome-background")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
+        }
         .navigationBarBackButtonHidden(true)
         .onAppear {
             print(self.appState.path)

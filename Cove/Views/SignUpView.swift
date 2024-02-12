@@ -18,12 +18,6 @@ struct SignUpView: View {
     @State private var presentAlert = false
     @State private var errorMessage: String? = nil
     
-    enum Field: Hashable {
-            case email
-            case password
-        }
-    
-    @FocusState var focusedField: Field?
     @State var showImage: Bool = true
     
     @State var email = ""
@@ -41,43 +35,28 @@ struct SignUpView: View {
                     .font(.custom("Poppins-SemiBold", size: 18))
             }
             
-            if (showImage == true) {
-                Image("signup-illustration")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            }
-            
             Group {
-                VStack(spacing: 15) {
-                    VStack(spacing: 15) {
-                        HStack {
-                            Image(systemName: "person.fill")
-                            TextField("Email", text: $email)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .focused($focusedField, equals: .email)
-                        }
-                        
-                        Color.black.frame(height: 2)
+                VStack(spacing: 0) {
+                    HStack {
+                        Image(systemName: "person.fill")
+                        TextField("Email", text: $email)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .font(.custom("Poppins", size: 14))
                     }
+                    .padding(15)
                     
-                    VStack(spacing: 15) {
-                        HStack {
-                            Image(systemName: "lock.fill")
-                            SecureField("Password", text: $password)
-                                .focused($focusedField, equals: .password)
-                        }
-                        
-                        Color.black.frame(height: 2)
+                    Color.secondaryColor.frame(height: 1)
+                        .padding(.horizontal, 15)
+
+                    HStack {
+                        Image(systemName: "lock.fill")
+                        SecureField("Password", text: $password)
+                        .font(.custom("Poppins", size: 14))
                     }
+                    .padding(15)
                 }
-                .onChange(of: focusedField) { focusedField in
-                    if focusedField != nil {
-                        withAnimation {
-                            showImage = false
-                        }
-                    }
-                }
+                .background(Color.white.clipShape(RoundedRectangle(cornerRadius: 10)))
             }
             
             Button {
@@ -126,7 +105,12 @@ struct SignUpView: View {
         }
         .padding(.horizontal, 30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.backdropColor)
+        .background {
+            Image("login-background")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
+        }
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .topLeading) {
             Button {

@@ -1,4 +1,4 @@
-# Cove - A Mock Ethical Marketplace
+# Cove - A Mock Curated Marketplace
 
 Cove is my passion project of a mock, curated marketplace of ethical businesses and quality producers. I work on this project to explore native iOS Development, UX/UI design, mobile CI/CD, and the Google Cloud Platform with Firebase.
 

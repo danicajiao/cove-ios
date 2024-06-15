@@ -61,7 +61,8 @@ struct CoveApp: App {
                                 }
                             }
                     } else {
-                        WelcomeView()
+//                        WelcomeView()
+                        OnboardingView()
                     }
                 }
                 .animation(.default, value: showSplash)  // << here !!

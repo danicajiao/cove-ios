@@ -1,10 +1,9 @@
 # Cove - A Mock Curated Marketplace
-
-Cove is my passion project of a mock, curated marketplace of ethical businesses and quality producers. I work on this project to explore native iOS Development, UX/UI design, mobile CI/CD, and the Google Cloud Platform with Firebase.
-
 <img width="1440" alt="Screenshot 2023-04-20 at 2 17 53 PM" src="https://user-images.githubusercontent.com/24427074/233455204-1528c0df-2fab-43d2-a909-632d9f11f16c.png">
 
 ## About
+
+Cove is my passion project of a mock, curated marketplace of ethical businesses and quality producers. I work on this project to explore native iOS Development, UX/UI design, mobile CI/CD, and the Google Cloud Platform with Firebase.
 
 This repository contains the source files for the Xcode project.
 - Supports iOS 16+
@@ -53,6 +52,28 @@ This repository contains the source files for the Xcode project.
 <img src="https://user-images.githubusercontent.com/24427074/233480170-2558c859-fb3a-4580-9366-eb394ee4edab.gif" width="20%"/>
 
 GIFs created with [Kap](https://getkap.co/).
+
+## Contributing
+
+### Branching
+This project follows trunk-based development where each branch is tied to an Issue. This projects Issues can be found [here](https://github.com/danicajiao/cove-ios/issues).
+
+For example, to start working on an Issue with id `#14` and label `feature` the convention is to name the branch `feature/14-issue-desc`. That is, all lowercase, starting
+with the label, followed by a forward-slash, then a short description starting with the Issue id in kebab case.
+
+Here are some more examples:
+- `feature/21-another-desc`
+- `bug/3-bug-desc`
+- `docs/10-doc-impl`
+
+### Pull Requests
+In order to make best use of GitHubs auto-referencing feature, pull request titles should start with the Issue it relates to like follows:
+- `#21 This is the PR title for Issue 21`
+- `#3 This is the PR title for Issue 3`
+
+This will then auto-link the PR to the issue for consistency and ease.
+
+Once a pull request is made, a contributor will review it as soon as possible.
 
 ## More to come!
 

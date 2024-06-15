@@ -108,7 +108,7 @@ tags
 [._]*.un~
 
 ### Xcode ###
-**/Info.plist
+**/*.plist
 
 ## Xcode 8 and earlier
 

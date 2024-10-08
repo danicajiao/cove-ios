@@ -8,7 +8,7 @@
 import SwiftUI
 
 class ImageLoader: ObservableObject {
-//    @Published var image: UIImage? = nil
+    @Published var image: UIImage? = nil
     private let imageNames: [String] = [
         "onboarding-1",
         "onboarding-2",
@@ -25,10 +25,10 @@ class ImageLoader: ObservableObject {
 
     private func loadImages() {
         imageNames.forEach { name in
-//            if let cachedImage = imageCache.object(forKey: name as NSString) {
-//                image = cachedImage
-//                return
-//            }
+            if let cachedImage = imageCache.object(forKey: name as NSString) {
+                image = cachedImage
+                return
+            }
 
             guard let image = UIImage(named: name) else { return }
             
@@ -63,16 +63,16 @@ struct OnboardingView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Image(uiImage: imageLoader.imageCache.object(forKey: items[activeIndex].imageName as NSString) ?? UIImage())
-                      .resizable()
-                      .aspectRatio(contentMode: .fill)
-                      .frame(maxWidth: geo.size.width)
-                      .ignoresSafeArea()
-//                Image(items[activeIndex].imageName)
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
-//                    .frame(maxWidth: geo.size.width)
-//                    .ignoresSafeArea()
+//                Image(uiImage: UIImage())
+//                      .resizable()
+//                      .aspectRatio(contentMode: .fill)
+//                      .frame(maxWidth: geo.size.width)
+//                      .ignoresSafeArea()
+                Image(items[activeIndex].imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: geo.size.width)
+                    .ignoresSafeArea()
                 VStack {
                     Spacer()
                     

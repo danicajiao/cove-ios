@@ -122,7 +122,7 @@ class HomeViewModel: ObservableObject {
         
         do {
             // Fetch 'brand' documents from the 'brands' collection
-            var snapshot = try await db.collection("brands").getDocuments()
+            let snapshot = try await db.collection("brands").getDocuments()
             
             // Map fetched documents to the `brands` array
             let brands: [Brand] = snapshot.documents.compactMap { d in

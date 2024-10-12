@@ -40,7 +40,7 @@ struct LogInView: View {
                     }
                     .padding(15)
                     
-                    Color.secondaryColor.frame(height: 1)
+                    Color.grey.frame(height: 1)
                         .padding(.horizontal, 15)
 
                     HStack {

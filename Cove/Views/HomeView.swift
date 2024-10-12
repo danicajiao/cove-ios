@@ -36,7 +36,7 @@ struct HomeView: View {
                         .resizable()
                         .frame(width: 25, height: 25)
                         .padding(EdgeInsets(top: 28, leading: 0, bottom: 0, trailing: 0))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                 }
                 .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 
@@ -45,7 +45,7 @@ struct HomeView: View {
                     .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
                     .overlay {
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.secondaryColor, lineWidth: 1)
+                            .stroke(Color.grey, lineWidth: 1)
                     }
                     .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                 
@@ -57,7 +57,7 @@ struct HomeView: View {
                         // TODO: Navigate to Categories scene
                         Button("See all \(Image(systemName: "arrow.forward"))") {
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                     }
                     .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     
@@ -79,7 +79,7 @@ struct HomeView: View {
                         // TODO: Navigate to Categories scene
                         Button("See all \(Image(systemName: "arrow.forward"))") {
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                     }
                     .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     
@@ -94,7 +94,7 @@ struct HomeView: View {
                         Spacer()
 //                        Button("See all \(Image(systemName: "arrow.forward"))") {
 //                        }
-//                        .foregroundColor(.primaryColor)
+//                        .foregroundColor(.accent)
                     }
                     
                     if !viewModel.products.isEmpty {
@@ -123,7 +123,7 @@ struct HomeView: View {
                         Spacer()
                         Button("See all \(Image(systemName: "arrow.forward"))") {
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                     }
                     .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     
@@ -141,7 +141,7 @@ struct HomeView: View {
                                     }
                                     Text(brand.name)
                                         .font(Font.custom("Poppins-Regular", size: 14))
-                                        .foregroundColor(.secondaryColor)
+                                        .foregroundColor(.grey)
                                         .frame(width: 100)
                                         .multilineTextAlignment(.center)
                                 }
@@ -159,7 +159,7 @@ struct HomeView: View {
 //                        // TODO: Navigate to Browse scene
 //                        Button("See all \(Image(systemName: "arrow.forward"))") {
 //                        }
-//                        .foregroundColor(.primaryColor)
+//                        .foregroundColor(.accent)
 //                    }
 //                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
 //

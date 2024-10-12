@@ -49,7 +49,7 @@ struct BannerButton: View {
                                     .font(Font.custom("Poppins-Regular", size: 12))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .foregroundColor(.quaternaryColor)
+                            .foregroundColor(.quaternary)
                             .padding(10)
                         }
                         .padding(10)
@@ -73,10 +73,10 @@ struct BannerButton: View {
                 VStack(alignment: .leading) {
                     Text("New")
                         .font(Font.custom("Poppins-Semibold", size: 36))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                     Text("Stumpton Huye Mountain")
                         .font(Font.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                 }
                 .offset(x: -70, y: 0)
             }

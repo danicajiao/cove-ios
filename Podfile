@@ -32,7 +32,12 @@ post_install do |installer|
     end
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
+      # Disable code signing for all Pods
       config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+      config.build_settings['CODE_SIGN_IDENTITY'] = ''
+      # Enable Clang Module Verifier
+      config.build_settings['CLANG_MODULES_ENABLE_VERIFIER_TOOL'] = 'NO'
 #      xcconfig_path = config.base_configuration_reference.real_path
 #      xcconfig = File.read(xcconfig_path)
 #      xcconfig_mod = xcconfig.gsub(/DT_TOOLCHAIN_DIR/, "TOOLCHAIN_DIR")

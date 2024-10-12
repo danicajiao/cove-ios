@@ -137,7 +137,7 @@ struct BagView: View {
                 self.bag.totalItems += bagProduct.quantity
             }
         }
-        .onChange(of: bag.bagProducts) { newValue in
+        .onChange(of: bag.bagProducts) {
             print("Bag product changed!")
             self.bag.total = 0
             self.bag.totalItems = 0

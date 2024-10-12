@@ -115,7 +115,7 @@ struct ProductDetailView: View {
                             HStack {
                                 Text("$\(Int(self.price))")
                                     .font(Font.custom("Poppins-SemiBold", size: 22))
-                                    .foregroundColor(.primaryColor)
+                                    .foregroundColor(.accent)
 
                                 Spacer()
 
@@ -128,7 +128,7 @@ struct ProductDetailView: View {
                                         .resizable()
                                         .frame(width: 20, height: 20)
                                 }
-                                .foregroundColor(.primaryColor)
+                                .foregroundColor(.accent)
                                 .disabled(count == 1 ? true : false)
 
                                 Text(String(count))
@@ -144,7 +144,7 @@ struct ProductDetailView: View {
                                         .resizable()
                                         .frame(width: 20, height: 20)
                                 }
-                                .foregroundColor(.primaryColor)
+                                .foregroundColor(.accent)
                                 .disabled(count == 15 ? true : false)
                             }
                         }
@@ -160,7 +160,7 @@ struct ProductDetailView: View {
                                     }
                                     Text("22 Reviews \(Image(systemName: "chevron.right"))")
                                         .font(Font.custom("Poppins-Regular", size: 14))
-                                        .foregroundColor(.secondaryColor)
+                                        .foregroundColor(.grey)
                                 }
 
                                 Spacer()
@@ -178,7 +178,7 @@ struct ProductDetailView: View {
                             .padding(10)
                             .background {
                                 Rectangle()
-                                    .foregroundColor(.tertiaryColor)
+                                    .foregroundColor(.tertiary)
                             }
                             .cornerRadius(8)
                         }
@@ -231,7 +231,7 @@ struct ProductDetailView: View {
             HStack {
                 if let product = self.product {
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.backgroundColor, lineWidth: 1)
+                        .stroke(Color.background, lineWidth: 1)
                         .frame(width: 55, height: 55)
                         .overlay {
                             LikeButton(enabled: product.isFavorite ?? false)
@@ -282,7 +282,7 @@ struct ProductDetailView: View {
             .background {
                 Color.white.ignoresSafeArea()
             }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.backgroundColor), alignment: .top)
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.background), alignment: .top)
         }
         .navigationBarHidden(true)
         .onAppear {

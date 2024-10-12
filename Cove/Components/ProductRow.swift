@@ -18,7 +18,7 @@ struct ProductRow: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .background {
-                            Color.backdropColor
+                            Color.backdrop
                         }
                         .cornerRadius(10)
                 } placeholder: {
@@ -33,7 +33,7 @@ struct ProductRow: View {
                         .font(Font.custom("Poppins-Regular", size: 12))
                     Text(coffeeProduct.info.roastery)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.secondaryColor)
+                        .foregroundColor(.grey)
                     
                     Spacer()
                     
@@ -47,7 +47,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
@@ -63,7 +63,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -74,12 +74,12 @@ struct ProductRow: View {
 //                    Image(systemName: "x.circle")
 //                        .resizable()
 //                        .aspectRatio(contentMode: .fit)
-//                        .foregroundColor(.primaryColor)
+//                        .foregroundColor(.accent)
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(coffeeProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                 }
             }
             .frame(height: 80)
@@ -103,7 +103,7 @@ struct ProductRow: View {
                         .font(Font.custom("Poppins-Regular", size: 12))
                     Text(musicProduct.info.artist)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.secondaryColor)
+                        .foregroundColor(.grey)
                     
                     Spacer()
                     
@@ -117,7 +117,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
@@ -133,7 +133,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -144,12 +144,12 @@ struct ProductRow: View {
 //                    Image(systemName: "x.circle")
 //                        .resizable()
 //                        .aspectRatio(contentMode: .fit)
-//                        .foregroundColor(.primaryColor)
+//                        .foregroundColor(.accent)
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(musicProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                 }
             }
             .frame(height: 80)
@@ -173,7 +173,7 @@ struct ProductRow: View {
                         .font(Font.custom("Poppins-Regular", size: 12))
                     Text(apparelProduct.info.brand)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.secondaryColor)
+                        .foregroundColor(.grey)
                     
                     Spacer()
                     
@@ -187,7 +187,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
                         
                         Text(String(bagProduct.quantity))
@@ -203,7 +203,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -214,12 +214,12 @@ struct ProductRow: View {
 //                    Image(systemName: "x.circle")
 //                        .resizable()
 //                        .aspectRatio(contentMode: .fit)
-//                        .foregroundColor(.primaryColor)
+//                        .foregroundColor(.accent)
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(apparelProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.primaryColor)
+                        .foregroundColor(.accent)
                 }
             }
             .frame(height: 80)

@@ -19,7 +19,7 @@ struct RatingView: View {
     var onImage = Image(systemName: "star.fill")
 
     var offColor = Color.gray
-    var onColor = Color.starColor
+    var onColor = Color.star
     
     var body: some View {
         HStack(spacing: 0) {

@@ -47,7 +47,7 @@ struct ProductCardView: View {
             NavigationLink(value: Path.product(product)) {
                 VStack {
                     Rectangle()
-                        .foregroundColor(.backgroundColor)
+                        .foregroundColor(.background)
                         .cornerRadius(8)
                         .overlay {
                             let imageURL = URL(string: product.defaultImageURL)
@@ -64,12 +64,12 @@ struct ProductCardView: View {
                     VStack {
                         Text(headerStr)
                             .font(Font.custom("Poppins-SemiBold", size: 14))
-                            .foregroundColor(.secondaryColor)
+                            .foregroundColor(.grey)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
                         Text(bodyStr)
                             .font(Font.custom("Poppins-Regular", size: 14))
-                            .foregroundColor(.secondaryColor)
+                            .foregroundColor(.grey)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
                         Text("$\(Int(self.price))")
@@ -84,14 +84,14 @@ struct ProductCardView: View {
                         .frame(height: 160)
                         .cornerRadius(8)
                         .foregroundColor(.white)
-                        .shadow(color: .dropShadowColor, radius: 20)
+                        .shadow(color: .dropShadow, radius: 20)
                 }
                 .frame(width: 160, height: 250)
             }
             .buttonStyle(PlainButtonStyle())
             
             LikeButton(enabled: self.favorited)
-                .shadow(color: .dropShadowColor, radius: 20)
+                .shadow(color: .dropShadow, radius: 20)
                 .padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 5))
 
         }
@@ -120,12 +120,12 @@ struct ProductCardView: View {
 //                    VStack {
 //                        Text(headerStr)
 //                            .font(Font.custom("Poppins-SemiBold", size: 14))
-//                            .foregroundColor(.secondaryColor)
+//                            .foregroundColor(.greyColor)
 //                            .frame(maxWidth: .infinity, alignment: .leading)
 //
 //                        Text(bodyStr)
 //                            .font(Font.custom("Poppins-Regular", size: 14))
-//                            .foregroundColor(.secondaryColor)
+//                            .foregroundColor(.greyColor)
 //                            .frame(maxWidth: .infinity, alignment: .leading)
 //
 //                        Text("$" + String(self.price))

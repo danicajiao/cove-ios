@@ -3,115 +3,40 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		C053146BB3AD1333A825C99A /* Pods_Cove.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC93EEC9F4D8247905F3CE0 /* Pods_Cove.framework */; };
-		D000C15729620255006FE2DA /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000C15629620255006FE2DA /* SignUpView.swift */; };
-		D0113351294BCDCA0055971A /* Getaway.otf in Resources */ = {isa = PBXBuildFile; fileRef = D0113350294BCDCA0055971A /* Getaway.otf */; };
-		D011D2EB27D735FA00E280CE /* Product.swift in Sources */ = {isa = PBXBuildFile; fileRef = D011D2EA27D735FA00E280CE /* Product.swift */; };
-		D015941029D20A7E004E649B /* ApparelProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = D015940F29D20A7E004E649B /* ApparelProduct.swift */; };
-		D01DE260294993C200A64910 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D01DE25E294993C200A64910 /* Poppins-Regular.ttf */; };
-		D01DE261294993C200A64910 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D01DE25F294993C200A64910 /* Poppins-SemiBold.ttf */; };
-		D0265B3327DC1ECD004E23F9 /* OriginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0265B3227DC1ECD004E23F9 /* OriginButton.swift */; };
-		D0291496294F08EA0013EAA9 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0291495294F08EA0013EAA9 /* SplashView.swift */; };
-		D029149A29518DFD0013EAA9 /* SocialButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D029149929518DFD0013EAA9 /* SocialButton.swift */; };
-		D02B2FB627BD7E61004732CB /* CoveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02B2FB527BD7E61004732CB /* CoveApp.swift */; };
-		D02B2FB827BD7E61004732CB /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02B2FB727BD7E61004732CB /* HomeView.swift */; };
-		D02B2FBA27BD7E62004732CB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D02B2FB927BD7E62004732CB /* Assets.xcassets */; };
-		D02B2FBD27BD7E62004732CB /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D02B2FBC27BD7E62004732CB /* Preview Assets.xcassets */; };
-		D04872552B6D974500BEE566 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D04872542B6D974500BEE566 /* LaunchScreen.storyboard */; };
-		D048F6B42829A731009CD571 /* RatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048F6B32829A731009CD571 /* RatingView.swift */; };
-		D04D2EC228277B7D001ED21A /* TabState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2EC128277B7D001ED21A /* TabState.swift */; };
-		D0502BFD293FD00000AC1255 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D0502BFC293FD00000AC1255 /* GoogleService-Info.plist */; };
-		D051E78729E32F90007BD5EA /* ProductDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D051E78629E32F90007BD5EA /* ProductDetailViewModel.swift */; };
-		D051E78929E3308B007BD5EA /* ProductDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = D051E78829E3308B007BD5EA /* ProductDetails.swift */; };
-		D051E78B29E349FE007BD5EA /* MusicProductDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = D051E78A29E349FE007BD5EA /* MusicProductDetails.swift */; };
-		D05D7338294A6ED500675205 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05D7337294A6ED500675205 /* PrimaryButton.swift */; };
-		D05EA85729E5F2E4007A25FC /* CoffeeProductDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EA85629E5F2E4007A25FC /* CoffeeProductDetails.swift */; };
-		D05EA85929E5F657007A25FC /* ApparelProductDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EA85829E5F657007A25FC /* ApparelProductDetails.swift */; };
-		D05EA85B29E71ED8007A25FC /* ProductDetailTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EA85A29E71ED8007A25FC /* ProductDetailTabs.swift */; };
-		D05EA85E29E74591007A25FC /* ProductTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EA85D29E74591007A25FC /* ProductTypes.swift */; };
-		D069A31327D9126400C5FFCF /* LikeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31227D9126400C5FFCF /* LikeButton.swift */; };
-		D069A31527D9391C00C5FFCF /* CoffeeCategoryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31427D9391C00C5FFCF /* CoffeeCategoryButton.swift */; };
-		D069A31727D95E2700C5FFCF /* BannerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31627D95E2700C5FFCF /* BannerButton.swift */; };
-		D069A31927D9C9B300C5FFCF /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069A31827D9C9B300C5FFCF /* MainView.swift */; };
-		D06B593428284D5500B26053 /* ProductDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06B593328284D5500B26053 /* ProductDetailView.swift */; };
-		D0785F9D294EBDEE0012D1F8 /* ProfileTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0785F9C294EBDEE0012D1F8 /* ProfileTabView.swift */; };
-		D07E194629B555110005BA36 /* LargeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07E194529B555110005BA36 /* LargeButton.swift */; };
-		D083C99929F7332400456322 /* BagViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D083C99829F7332400456322 /* BagViewModel.swift */; };
-		D08608EC2940223200C30E87 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608EB2940223200C30E87 /* ColorExtension.swift */; };
-		D08608EE294023D900C30E87 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608ED294023D900C30E87 /* HomeViewModel.swift */; };
-		D08608F0294067E700C30E87 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08608EF294067E700C30E87 /* WelcomeView.swift */; };
-		D08D5EAD294C492100D14DE6 /* LogInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D5EAC294C492100D14DE6 /* LogInView.swift */; };
-		D08D5EB1294C64EE00D14DE6 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D5EB0294C64EE00D14DE6 /* AppState.swift */; };
-		D08FD52829B6714000880E77 /* MusicProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08FD52729B6714000880E77 /* MusicProduct.swift */; };
-		D08FD52A29B6729100880E77 /* CoffeeProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08FD52929B6729100880E77 /* CoffeeProduct.swift */; };
-		D09D1F3529CA454200B7CF70 /* FavoriteProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D1F3429CA454200B7CF70 /* FavoriteProduct.swift */; };
-		D0A561D629D36BE7004BCCCA /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A561D529D36BE7004BCCCA /* Brand.swift */; };
-		D0B9A2DD29EDDCE900B532C5 /* BagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B9A2DC29EDDCE900B532C5 /* BagView.swift */; };
-		D0B9A2DF29EDE1AC00B532C5 /* ProductRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B9A2DE29EDE1AC00B532C5 /* ProductRow.swift */; };
-		D0B9A2E129EF0DB600B532C5 /* Bag.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B9A2E029EF0DB600B532C5 /* Bag.swift */; };
-		D0D3C27527D5531D00BD4E39 /* ProductCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3C27427D5531D00BD4E39 /* ProductCardView.swift */; };
-		D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4DC93EEC9F4D8247905F3CE0 /* Pods_Cove.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Cove.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D000C15629620255006FE2DA /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
-		D0113350294BCDCA0055971A /* Getaway.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Getaway.otf; sourceTree = "<group>"; };
-		D011D2EA27D735FA00E280CE /* Product.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Product.swift; sourceTree = "<group>"; };
-		D015940F29D20A7E004E649B /* ApparelProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApparelProduct.swift; sourceTree = "<group>"; };
-		D01DE25E294993C200A64910 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Regular.ttf"; sourceTree = "<group>"; };
-		D01DE25F294993C200A64910 /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
-		D0265B3227DC1ECD004E23F9 /* OriginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginButton.swift; sourceTree = "<group>"; };
-		D0291495294F08EA0013EAA9 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
-		D029149929518DFD0013EAA9 /* SocialButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialButton.swift; sourceTree = "<group>"; };
 		D02B2FB227BD7E61004732CB /* Cove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cove.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D02B2FB527BD7E61004732CB /* CoveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoveApp.swift; sourceTree = "<group>"; };
-		D02B2FB727BD7E61004732CB /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		D02B2FB927BD7E62004732CB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D02B2FBC27BD7E62004732CB /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		D02B2FC927BD7FC3004732CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D04872542B6D974500BEE566 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		D048F6B32829A731009CD571 /* RatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingView.swift; sourceTree = "<group>"; };
-		D04D2EC128277B7D001ED21A /* TabState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabState.swift; sourceTree = "<group>"; };
-		D0502BFC293FD00000AC1255 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		D051E78629E32F90007BD5EA /* ProductDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailViewModel.swift; sourceTree = "<group>"; };
-		D051E78829E3308B007BD5EA /* ProductDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetails.swift; sourceTree = "<group>"; };
-		D051E78A29E349FE007BD5EA /* MusicProductDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicProductDetails.swift; sourceTree = "<group>"; };
-		D05D7337294A6ED500675205 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
-		D05EA85629E5F2E4007A25FC /* CoffeeProductDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeProductDetails.swift; sourceTree = "<group>"; };
-		D05EA85829E5F657007A25FC /* ApparelProductDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApparelProductDetails.swift; sourceTree = "<group>"; };
-		D05EA85A29E71ED8007A25FC /* ProductDetailTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailTabs.swift; sourceTree = "<group>"; };
-		D05EA85D29E74591007A25FC /* ProductTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductTypes.swift; sourceTree = "<group>"; };
-		D069A31227D9126400C5FFCF /* LikeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeButton.swift; sourceTree = "<group>"; };
-		D069A31427D9391C00C5FFCF /* CoffeeCategoryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeCategoryButton.swift; sourceTree = "<group>"; };
-		D069A31627D95E2700C5FFCF /* BannerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerButton.swift; sourceTree = "<group>"; };
-		D069A31827D9C9B300C5FFCF /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
-		D06B593328284D5500B26053 /* ProductDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailView.swift; sourceTree = "<group>"; };
-		D0785F9C294EBDEE0012D1F8 /* ProfileTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileTabView.swift; sourceTree = "<group>"; };
-		D07E194529B555110005BA36 /* LargeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButton.swift; sourceTree = "<group>"; };
-		D083C99829F7332400456322 /* BagViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BagViewModel.swift; sourceTree = "<group>"; };
-		D08608EB2940223200C30E87 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
-		D08608ED294023D900C30E87 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
-		D08608EF294067E700C30E87 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
-		D08D5EAC294C492100D14DE6 /* LogInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogInView.swift; sourceTree = "<group>"; };
-		D08D5EB0294C64EE00D14DE6 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		D08FD52729B6714000880E77 /* MusicProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicProduct.swift; sourceTree = "<group>"; };
-		D08FD52929B6729100880E77 /* CoffeeProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeProduct.swift; sourceTree = "<group>"; };
-		D09D1F3429CA454200B7CF70 /* FavoriteProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteProduct.swift; sourceTree = "<group>"; };
-		D0A561D529D36BE7004BCCCA /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
-		D0B9A2DC29EDDCE900B532C5 /* BagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BagView.swift; sourceTree = "<group>"; };
-		D0B9A2DE29EDE1AC00B532C5 /* ProductRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRow.swift; sourceTree = "<group>"; };
-		D0B9A2E029EF0DB600B532C5 /* Bag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bag.swift; sourceTree = "<group>"; };
-		D0D3C27427D5531D00BD4E39 /* ProductCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductCardView.swift; sourceTree = "<group>"; };
-		D0E07CA62953BE7000C3CE17 /* Cove.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cove.entitlements; sourceTree = "<group>"; };
-		D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomUIView.swift; sourceTree = "<group>"; };
 		D3D1A2308FF70ACBB9A98231 /* Pods-Cove.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cove.release.xcconfig"; path = "Target Support Files/Pods-Cove/Pods-Cove.release.xcconfig"; sourceTree = "<group>"; };
 		F1D4D158FF89B4C2BA48706B /* Pods-Cove.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Cove.debug.xcconfig"; path = "Target Support Files/Pods-Cove/Pods-Cove.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D0DA907F2D697BFE0079DDEB /* Exceptions for "Cove" folder in "Cove" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Supporting Files/Info.plist",
+			);
+			target = D02B2FB127BD7E61004732CB /* Cove */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D0DA904D2D697BFE0079DDEB /* Cove */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D0DA907F2D697BFE0079DDEB /* Exceptions for "Cove" folder in "Cove" target */,
+			);
+			path = Cove;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D02B2FAF27BD7E61004732CB /* Frameworks */ = {
@@ -145,7 +70,7 @@
 		D02B2FA927BD7E61004732CB = {
 			isa = PBXGroup;
 			children = (
-				D02B2FB427BD7E61004732CB /* Cove */,
+				D0DA904D2D697BFE0079DDEB /* Cove */,
 				D02B2FB327BD7E61004732CB /* Products */,
 				24DE2001B1B3B4E5D7DACA01 /* Pods */,
 				AF0D210CA310EBC3433F7F5F /* Frameworks */,
@@ -160,150 +85,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D02B2FB427BD7E61004732CB /* Cove */ = {
-			isa = PBXGroup;
-			children = (
-				D05EA85C29E7457B007A25FC /* Enums */,
-				D0E07CA62953BE7000C3CE17 /* Cove.entitlements */,
-				D05D7336294A6DB300675205 /* Styles */,
-				D08608EA294021D200C30E87 /* Extensions */,
-				D0E07CA729578B6600C3CE17 /* View Models */,
-				D02B2FCB27BDB1C3004732CB /* Models */,
-				D02B2FCA27BDB1AF004732CB /* Components */,
-				D02B2FCC27BDB1C8004732CB /* Views */,
-				D02B2FCD27BDB1D0004732CB /* Supporting Files */,
-				D02B2FC327BD7ED4004732CB /* Resources */,
-				D02B2FBB27BD7E62004732CB /* Preview Content */,
-			);
-			path = Cove;
-			sourceTree = "<group>";
-		};
-		D02B2FBB27BD7E62004732CB /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				D02B2FBC27BD7E62004732CB /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		D02B2FC327BD7ED4004732CB /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				D02B2FB927BD7E62004732CB /* Assets.xcassets */,
-				D02B2FC427BD7EEC004732CB /* Fonts */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		D02B2FC427BD7EEC004732CB /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-				D0113350294BCDCA0055971A /* Getaway.otf */,
-				D01DE25E294993C200A64910 /* Poppins-Regular.ttf */,
-				D01DE25F294993C200A64910 /* Poppins-SemiBold.ttf */,
-			);
-			path = Fonts;
-			sourceTree = "<group>";
-		};
-		D02B2FCA27BDB1AF004732CB /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				D0E1D97927D1BEFE00A11569 /* CustomUIView.swift */,
-				D0D3C27427D5531D00BD4E39 /* ProductCardView.swift */,
-				D069A31227D9126400C5FFCF /* LikeButton.swift */,
-				D069A31427D9391C00C5FFCF /* CoffeeCategoryButton.swift */,
-				D069A31627D95E2700C5FFCF /* BannerButton.swift */,
-				D0265B3227DC1ECD004E23F9 /* OriginButton.swift */,
-				D07E194529B555110005BA36 /* LargeButton.swift */,
-				D048F6B32829A731009CD571 /* RatingView.swift */,
-				D029149929518DFD0013EAA9 /* SocialButton.swift */,
-				D05EA85A29E71ED8007A25FC /* ProductDetailTabs.swift */,
-				D0B9A2DE29EDE1AC00B532C5 /* ProductRow.swift */,
-			);
-			path = Components;
-			sourceTree = "<group>";
-		};
-		D02B2FCB27BDB1C3004732CB /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				D011D2EA27D735FA00E280CE /* Product.swift */,
-				D04D2EC128277B7D001ED21A /* TabState.swift */,
-				D08D5EB0294C64EE00D14DE6 /* AppState.swift */,
-				D08FD52729B6714000880E77 /* MusicProduct.swift */,
-				D08FD52929B6729100880E77 /* CoffeeProduct.swift */,
-				D09D1F3429CA454200B7CF70 /* FavoriteProduct.swift */,
-				D015940F29D20A7E004E649B /* ApparelProduct.swift */,
-				D0A561D529D36BE7004BCCCA /* Brand.swift */,
-				D051E78829E3308B007BD5EA /* ProductDetails.swift */,
-				D051E78A29E349FE007BD5EA /* MusicProductDetails.swift */,
-				D05EA85629E5F2E4007A25FC /* CoffeeProductDetails.swift */,
-				D05EA85829E5F657007A25FC /* ApparelProductDetails.swift */,
-				D0B9A2E029EF0DB600B532C5 /* Bag.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		D02B2FCC27BDB1C8004732CB /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				D069A31827D9C9B300C5FFCF /* MainView.swift */,
-				D02B2FB727BD7E61004732CB /* HomeView.swift */,
-				D06B593328284D5500B26053 /* ProductDetailView.swift */,
-				D08608EF294067E700C30E87 /* WelcomeView.swift */,
-				D08D5EAC294C492100D14DE6 /* LogInView.swift */,
-				D0785F9C294EBDEE0012D1F8 /* ProfileTabView.swift */,
-				D0291495294F08EA0013EAA9 /* SplashView.swift */,
-				D000C15629620255006FE2DA /* SignUpView.swift */,
-				D0B9A2DC29EDDCE900B532C5 /* BagView.swift */,
-				D04872542B6D974500BEE566 /* LaunchScreen.storyboard */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		D02B2FCD27BDB1D0004732CB /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				D02B2FB527BD7E61004732CB /* CoveApp.swift */,
-				D02B2FC927BD7FC3004732CB /* Info.plist */,
-				D0502BFC293FD00000AC1255 /* GoogleService-Info.plist */,
-			);
-			path = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		D05D7336294A6DB300675205 /* Styles */ = {
-			isa = PBXGroup;
-			children = (
-				D05D7337294A6ED500675205 /* PrimaryButton.swift */,
-			);
-			path = Styles;
-			sourceTree = "<group>";
-		};
-		D05EA85C29E7457B007A25FC /* Enums */ = {
-			isa = PBXGroup;
-			children = (
-				D05EA85D29E74591007A25FC /* ProductTypes.swift */,
-			);
-			path = Enums;
-			sourceTree = "<group>";
-		};
-		D08608EA294021D200C30E87 /* Extensions */ = {
-			isa = PBXGroup;
-			children = (
-				D08608EB2940223200C30E87 /* ColorExtension.swift */,
-			);
-			path = Extensions;
-			sourceTree = "<group>";
-		};
-		D0E07CA729578B6600C3CE17 /* View Models */ = {
-			isa = PBXGroup;
-			children = (
-				D08608ED294023D900C30E87 /* HomeViewModel.swift */,
-				D051E78629E32F90007BD5EA /* ProductDetailViewModel.swift */,
-				D083C99829F7332400456322 /* BagViewModel.swift */,
-			);
-			path = "View Models";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -316,10 +97,14 @@
 				D02B2FAF27BD7E61004732CB /* Frameworks */,
 				D02B2FB027BD7E61004732CB /* Resources */,
 				F30B487BD79AD29C6F1960A7 /* [CP] Embed Pods Frameworks */,
+				F3C0030514A32F87894C6AAE /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D0DA904D2D697BFE0079DDEB /* Cove */,
 			);
 			name = Cove;
 			productName = CoffeeCommerce;
@@ -342,7 +127,6 @@
 				};
 			};
 			buildConfigurationList = D02B2FAD27BD7E61004732CB /* Build configuration list for PBXProject "Cove" */;
-			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -350,6 +134,7 @@
 				Base,
 			);
 			mainGroup = D02B2FA927BD7E61004732CB;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = D02B2FB327BD7E61004732CB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -364,13 +149,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0113351294BCDCA0055971A /* Getaway.otf in Resources */,
-				D0502BFD293FD00000AC1255 /* GoogleService-Info.plist in Resources */,
-				D02B2FBD27BD7E62004732CB /* Preview Assets.xcassets in Resources */,
-				D01DE261294993C200A64910 /* Poppins-SemiBold.ttf in Resources */,
-				D02B2FBA27BD7E62004732CB /* Assets.xcassets in Resources */,
-				D01DE260294993C200A64910 /* Poppins-Regular.ttf in Resources */,
-				D04872552B6D974500BEE566 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -416,6 +194,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Cove/Pods-Cove-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		F3C0030514A32F87894C6AAE /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Cove/Pods-Cove-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Cove/Pods-Cove-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Cove/Pods-Cove-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -423,46 +218,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D08FD52829B6714000880E77 /* MusicProduct.swift in Sources */,
-				D069A31527D9391C00C5FFCF /* CoffeeCategoryButton.swift in Sources */,
-				D069A31927D9C9B300C5FFCF /* MainView.swift in Sources */,
-				D069A31727D95E2700C5FFCF /* BannerButton.swift in Sources */,
-				D08608F0294067E700C30E87 /* WelcomeView.swift in Sources */,
-				D09D1F3529CA454200B7CF70 /* FavoriteProduct.swift in Sources */,
-				D05EA85B29E71ED8007A25FC /* ProductDetailTabs.swift in Sources */,
-				D05EA85E29E74591007A25FC /* ProductTypes.swift in Sources */,
-				D051E78929E3308B007BD5EA /* ProductDetails.swift in Sources */,
-				D08D5EB1294C64EE00D14DE6 /* AppState.swift in Sources */,
-				D08FD52A29B6729100880E77 /* CoffeeProduct.swift in Sources */,
-				D02B2FB827BD7E61004732CB /* HomeView.swift in Sources */,
-				D0785F9D294EBDEE0012D1F8 /* ProfileTabView.swift in Sources */,
-				D0D3C27527D5531D00BD4E39 /* ProductCardView.swift in Sources */,
-				D08608EC2940223200C30E87 /* ColorExtension.swift in Sources */,
-				D05D7338294A6ED500675205 /* PrimaryButton.swift in Sources */,
-				D0A561D629D36BE7004BCCCA /* Brand.swift in Sources */,
-				D04D2EC228277B7D001ED21A /* TabState.swift in Sources */,
-				D0B9A2DF29EDE1AC00B532C5 /* ProductRow.swift in Sources */,
-				D0B9A2DD29EDDCE900B532C5 /* BagView.swift in Sources */,
-				D07E194629B555110005BA36 /* LargeButton.swift in Sources */,
-				D0E1D97A27D1BEFE00A11569 /* CustomUIView.swift in Sources */,
-				D05EA85729E5F2E4007A25FC /* CoffeeProductDetails.swift in Sources */,
-				D011D2EB27D735FA00E280CE /* Product.swift in Sources */,
-				D06B593428284D5500B26053 /* ProductDetailView.swift in Sources */,
-				D08D5EAD294C492100D14DE6 /* LogInView.swift in Sources */,
-				D0265B3327DC1ECD004E23F9 /* OriginButton.swift in Sources */,
-				D083C99929F7332400456322 /* BagViewModel.swift in Sources */,
-				D02B2FB627BD7E61004732CB /* CoveApp.swift in Sources */,
-				D015941029D20A7E004E649B /* ApparelProduct.swift in Sources */,
-				D0B9A2E129EF0DB600B532C5 /* Bag.swift in Sources */,
-				D051E78729E32F90007BD5EA /* ProductDetailViewModel.swift in Sources */,
-				D05EA85929E5F657007A25FC /* ApparelProductDetails.swift in Sources */,
-				D069A31327D9126400C5FFCF /* LikeButton.swift in Sources */,
-				D08608EE294023D900C30E87 /* HomeViewModel.swift in Sources */,
-				D048F6B42829A731009CD571 /* RatingView.swift in Sources */,
-				D051E78B29E349FE007BD5EA /* MusicProductDetails.swift in Sources */,
-				D029149A29518DFD0013EAA9 /* SocialButton.swift in Sources */,
-				D0291496294F08EA0013EAA9 /* SplashView.swift in Sources */,
-				D000C15729620255006FE2DA /* SignUpView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -474,6 +229,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -526,6 +282,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -537,6 +294,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
@@ -582,6 +340,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -595,6 +354,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CODE_SIGN_ENTITLEMENTS = Cove/Cove.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -613,8 +373,9 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
-					"\"-Wl,-no_warn_duplicate_libraries\"",
 					"$(inherited)",
+					"-Xlinker",
+					"-no_warn_duplicate_libraries",
 					"-ObjC",
 					"-l\"c++\"",
 					"-l\"sqlite3\"",
@@ -720,6 +481,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CODE_SIGN_ENTITLEMENTS = Cove/Cove.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -738,8 +500,9 @@
 				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
-					"\"-Wl,-no_warn_duplicate_libraries\"",
 					"$(inherited)",
+					"-Xlinker",
+					"-no_warn_duplicate_libraries",
 					"-ObjC",
 					"-l\"c++\"",
 					"-l\"sqlite3\"",

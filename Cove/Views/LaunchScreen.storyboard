@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-    <device id="retina6_12" orientation="portrait" appearance="light"/>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina6_3" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -12,29 +12,37 @@
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="402" height="874"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="O1L-OA-zSp">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="DefaultTile" translatesAutoresizingMaskIntoConstraints="NO" id="U1a-Io-mPa">
+                                <rect key="frame" x="158" y="394" width="86" height="86.333333333333314"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="cove" translatesAutoresizingMaskIntoConstraints="NO" id="Shy-b9-fRM">
+                                <rect key="frame" x="136" y="668.66666666666663" width="130" height="37"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="37" id="NXU-EF-hR7"/>
+                                </constraints>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="1" green="0.98039215686274506" blue="0.94509803921568625" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstAttribute="trailing" secondItem="O1L-OA-zSp" secondAttribute="trailing" id="95j-vU-lhr"/>
-                            <constraint firstAttribute="bottom" secondItem="O1L-OA-zSp" secondAttribute="bottom" id="ZM7-s7-T0w"/>
-                            <constraint firstItem="O1L-OA-zSp" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="sx0-8Q-Q2f"/>
-                            <constraint firstItem="O1L-OA-zSp" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="tcp-aC-0W1"/>
+                            <constraint firstItem="Shy-b9-fRM" firstAttribute="top" secondItem="U1a-Io-mPa" secondAttribute="bottom" constant="188.5" id="BI6-DP-zUH"/>
+                            <constraint firstItem="Shy-b9-fRM" firstAttribute="centerX" secondItem="U1a-Io-mPa" secondAttribute="centerX" id="J0a-e2-geQ"/>
+                            <constraint firstItem="U1a-Io-mPa" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="U8Z-PE-XPE"/>
+                            <constraint firstItem="U1a-Io-mPa" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="yJ5-AO-1SG"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="Shy-b9-fRM" secondAttribute="bottom" constant="134.33333333333337" id="yh8-7T-srC"/>
                         </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="52.671755725190835" y="374.64788732394368"/>
+            <point key="canvasLocation" x="52.238805970149251" y="374.14187643020591"/>
         </scene>
     </scenes>
     <resources>
-        <image name="splash" width="1000" height="1281"/>
+        <image name="DefaultTile" width="86" height="86"/>
+        <image name="cove" width="130" height="37"/>
     </resources>
 </document>

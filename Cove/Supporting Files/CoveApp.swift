@@ -83,28 +83,6 @@ struct CoveApp: App {
                             .environmentObject(bag)
                     }
                 }
-
-                
-                    
-//                SplashView()
-//                    .navigationDestination(for: Path.self) { path in
-//                        switch path {
-//                        case .welcome:
-//                            WelcomeView()
-//                        case .login:
-//                            LogInView()
-//                        case .signup:
-//                            SignUpView()
-//                        case .main:
-//                            MainView()
-//                                .environmentObject(bag)
-//                        case .home:
-//                            HomeView()
-//                        case .product(let product):
-//                            ProductDetailView(product: product)
-//                                .environmentObject(bag)
-//                        }
-//                    }
             }
             .environmentObject(self.appState)
             .onOpenURL { url in

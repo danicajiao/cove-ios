@@ -31,7 +31,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             open: url,
             sourceApplication: options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String,
             annotation: options[UIApplication.OpenURLOptionsKey.annotation]
-            )
+        )
     }
 }
 
@@ -41,7 +41,7 @@ struct CoveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var appState = AppState()
     @StateObject var bag = Bag()
-    @State private var showSplash = true
+    @StateObject private var networkMonitor = NetworkMonitor()
     
     init() {
         print("init run")
@@ -52,19 +52,15 @@ struct CoveApp: App {
             NavigationStack(path: self.$appState.path) {
                 // Root View
                 ZStack {
-                    if showSplash {
+                    if networkMonitor.isConnected {
+                        WelcomeView()
+                            .transition(.opacity)
+                    } else {
                         SplashView()
                             .transition(.opacity)
-                            .onAppear {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                                    showSplash.toggle()
-                                }
-                            }
-                    } else {
-                        WelcomeView()
                     }
                 }
-                .animation(.default, value: showSplash)  // << here !!
+                .animation(.default, value: networkMonitor.isConnected)
                 .navigationDestination(for: Path.self) { path in
                     switch path {
                     case .welcome:

@@ -6,52 +6,22 @@
 //
 
 import SwiftUI
-import FirebaseAuth
+import RiveRuntime
 
 struct SplashView: View {
-//    @EnvironmentObject var appState: AppState
+    var riveViewModel = RiveViewModel(fileName: "loading_indicator")
     
     var body: some View {
-        
-        GeometryReader { geo in
-            ZStack {
-                Image("splash")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: geo.size.width)
-                    .ignoresSafeArea()
-                Text("Cove")
-                    .font(.custom("Getaway", size: 80))
-                    .foregroundStyle(.white)
-            }
+        ZStack {
+            Color("NewColor")
+                .ignoresSafeArea()
+            riveViewModel.view()
+                .frame(width: 172, height: 172)
+                
+            Image("cove")
+                .offset(y: 250)
         }
-        
-//        ZStack {
-//            VStack {
-//                Spacer()
-//                Image("splash-illustration")
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fill)
-//                    .frame(height: 350)
-//            }
-//            .frame(maxWidth: .infinity, maxHeight: .infinity)
-//            .background(Color.backdropColor)
-//            .ignoresSafeArea(.all, edges: .bottom)
-//            
-//            Text("Cove")
-//                .font(.custom("Getaway", size: 80))
-//        }
-//        .onAppear {
-//            print(self.appState.path)
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-//                guard Auth.auth().currentUser != nil else {
-//                    self.appState.path.append(.welcome)
-//                    return
-//                }
-////                self.appState.path.append(.welcome)
-//                self.appState.path.append(.main)
-//            }
-//        }
+        .ignoresSafeArea()
     }
 }
 

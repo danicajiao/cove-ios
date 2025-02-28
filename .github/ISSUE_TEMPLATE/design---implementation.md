@@ -11,8 +11,8 @@ assignees: ''
 Describe the work the needs to be done in a simple sentence. 
 ### Components
 #### Design
-* Add url(s) to sub-issues regarding required design work
+* Add sub-issue number(s) regarding required design work
 #### Implementation
-* Add url(s) to sub-issues regarding required implementation work
+* Add sub-issues number(s) regarding required implementation work
 ### Notes
 * Add any additional notes

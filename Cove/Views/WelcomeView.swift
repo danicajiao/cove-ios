@@ -7,101 +7,63 @@
 
 import SwiftUI
 import FirebaseAuth
+import RiveRuntime
 
 
 struct WelcomeView: View {
     @EnvironmentObject private var appState: AppState
+    var riveViewModel = RiveViewModel(
+        fileName: "hero",
+        alignment: .topCenter
+    )
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Cove")
-                .font(.custom("Getaway", size: 60))
+            riveViewModel.view()
             
             Spacer()
             
-            VStack(spacing: 0) {
-                Text("For the conscious")
-                    .font(.custom("Poppins-SemiBold", size: 25))
-                Text("shopper")
-                    .font(.custom("Poppins-SemiBold", size: 25))
-                    .offset(x: 0, y: -5)
-            }
-            
-            Text("Login with credentials or with an external provider")
-                .font(.custom("Poppins-Regular", size: 15))
-                .multilineTextAlignment(.center)
-            
-//            NavigationLink(value: Path.login) {
-//                RoundedRectangle(cornerRadius: 10)
-//                    .foregroundColor(.black)
-//                    .frame(maxWidth: .infinity)
-//                    .frame(height: 55)
-//                    .overlay {
-//                        Text("Login")
-//                            .font(.custom("Poppins-SemiBold", size: 14))
-//                            .foregroundColor(.white)
-//                    }
-//            }
-            
-            Button {
-                self.appState.path.append(.login)
-            } label: {
-                Text("Login")
-            }
-            .buttonStyle(PrimaryButton(width: .infinity))
-            
-            HStack {
-                Color.black.frame(height: 1)
-                    .padding(.leading, 60)
-                    .padding(.trailing)
-                Text("or")
-                    .font(.custom("Poppins-Regular", size: 14))
-                Color.black.frame(height: 1)
-                    .padding(.trailing, 60)
-                    .padding(.leading)
-            }
-            
-            HStack(spacing: 30) {
-                SocialButton(socialType: .apple)
-                SocialButton(socialType: .facebook)
-                SocialButton(socialType: .google)
-            }
-            
-            HStack(spacing: 0) {
-                Text("Don't have an account? ")
-                    .font(.custom("Poppins-Regular", size: 14))
-                    .foregroundColor(.gray)
-                // TODO: Add Link to SignUp View
-//                NavigationLink(destination: EmptyView()) {
-//                    Text("Sign Up")
-//                        .font(.custom("Poppins-Regular", size: 14))
-//                }
+            VStack {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("For the conscious")
+                        .font(.custom("gazpacho-black", size: 30))
+                    Text("shopper")
+                        .font(.custom("gazpacho-black", size: 30))
+                    Text("Cove.")
+                        .font(.custom("gazpacho-black", size: 60))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Button {
+                    self.appState.path.append(.login)
+                } label: {
+                    Text("Login")
+                }
+                .buttonStyle(PrimaryButton())
+                
                 Button {
                     self.appState.path.append(.signup)
                 } label: {
-                    Text("Sign up")
-                        .font(.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.black)
+                    Text("Join for free")
                 }
+                .buttonStyle(SecondaryButton())
             }
+            .frame(maxWidth: .infinity)
+            .padding(20)
         }
-        .padding(30)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            Image("welcome-background")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-        }
-        .navigationBarBackButtonHidden(true)
+        .ignoresSafeArea(edges: .top)
         .onAppear {
             print(self.appState.path)
         }
+        .background(Color("NewColor"))
     }
 }
 
 struct WelcomeView_Previews: PreviewProvider {
+    static let appState = AppState()
+    
     static var previews: some View {
         WelcomeView()
+            .environmentObject(appState)
     }
 }

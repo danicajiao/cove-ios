@@ -1,13 +1,13 @@
 //
-//  PrimaryButton.swift
+//  SecondaryButton.swift
 //  Cove
 //
-//  Created by Daniel Cajiao on 12/14/22.
+//  Created by Daniel Cajiao on 2/27/25.
 //
 
 import SwiftUI
 
-struct PrimaryButton: PrimitiveButtonStyle {
+struct SecondaryButton: PrimitiveButtonStyle {
     @State private var isPressed = false
     let width: CGFloat?
     let height: CGFloat?
@@ -19,13 +19,13 @@ struct PrimaryButton: PrimitiveButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.custom("Poppins-Regular", size: 14))
+            .font(.custom("Poppins-SemiBold", size: 14))
             .padding()
-            .foregroundStyle(.black)
+            .foregroundStyle(.white)
             .frame(maxWidth: self.width, maxHeight: self.height)
             .background {
                 Capsule()
-                    .stroke(lineWidth: 2)
+                    .fill(.black)
             }
             .contentShape(.capsule)
             // animation defaults
@@ -44,12 +44,12 @@ struct PrimaryButton: PrimitiveButtonStyle {
     }
 }
 
-struct PrimaryButton_Previews: PreviewProvider {
+struct SecondaryButton_Previews: PreviewProvider {
     static var previews: some View {
         Button("Press Me") {
             print("Button pressed!")
         }
-        .buttonStyle(PrimaryButton())
+        .buttonStyle(SecondaryButton())
         .padding()
     }
 }

@@ -1,6 +1,6 @@
 ---
-name: Design + Implementation
-about: Template for issues that encompass design and implementation work.
+name: Feature Work
+about: Template for feature work that describe design and implementation details.
 title: ''
 labels: design, feature
 assignees: ''
@@ -8,8 +8,8 @@ assignees: ''
 ---
 
 ### Description
-Describe the work the needs to be done in a simple sentence. 
-### Components
+Describe the work the needs to be done in a sentence or two. 
+### Requirements
 #### Design
 * Add sub-issue number(s) regarding required design work
 #### Implementation

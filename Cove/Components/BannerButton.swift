@@ -49,7 +49,7 @@ struct BannerButton: View {
                                     .font(Font.custom("Poppins-Regular", size: 12))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .foregroundColor(.quaternary)
+                            .foregroundColor(.blue)
                             .padding(10)
                         }
                         .padding(10)

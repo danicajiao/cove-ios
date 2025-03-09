@@ -13,7 +13,7 @@ enum SocialType {
     case google
 }
 
-struct SocialButton: View {
+struct SmallSocialButton: View {
     @EnvironmentObject var appState: AppState
     
     @State private var presentAlert = false
@@ -60,7 +60,8 @@ struct SocialButton: View {
             }
         } label: {
             Circle()
-                .foregroundColor(self.color)
+                .fill(self.color)
+                .strokeBorder(.black)
                 .frame(width: 55, height: 55)
                 .overlay {
                     Image(self.imgName)
@@ -75,8 +76,8 @@ struct SocialButton: View {
     }
 }
 
-struct SocialButton_Previews: PreviewProvider {
+struct SmallSocialButton_Previews: PreviewProvider {
     static var previews: some View {
-        SocialButton(socialType: .google)
+        SmallSocialButton(socialType: .google)
     }
 }

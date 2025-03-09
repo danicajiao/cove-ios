@@ -19,13 +19,13 @@ struct PrimaryButton: PrimitiveButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.custom("Poppins-Regular", size: 14))
+            .font(.custom("Lato-Bold", size: 14))
             .padding()
-            .foregroundStyle(.black)
+            .foregroundStyle(.white)
             .frame(maxWidth: self.width, maxHeight: self.height)
             .background {
                 Capsule()
-                    .stroke(lineWidth: 2)
+                    .fill(.black)
             }
             .contentShape(.capsule)
             // animation defaults

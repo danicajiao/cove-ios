@@ -13,7 +13,7 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            Color("NewColor")
+            Color.background
                 .ignoresSafeArea()
             riveViewModel.view()
                 .frame(width: 172, height: 172)

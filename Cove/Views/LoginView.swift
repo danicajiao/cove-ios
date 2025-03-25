@@ -15,8 +15,7 @@ struct LoginView: View {
     @State private var errorMessage: String? = nil
         
     @State var email: String = ""
-    @State var password: String = ""
-        
+    @State var password: String = "" 
     @State var loading: Bool = false
     
     var body: some View {

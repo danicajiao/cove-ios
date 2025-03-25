@@ -6,7 +6,7 @@
 Cove is my passion project of a mock, curated marketplace of ethical businesses and quality producers. I work on this project to explore native iOS Development, UX/UI design, mobile CI/CD, and the Google Cloud Platform with Firebase.
 
 This repository contains the source files for the Xcode project.
-- Supports iOS 16+
+- Supports iOS 18+
 - Uses Firebase for backend
   - Firebase Auth
   - Firestore
@@ -67,15 +67,13 @@ Here are some more examples:
 - `docs/10-doc-impl`
 
 ### Pull Requests
-In order to make best use of GitHubs auto-referencing feature, pull request titles should start with the Issue it relates to like follows:
-- `#21 This is the PR title for Issue 21`
-- `#3 This is the PR title for Issue 3`
+In order to make best use of GitHubs auto-referencing feature, pull request titles or descriptions should contain keywords like "closes" or "resolves" followed by the Issue number it relates to like follows:
+- `This PR closes #21`
+- `This PR resolves danicajiao/cove-ios#3`
 
-This will then auto-link the PR to the issue for consistency and ease.
+This will then auto-link the PR to the issue(s) and will close them once the PR is merged.
 
-Once a pull request is made, a contributor will review it as soon as possible.
-
-## More to come!
+## More to come
 
 Everything seen so far is subject to change overtime as I move along with development.
 

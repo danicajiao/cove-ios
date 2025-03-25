@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-private enum Field: Hashable {
-    case email
-    case password
-}
+//private enum Field: Hashable {
+//    case email
+//    case password
+//}
 
 struct SignUpView: View {
     @EnvironmentObject private var appState: AppState
@@ -70,7 +70,7 @@ struct SignUpView: View {
             } label: {
                 Text("Sign up")
             }
-            .buttonStyle(PrimaryButton(width: .infinity))
+            .buttonStyle(PrimaryButton())
             
             HStack {
                 Color.black.frame(height: 1)
@@ -85,9 +85,9 @@ struct SignUpView: View {
             
             // TODO: Add Links to Social Provider Views
             HStack(spacing: 30) {
-                SocialButton(socialType: .apple)
-                SocialButton(socialType: .facebook)
-                SocialButton(socialType: .google)
+                SmallSocialButton(socialType: .apple)
+                SmallSocialButton(socialType: .facebook)
+                SmallSocialButton(socialType: .google)
             }
             
             HStack(spacing: 0) {

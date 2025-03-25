@@ -23,39 +23,37 @@ struct WelcomeView: View {
             
             Spacer()
             
-            VStack {
+            VStack(alignment: .leading) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("For the conscious")
-                        .font(.custom("gazpacho-black", size: 30))
+                        .font(.custom("Gazpacho-Black", size: 30))
                     Text("shopper")
-                        .font(.custom("gazpacho-black", size: 30))
+                        .font(.custom("Gazpacho-Black", size: 30))
                     Text("Cove.")
-                        .font(.custom("gazpacho-black", size: 60))
+                        .font(.custom("Gazpacho-Heavy", size: 60))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Button {
-                    self.appState.path.append(.login)
-                } label: {
-                    Text("Login")
-                }
-                .buttonStyle(PrimaryButton())
                 
                 Button {
                     self.appState.path.append(.signup)
                 } label: {
                     Text("Join for free")
                 }
+                .buttonStyle(PrimaryButton())
+                
+                Button {
+                    self.appState.path.append(.login)
+                } label: {
+                    Text("Login")
+                }
                 .buttonStyle(SecondaryButton())
             }
-            .frame(maxWidth: .infinity)
             .padding(20)
         }
         .ignoresSafeArea(edges: .top)
+        .background(Color.background)
         .onAppear {
             print(self.appState.path)
         }
-        .background(Color("NewColor"))
     }
 }
 

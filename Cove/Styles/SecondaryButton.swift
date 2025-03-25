@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SecondaryButton: PrimitiveButtonStyle {
+    
     @State private var isPressed = false
     let width: CGFloat?
     let height: CGFloat?
@@ -19,13 +20,14 @@ struct SecondaryButton: PrimitiveButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.custom("Poppins-SemiBold", size: 14))
+            .font(.custom("Lato-Regular", size: 14))
             .padding()
-            .foregroundStyle(.white)
+            .foregroundStyle(.black)
             .frame(maxWidth: self.width, maxHeight: self.height)
             .background {
                 Capsule()
-                    .fill(.black)
+                    .fill(.white)
+                    .strokeBorder(lineWidth: 1)
             }
             .contentShape(.capsule)
             // animation defaults

@@ -178,7 +178,7 @@ struct ProductDetailView: View {
                             .padding(10)
                             .background {
                                 Rectangle()
-                                    .foregroundColor(.tertiary)
+                                    .foregroundColor(.blue)
                             }
                             .cornerRadius(8)
                         }

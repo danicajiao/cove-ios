@@ -19,37 +19,38 @@ struct PrimaryButton: PrimitiveButtonStyle {
     
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.custom("Poppins-Regular", size: 14))
+            .font(.custom("Lato-Bold", size: 14))
             .padding()
-            .foregroundStyle(.black)
-            .frame(maxWidth: self.width, maxHeight: self.height)
+            .frame(maxWidth: self.width)
+            .frame(height: self.height)
+            .foregroundStyle(.white)
             .background {
                 Capsule()
-                    .stroke(lineWidth: 2)
+                    .fill(.black)
             }
-            .contentShape(.capsule)
             // animation defaults
             .opacity(isPressed ? 0.2 : 1)
             .animation(.default, value: isPressed)
-            .gesture(DragGesture(minimumDistance: 0).onChanged { _ in
-                var t = Transaction()
-                t.disablesAnimations = true
-                withTransaction(t) {
-                    isPressed = true
-                }
-            }.onEnded({ _ in
-                isPressed = false
-                configuration.trigger()
-            }))
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        var t = Transaction()
+                        t.disablesAnimations = true
+                        withTransaction(t) {
+                            isPressed = true
+                        }
+                    }.onEnded { _ in
+                        isPressed = false
+                        configuration.trigger()
+                    }
+            )
     }
 }
 
-struct PrimaryButton_Previews: PreviewProvider {
-    static var previews: some View {
-        Button("Press Me") {
-            print("Button pressed!")
-        }
-        .buttonStyle(PrimaryButton())
-        .padding()
+#Preview {
+    Button("Press Me") {
+        print("Button pressed!")
     }
+    .buttonStyle(PrimaryButton())
+    .padding()
 }

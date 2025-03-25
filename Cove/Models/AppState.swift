@@ -83,12 +83,14 @@ class AppState: ObservableObject {
     }
     
     func emailLogIn(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
-        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
+            guard let strongSelf = self else { return }
+            // ...
             if error != nil {
                 onFailure(error)
 //                print(error?.localizedDescription ?? "")
             } else {
-                self.path.append(.main)
+                strongSelf.path.append(.main)
                 onSuccess()
             }
         }

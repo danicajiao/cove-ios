@@ -8,125 +8,129 @@
 import SwiftUI
 import UIKit
 
-struct SecureTextFieldViewRepresentable: UIViewRepresentable {
-    var titleKey: String
-    var font: UIFont?
-    @Binding var text: String
-    @Binding var isSecured: Bool
-    @FocusState.Binding var focus: Field?
-    var fieldType: Field?
+class TestViewController: UIViewController {
+    var textField = UITextField()
+    weak var delegate: UITextFieldDelegate?
+    
+    // Gets called during super.init
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        print("viewDidLoad HIT")
+                
+        textField.delegate = delegate
+        textField.backgroundColor = .yellow
+        textField.translatesAutoresizingMaskIntoConstraints = false
+//        self.view.translatesAutoresizingMaskIntoConstraints = false
+        
+        print("Intrinsic textfield size: \(textField.intrinsicContentSize)")
 
+        self.view.addSubview(textField)
+        
+        print("viewDidLoad -> textField.frame.height \(textField.frame.height)")
+        
+        NSLayoutConstraint.activate([
+            textField.widthAnchor.constraint(equalTo: self.view.widthAnchor),
+//            textField.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.frame.height), // Minimum height of 64 points
+//            textField.heightAnchor.constraint(equalTo: self.view.heightAnchor)
+//            self.view.widthAnchor.constraint(equalToConstant: 64),
+            self.view.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.intrinsicContentSize.height)
+        ])
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        print("viewDidLayoutSubviews HIT")
+        print("viewDidLayoutSubviews -> textField.frame.height \(textField.frame.height)")
+        
+//        NSLayoutConstraint.activate([
+//            self.view.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.frame.height)
+//        ])
+//        
+//        print(self.view.constraints)
+
+    }
+}
+
+struct TestViewRepresentable: UIViewControllerRepresentable {
+    typealias UIViewControllerType = TestViewController
+
+    @Binding var text: String
+    
     class Coordinator: NSObject, UITextFieldDelegate {
-        var titleKey: String
-        @Binding var text: String
-        @Binding var isSecured: Bool
-
-        init(titleKey: String, text: Binding<String>, isSecured: Binding<Bool>) {
-            self.titleKey = titleKey
-            self._text = text
-            self._isSecured = isSecured
+        var parent: TestViewRepresentable
+        
+        init(parent: TestViewRepresentable) {
+            self.parent = parent
         }
-
+        
         func textFieldDidChangeSelection(_ textField: UITextField) {
-            text = textField.text ?? ""
+            parent.text = textField.text ?? ""
+        }
+        
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
         }
     }
-
+    
     func makeCoordinator() -> Coordinator {
-        return Coordinator(titleKey: titleKey, text: $text, isSecured: $isSecured)
-    }
-
-    func makeUIView(context: Context) -> UITextField {
-        let textField = UITextField()
-        textField.isSecureTextEntry = isSecured
-        textField.delegate = context.coordinator
-        
-        // Styling options
-        textField.font = font
-        textField.setContentHuggingPriority(.defaultHigh, for: .vertical)
-//        textField.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        textField.textColor = .black
-//        textField.backgroundColor = .white
-        textField.placeholder = self.titleKey
-//        textField.setValue(UIColor.lightGray, forKeyPath: "placeholderLabel.textColor")
-        
-        return textField
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        uiView.text = text
-        uiView.isSecureTextEntry = isSecured
-        if focus == fieldType {
-            uiView.becomeFirstResponder()
-        } else {
-            uiView.resignFirstResponder()
-        }
-    
-    }
-}
-
-// Any modifiers to adjust your text field – copy self, adjust, then return.
-extension SecureTextFieldViewRepresentable {
-    func font(_ font: UIFont?) -> SecureTextFieldViewRepresentable {
-        var view = self
-        view.font = font
-        return view
+        Coordinator(parent: self)
     }
     
-    func focused(_ binding: FocusState<Field?>.Binding, equals: Field) -> SecureTextFieldViewRepresentable {
-        var view = self
-        view._focus = binding
-        view.fieldType = equals
-        return view
+    func makeUIViewController(context: Context) -> TestViewController {
+        print("makeUIViewController HIT")
+        let viewController = TestViewController()
+        viewController.delegate = context.coordinator // Setting the coordinator as the delegate
+        viewController.textField.text = text
+        print("makeUIViewController -> textField.frame.height \(viewController.textField.frame.height)")
+        return viewController
     }
-}
 
-struct SecureTextField: View {
-    var titleKey: String
-    @Binding var text: String
-    @Binding var isSecured: Bool
-    @FocusState.Binding var focus: Field?
-    
-    var body: some View {
-        VStack(spacing: 5) {
-            Text("Email")
-                .font(.custom("Lato-Bold", size: 12))
-                .frame(maxWidth: .infinity, alignment: .leading)
-            //                .padding(.horizontal)
-                .foregroundStyle(.black.opacity(0.5))
-            SecureTextFieldViewRepresentable(titleKey: titleKey, text: $text, isSecured: $isSecured)
-                .font(UIFont(name: "Lato-Regular", size: 14))
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: 50)
-                .background(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.black, lineWidth: 1)
-                )
-                .focused($focus, equals: Field.password)
-            Button {
-                isSecured.toggle()
-            } label: {
-                Image(systemName: self.isSecured ? "eye.slash" : "eye")
-                    .accentColor(.black.opacity(0.5))
-            }
-        }
+    func updateUIViewController(_ uiViewController: TestViewController, context: Context) {
+        // Update the view controller if needed
+        print("updateUIViewController HIT")
+        uiViewController.textField.text = text
+        print("updateUIViewController -> textField.frame.height \(uiViewController.textField.frame.height)")
     }
 }
 
 #Preview {
-    @Previewable @State var password: String = ""
-    @Previewable @State var isSecured: Bool = false
-    @Previewable @FocusState var focusedField: Field?
-
-    VStack {
-        SecureTextField(titleKey: "Password", text: $password, isSecured: $isSecured)
-        
-        Toggle(isOn: $isSecured) {
-            Text("isSecured")
-        }
-    }
-    .background(Color.background)
-    .padding(20)
+    @Previewable @State var password: String = "hello"
+    @Previewable @State var rightAreaToggle: Bool = true
+    @Previewable @State var bottomAreaToggle: Bool = true
     
+    VStack {
+        Text(password)
+        HStack {
+            TestViewRepresentable(text: $password)
+                .border(.green)
+//                .frame(width: 100, height: 10)
+                .background(Color.blue)
+            if rightAreaToggle {
+                Text("Right of the TextField")
+                    .border(.purple)
+            }
+        }
+        if bottomAreaToggle {
+            HStack {
+                Rectangle()
+                    .fill(Color.green)
+                    .frame(maxWidth: .infinity, maxHeight: 100)
+                Rectangle()
+                    .fill(Color.cyan)
+                    .frame(width: 100, height: 100)
+            }
+        }
+        HStack{
+            Toggle("right", isOn: $rightAreaToggle)
+            Toggle("bottom", isOn: $bottomAreaToggle)
+        }
+        TextField("Placeholder", text: $password)
+//            .frame(width: 100, height: 100)
+            .background(Color.yellow)
+    }
+    .border(.red)
+    .padding()
 }

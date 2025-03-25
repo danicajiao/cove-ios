@@ -16,13 +16,10 @@ struct EmailField: View {
             Text("Email")
                 .font(.custom("Lato-Bold", size: 12))
                 .frame(maxWidth: .infinity, alignment: .leading)
-//                .padding(.horizontal)
                 .foregroundStyle(.black.opacity(0.5))
             TextField(String("email@example.com"), text: $text)
                 .font(.custom("Lato-Regular", size: 14))
-//                .border(.green)
                 .padding()
-//                .border(.red)
                 .frame(maxWidth: .infinity, maxHeight: 50)
                 .background(Color.white)
                 .overlay(

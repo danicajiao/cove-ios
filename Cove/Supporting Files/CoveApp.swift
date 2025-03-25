@@ -43,6 +43,8 @@ struct CoveApp: App {
     @StateObject var bag = Bag()
     @StateObject private var networkMonitor = NetworkMonitor()
     
+    @State var text: String = ""
+        
     init() {
         print("init run")
     }
@@ -66,7 +68,7 @@ struct CoveApp: App {
                     case .welcome:
                         WelcomeView()
                     case .login:
-                        LogInView()
+                        LoginView()
                     case .signup:
                         SignUpView()
                     case .main:

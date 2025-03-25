@@ -27,16 +27,22 @@ struct SpectrumDivider: View {
     ]
     
     var body: some View {
-        LinearGradient(colors: spectrum,
-                       startPoint: UnitPoint(x: animateGradient ? -1 : 0, y: 0.5),
-                       endPoint: UnitPoint(x: animateGradient ? 1 : 2, y: 0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 100, style: .continuous))
-        .frame(height: 4)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
-                animateGradient.toggle()
+        Capsule()
+            .fill(
+                LinearGradient(
+                    colors: spectrum,
+                    startPoint: UnitPoint(x: animateGradient ? -1 : 0, y: 0.5),
+                    endPoint: UnitPoint(x: animateGradient ? 1 : 2, y: 0.5)
+                )
+            )
+            .frame(height: 4)
+            .onAppear {
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
+                        animateGradient.toggle()
+                    }
+                }
             }
-        }
     }
 }
 

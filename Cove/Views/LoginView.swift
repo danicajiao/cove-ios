@@ -16,8 +16,8 @@ struct LoginView: View {
         
     @State var email: String = ""
     @State var password: String = ""
-    
-    @State var fieldFocus = [false, false]
+        
+    @State var loading: Bool = false
     
     var body: some View {
         
@@ -36,17 +36,20 @@ struct LoginView: View {
                     CustomTextField(
                         placeholder: "email@provider.com",
                         text: $email,
-                        focusable: $fieldFocus,
                         returnKeyType: .next,
+                        autocapitalizationType: UITextAutocapitalizationType.none,
+                        keyboardType: .emailAddress,
+                        textContentType: .username,
                         label: "Email",
                         tag: 0
                     )
                     CustomTextField(
                         placeholder: "Password",
                         text: $password,
-                        focusable: $fieldFocus,
                         isSecureTextEntry: true,
                         returnKeyType: .done,
+                        keyboardType: .default,
+                        textContentType: .password,
                         label: "Password",
                         tag: 1
                     )
@@ -73,14 +76,24 @@ struct LoginView: View {
             }
             
             Button {
-                self.appState.emailLogIn(email: self.email, password: self.password, onFailure: { error in
+                loading = true
+                self.appState.emailLogIn(email: self.email, password: self.password,
+                onFailure: { error in
                     self.presentAlert = true
                     self.errorMessage = error?.localizedDescription
+                    loading = false
                 }, onSuccess: {
                     // onSuccess work here
+                    loading = false
                 })
             } label: {
-                Text("Log In")
+                if !loading {
+                    Text("Log In")
+                        .font(.custom("Lato-Bold", size: 16))
+                } else {
+                    ProgressView()
+                        .tint(.white)
+                }
             }
             .buttonStyle(PrimaryButton())
             .alert(isPresented: $presentAlert) {
@@ -132,15 +145,17 @@ struct LoginView: View {
                 .padding(20)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: fieldFocus, { oldValue, newValue in
-            print("fieldFocus: \(oldValue) -> \(newValue)")
-        })
         .onAppear {
             print(self.appState.path)
         }
         .onDisappear {
             self.email = ""
             self.password = ""
+        }
+        .contentShape(Rectangle()) // Makes the entire view tappable
+        .onTapGesture {
+            // Dismiss the keyboard
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
     }
 }

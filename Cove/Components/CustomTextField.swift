@@ -16,27 +16,24 @@ enum Field: Hashable {
 struct CustomTextField: View {
     let placeholder: String
     @Binding var text: String
-    
-    var focusable: Binding<[Bool]>?
     @State var isSecureTextEntry: Bool
     @State var isHidden: Bool?
     
     var returnKeyType: UIReturnKeyType
     var autocapitalizationType: UITextAutocapitalizationType
-    var keyboardType: UIKeyboardType = .default
-    var textContentType: UITextContentType? = nil
+    var keyboardType: UIKeyboardType
+    var textContentType: UITextContentType?
     var uiFont: UIFont?
-    var label: String? = nil
+    var label: String?
     
-    var tag: Int? = nil
-    var inputAccessoryView: UIToolbar? = nil
+    var tag: Int?
+    var inputAccessoryView: UIToolbar?
     
-    var onCommit: (() -> Void)? = nil
+    var onCommit: (() -> Void)?
     
-    init(placeholder: String, text: Binding<String>, focusable: Binding<[Bool]>? = nil, isSecureTextEntry: Bool = false, returnKeyType: UIReturnKeyType, autocapitalizationType: UITextAutocapitalizationType = .none, keyboardType: UIKeyboardType = .default, textContentType: UITextContentType? = nil, uiFont: UIFont? = UIFont(name: "Lato-Regular", size: 14), label: String? = nil, tag: Int? = nil, inputAccessoryView: UIToolbar? = nil, onCommit: (() -> Void)? = nil) {
+    init(placeholder: String, text: Binding<String>, isSecureTextEntry: Bool = false, returnKeyType: UIReturnKeyType, autocapitalizationType: UITextAutocapitalizationType = .none, keyboardType: UIKeyboardType = .default, textContentType: UITextContentType? = nil, uiFont: UIFont? = UIFont(name: "Lato-Regular", size: 14), label: String? = nil, tag: Int? = nil, inputAccessoryView: UIToolbar? = nil, onCommit: (() -> Void)? = nil) {
         self.placeholder = placeholder
         self._text = text
-        self.focusable = focusable
         self.isSecureTextEntry = isSecureTextEntry
         self.isHidden = isSecureTextEntry
         self.returnKeyType = returnKeyType
@@ -63,7 +60,6 @@ struct CustomTextField: View {
                 UITextFieldRepresentable(
                     placeholder: placeholder,
                     text: $text,
-                    focusable: focusable,
                     isHidden: $isHidden,
                     returnKeyType: returnKeyType,
                     autocapitalizationType: autocapitalizationType,
@@ -82,7 +78,6 @@ struct CustomTextField: View {
                 }
             }
             .padding(.horizontal, 10)
-//            .frame(maxWidth: .infinity, maxHeight: 50)
             .frame(height: 50)
             .background(Color.white)
             .overlay {
@@ -93,12 +88,9 @@ struct CustomTextField: View {
     }
 }
 
-struct UITextFieldRepresentable: UIViewRepresentable {
+private struct UITextFieldRepresentable: UIViewRepresentable {
     let placeholder: String
     @Binding var text: String
-    
-    var focusable: Binding<[Bool]>? = nil
-//    var isSecureTextEntry: Binding<Bool>? = nil
     @Binding var isHidden: Bool?
     
     var returnKeyType: UIReturnKeyType = .default
@@ -119,13 +111,12 @@ struct UITextFieldRepresentable: UIViewRepresentable {
         
         textField.returnKeyType = returnKeyType
         textField.autocapitalizationType = autocapitalizationType
+        textField.autocorrectionType = .no
         textField.keyboardType = keyboardType
         textField.isSecureTextEntry = isHidden ?? false
         textField.textContentType = textContentType
         textField.textAlignment = .left
         textField.font = uiFont
-//        textField.layer.borderColor = UIColor.red.cgColor
-//        textField.layer.borderWidth = 1
         
         if let tag = tag {
             textField.tag = tag
@@ -140,24 +131,9 @@ struct UITextFieldRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UITextField, context: Context) {
+        print("updateUI HIT: \(self.placeholder)")
         uiView.text = text
         uiView.isSecureTextEntry = isHidden ?? false
-        
-        if let focusable = focusable?.wrappedValue {
-            var resignResponder = true
-            
-            for (index, focused) in focusable.enumerated() {
-                if uiView.tag == index && focused {
-                    uiView.becomeFirstResponder()
-                    resignResponder = false
-                    break
-                }
-            }
-            
-            if resignResponder {
-                uiView.resignFirstResponder()
-            }
-        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -173,32 +149,16 @@ struct UITextFieldRepresentable: UIViewRepresentable {
         
         func textFieldDidBeginEditing(_ textField: UITextField) {
             print("textFieldDidBeginEditing HIT")
-            guard var focusable = parent.focusable?.wrappedValue else { return }
-            
-            for i in 0...(focusable.count - 1) {
-                focusable[i] = (textField.tag == i)
-            }
-            
-            parent.focusable?.wrappedValue = focusable
         }
         
         func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            guard var focusable = parent.focusable?.wrappedValue else {
-                textField.resignFirstResponder()
-                return true
-            }
-            
-            for i in 0...(focusable.count - 1) {
-                focusable[i] = (textField.tag + 1 == i)
-            }
-            
-            parent.focusable?.wrappedValue = focusable
-            
-            if textField.tag == focusable.count - 1 {
+            print("textFieldShouldReturn HIT")
+            if let nextField = textField.superview?.superview?.viewWithTag(textField.tag + 1) as? UITextField {
+                nextField.becomeFirstResponder()
+            } else {
                 textField.resignFirstResponder()
             }
-            
-            return true
+            return false
         }
         
         func textFieldDidEndEditing(_ textField: UITextField) {
@@ -214,7 +174,6 @@ struct UITextFieldRepresentable: UIViewRepresentable {
 #Preview {
     @Previewable @State var email: String = ""
     @Previewable @State var password: String = ""
-    @Previewable @State var fieldFocus = [false, false]
     
     VStack {
         Text("email: \(email)")
@@ -222,7 +181,6 @@ struct UITextFieldRepresentable: UIViewRepresentable {
         CustomTextField(
             placeholder: "email@provider.com",
             text: $email,
-            focusable: $fieldFocus,
             returnKeyType: .next,
             label: "Email",
             tag: 0
@@ -230,7 +188,6 @@ struct UITextFieldRepresentable: UIViewRepresentable {
         CustomTextField(
             placeholder: "Password",
             text: $password,
-            focusable: $fieldFocus,
             isSecureTextEntry: true,
             returnKeyType: .done,
             label: "Password",

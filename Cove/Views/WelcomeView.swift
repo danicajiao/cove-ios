@@ -25,10 +25,9 @@ struct WelcomeView: View {
             
             VStack(alignment: .leading) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("For the conscious")
+                    Text("A new way to shop local")
                         .font(.custom("Gazpacho-Black", size: 30))
-                    Text("shopper")
-                        .font(.custom("Gazpacho-Black", size: 30))
+                        .containerRelativeFrame(.horizontal, count: 100, span: 50, spacing: 0)
                     Text("Cove.")
                         .font(.custom("Gazpacho-Heavy", size: 60))
                 }

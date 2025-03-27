@@ -70,7 +70,7 @@ struct CoveApp: App {
                     case .login:
                         LoginView()
                     case .signup:
-                        SignUpView()
+                        SignupView()
                     case .main:
                         MainView()
                             .environmentObject(bag)

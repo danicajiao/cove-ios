@@ -1,146 +1,167 @@
 //
-//  SignUpView.swift
+//  SignupView.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 1/1/23.
 //
 
 import SwiftUI
+import FirebaseAuth
 
-//private enum Field: Hashable {
-//    case email
-//    case password
-//}
-
-struct SignUpView: View {
+struct SignupView: View {
     @EnvironmentObject private var appState: AppState
     
     @State private var presentAlert = false
     @State private var errorMessage: String? = nil
-    
-    @State var showImage: Bool = true
-    
-    @State var email = ""
-    @State var password = ""
+        
+    @State var email: String = ""
+    @State var password: String = ""
+    @State var loading: Bool = false
     
     var body: some View {
-//        let _ = Self._printChanges()
-
-        VStack(spacing: 20) {
-            Text("Cove")
-                .font(.custom("Getaway", size: 50))
-            
-            VStack(spacing: 0) {
-                Text("Sign Up")
-                    .font(.custom("Poppins-SemiBold", size: 18))
-            }
-            
-            Group {
-                VStack(spacing: 0) {
-                    HStack {
-                        Image(systemName: "person.fill")
-                        TextField("Email", text: $email)
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                            .font(.custom("Poppins", size: 14))
-                    }
-                    .padding(15)
+        GeometryReader { proxy in
+            VStack(spacing: 20) {
+                Text("Cove.")
+                    .font(.custom("Gazpacho-Heavy", size: 40))
+                
+                SpectrumDivider()
+                
+                Group {
+                    Text("Create your account")
+                        .font(.custom("Lato-Bold", size: 28))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Color.grey.frame(height: 1)
-                        .padding(.horizontal, 15)
-
+                    VStack(spacing: 4) {
+                        CustomTextField(
+                            placeholder: "email@provider.com",
+                            text: $email,
+                            returnKeyType: .next,
+                            autocapitalizationType: UITextAutocapitalizationType.none,
+                            keyboardType: .emailAddress,
+                            textContentType: .username,
+                            label: "Email",
+                            tag: 0
+                        )
+                        CustomTextField(
+                            placeholder: "Password",
+                            text: $password,
+                            isSecureTextEntry: true,
+                            returnKeyType: .done,
+                            keyboardType: .default,
+                            textContentType: .password, // update to .newPassword once enrolled in ADP
+                            label: "Password",
+                            tag: 1
+                        )
+                        HStack {
+                            Text("Passwords must contain at least 8 characters.")
+                                .font(.custom("Lato-Regular", size: 14))
+                                .foregroundStyle(.black.opacity(0.5))
+                            Spacer()
+                        }
+                        .padding(.horizontal, 10)
+                    }
+                }
+                
+                VStack(spacing: 10) {
+                    Button {
+                        loading = true
+                        self.appState.emailLogIn(email: self.email, password: self.password,
+                                                 onFailure: { error in
+                            self.presentAlert = true
+                            self.errorMessage = error?.localizedDescription
+                            loading = false
+                        }, onSuccess: {
+                            // onSuccess work here
+                            loading = false
+                        })
+                    } label: {
+                        if !loading {
+                            Text("Sign Up")
+                        } else {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                    }
+                    .buttonStyle(PrimaryButton())
+                    .alert(isPresented: $presentAlert) {
+                        Alert(title: Text("Login Failed"), message: Text(self.errorMessage ?? "Missing error message"), dismissButton: .default(Text("OK")))
+                    }
+                    
                     HStack {
-                        Image(systemName: "lock.fill")
-                        SecureField("Password", text: $password)
-                        .font(.custom("Poppins", size: 14))
+                        Text("By signing up, you are agreeing to our Terms of Service. View our Privacy Policy.")
+                            .font(.custom("Lato-Regular", size: 14))
+                            .foregroundStyle(.black.opacity(0.5))
                     }
-                    .padding(15)
+                    .padding(.horizontal, 10)
                 }
-                .background(Color.white.clipShape(RoundedRectangle(cornerRadius: 10)))
-            }
-            
-            Button {
-                self.appState.emailSignUp(email: self.email, password: self.password, onFailure: { error in
-                    self.presentAlert = true
-                    self.errorMessage = error?.localizedDescription
-                }, onSuccess: {
-                    self.email = ""
-                    self.password = ""
-                })
-            } label: {
-                Text("Sign up")
-            }
-            .buttonStyle(PrimaryButton())
-            
-            HStack {
-                Color.black.frame(height: 1)
-                    .padding(.leading, 60)
-                    .padding(.trailing)
-                Text("or")
-                    .font(.custom("Poppins-Regular", size: 14))
-                Color.black.frame(height: 1)
-                    .padding(.trailing, 60)
-                    .padding(.leading)
-            }
-            
-            // TODO: Add Links to Social Provider Views
-            HStack(spacing: 30) {
-                SmallSocialButton(socialType: .apple)
-                SmallSocialButton(socialType: .facebook)
-                SmallSocialButton(socialType: .google)
-            }
-            
-            HStack(spacing: 0) {
-                Text("Already have an account? ")
-                    .font(.custom("Poppins-Regular", size: 14))
-                    .foregroundColor(.gray)
-                Button {
-                    self.appState.path.append(.login)
-                } label: {
-                    Text("Log in")
-                        .font(.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.black)
+                
+                HStack {
+                    Capsule()
+                        .fill(.gray.opacity(0.5))
+                        .frame(height: 2)
+                        .padding(.leading, 60)
+                        .padding(.trailing)
+                    Text("OR")
+                        .font(.custom("Lato-Regular", size: 12))
+                    Capsule()
+                        .fill(.gray.opacity(0.5))
+                        .frame(height: 2)
+                        .padding(.trailing, 60)
+                        .padding(.leading)
                 }
-            }
-        }
-        .padding(.horizontal, 30)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            Image("login-background")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .topLeading) {
-            Button {
-                _ = self.appState.path.popLast()
-            } label: {
-                RoundedRectangle(cornerRadius: 5)
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.black)
-                    .opacity(0.2)
-                    .overlay {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.white)
+                
+                // TODO: Add Links to Social Provider Views
+                HStack(spacing: 30) {
+                    SmallSocialButton(socialType: .apple)
+                    SmallSocialButton(socialType: .facebook)
+                    SmallSocialButton(socialType: .google)
+                }
+                
+                HStack(spacing: 0) {
+                    Text("Already have an email? ")
+                        .font(.custom("Lato-Regular", size: 14))
+                        .foregroundColor(.black.opacity(0.5))
+                    Button {
+                        self.appState.path.append(.login)
+                    } label: {
+                        Text("Log In")
+                            .font(.custom("Lato-Regular", size: 14))
+                            .foregroundColor(.black)
                     }
-                    .padding(10)
+                }
+                
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(20)
+            .background(Color.background)
+            .overlay(alignment: .topLeading) {
+                BackButton()
+                    .padding(20)
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .onAppear {
+                print(self.appState.path)
+            }
+            .onDisappear {
+                self.email = ""
+                self.password = ""
+            }
+            .contentShape(Rectangle()) // Makes the entire view tappable
+            .onTapGesture {
+                // Dismiss the keyboard
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
         }
-        .alert(isPresented: $presentAlert) {
-            Alert(
-                title: Text("Verify login"),
-                message: Text(self.errorMessage ?? "")
-            )
-        }
-        .onAppear {
-            print(self.appState.path)
-        }
+        .ignoresSafeArea(.keyboard, edges: .all)
     }
 }
 
-struct SignUpView_Previews: PreviewProvider {
+struct SignupView_Previews: PreviewProvider {
+    static let appState = AppState()
     static var previews: some View {
-        SignUpView()
+        SignupView()
+            .environmentObject(appState)
     }
 }
+

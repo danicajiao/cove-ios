@@ -6,7 +6,6 @@
 //
 
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 import FirebaseAuth
 
 class ProductDetailViewModel : ObservableObject {

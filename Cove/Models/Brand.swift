@@ -6,7 +6,6 @@
 //
 
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 struct Brand : Codable, Identifiable {
     @DocumentID var id: String?

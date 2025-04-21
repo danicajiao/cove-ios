@@ -7,7 +7,6 @@
 
 import SwiftUI
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 import FirebaseStorage
 
 struct HomeView: View {

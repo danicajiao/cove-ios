@@ -6,7 +6,6 @@
 //
 
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 protocol Product : Codable, Identifiable, Hashable {
 //    @Published var imgData: Data = Data()

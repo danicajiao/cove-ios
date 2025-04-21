@@ -6,7 +6,6 @@
 //
 
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 struct ApparelProduct: Product {
     @DocumentID var id: String?

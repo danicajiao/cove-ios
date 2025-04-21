@@ -8,10 +8,10 @@ target 'Cove' do
     use_frameworks!
 
     # Pods for Cove
-    pod 'FirebaseAuth'
-    pod 'FirebaseFirestoreSwift'
-    pod 'FirebaseStorage'
-    pod 'FirebaseAnalytics'
+    pod 'FirebaseAuth', '~> 11.0'
+    pod 'FirebaseFirestore', '~> 11.0'
+    pod 'FirebaseStorage', '~> 11.0'
+    pod 'FirebaseAnalytics', '~> 11.0'
     pod 'GoogleSignIn'
     pod 'FBSDKLoginKit'
     pod 'RiveRuntime'

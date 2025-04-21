@@ -7,7 +7,6 @@
 
 import FirebaseAuth
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 class BagViewModel: ObservableObject {
     @Published var similarProducts = [any Product]()

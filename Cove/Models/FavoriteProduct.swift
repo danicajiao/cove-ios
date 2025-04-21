@@ -6,7 +6,6 @@
 //
 
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 
 struct FavoriteProduct : Codable, Identifiable {
     @DocumentID var id: String?

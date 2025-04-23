@@ -1,5 +1,5 @@
 # Cove - A Mock Curated Marketplace
-<img width="1440" alt="Screenshot 2023-04-20 at 2 17 53 PM" src="https://user-images.githubusercontent.com/24427074/233455204-1528c0df-2fab-43d2-a909-632d9f11f16c.png">
+<img width="1630" alt="Screenshot 2025-04-23 at 12 36 21 AM" src="https://github.com/user-attachments/assets/a6194687-e7ce-4ca4-a534-b6852527d8ad" />
 
 ## About
 

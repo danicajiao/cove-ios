@@ -60,29 +60,31 @@ struct ProductCardView: View {
                             }
                     }
                     
-                    VStack {
-                        Text(headerStr)
-                            .font(Font.custom("Lato-Bold", size: 12))
-                            .foregroundColor(.grey)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        Text(bodyStr)
-                            .font(Font.custom("Lato-Regular", size: 14))
-                            .foregroundColor(.grey)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack (spacing: 6) {
+                        VStack (spacing: 0) {
+                            Text(headerStr)
+                                .font(Font.custom("Lato-Bold", size: 10))
+                                .foregroundColor(.grey)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Text(bodyStr)
+                                .font(Font.custom("Lato-Regular", size: 12))
+                                .foregroundColor(.grey)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         
                         Text("$\(Int(self.price))")
-                            .font(Font.custom("Lato-Regular", size: 16))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .fontWeight(.bold)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .padding(10)
+                    .padding(8)
                     .background(.white)
                 }
                 .frame(maxWidth: .infinity) // Take up the full width of the column
@@ -94,8 +96,8 @@ struct ProductCardView: View {
             .buttonStyle(PlainButtonStyle())
             
             LikeButton(enabled: self.favorited)
-                .shadow(color: .dropShadow, radius: 20)
-                .padding(EdgeInsets(top: 5, leading: 0, bottom: 0, trailing: 5))
+                // .shadow(color: .dropShadow, radius: 20)
+                .padding(10)
         }
     }
 
@@ -112,8 +114,11 @@ struct ProductCardView: View {
             if let data = data, let image = UIImage(data: data) {
                 DispatchQueue.main.async {
                     self.uiImage = image
-                    if let uiColor = image.edgeAverageColor {
+                    if let uiColor = image.averageColor {
+                        print("✅ Got average color: \(uiColor)")
                         self.averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
+                    } else {
+                        print("❌ averageColor returned nil")
                     }
                 }
             }
@@ -122,51 +127,31 @@ struct ProductCardView: View {
 }
 
 extension UIImage {
-    var edgeAverageColor: UIColor? {
-        guard let inputImage = CIImage(image: self) else { return nil }
-        
-        let edgeWidth: CGFloat = 10 // Adjust this value to control the thickness of the edges
-        let imageWidth = inputImage.extent.width
-        let imageHeight = inputImage.extent.height
-        
-        // Define edge regions
-        let topEdge = CGRect(x: 0, y: imageHeight - edgeWidth, width: imageWidth, height: edgeWidth)
-        let bottomEdge = CGRect(x: 0, y: 0, width: imageWidth, height: edgeWidth)
-        let leftEdge = CGRect(x: 0, y: 0, width: edgeWidth, height: imageHeight)
-        let rightEdge = CGRect(x: imageWidth - edgeWidth, y: 0, width: edgeWidth, height: imageHeight)
-        
-        // Calculate average color for each edge
-        let topColor = averageColor(for: inputImage, in: topEdge)
-        let bottomColor = averageColor(for: inputImage, in: bottomEdge)
-        let leftColor = averageColor(for: inputImage, in: leftEdge)
-        let rightColor = averageColor(for: inputImage, in: rightEdge)
-        
-        // Combine the colors by averaging their RGB components
-        let colors = [topColor, bottomColor, leftColor, rightColor].compactMap { $0 }
-        guard !colors.isEmpty else { return nil }
-
-        // Check if any edge has transparency (alpha < 1)
-        let hasTransparency = colors.contains { $0.alpha < 1.0 }
-        if hasTransparency {
-            return UIColor(red: 239/255, green: 239/255, blue: 239/255, alpha: 1.0) // Return light gray color if transparency is detected
+    var averageColor: UIColor? {
+        guard let inputImage = CIImage(image: self) else {
+            print("❌ Failed to create CIImage")
+            return nil
         }
         
-        let totalRed = colors.reduce(0.0) { $0 + $1.red }
-        let totalGreen = colors.reduce(0.0) { $0 + $1.green }
-        let totalBlue = colors.reduce(0.0) { $0 + $1.blue }
+        // Calculate average color for the entire image
+        guard let color = averageColor(for: inputImage, in: inputImage.extent) else {
+            return nil
+        }
         
-        let count = CGFloat(colors.count)
-        let averageRed = totalRed / count
-        let averageGreen = totalGreen / count
-        let averageBlue = totalBlue / count
+        // Convert RGB to HSB to boost vibrancy
+        let averageUIColor = UIColor(red: color.red, green: color.green, blue: color.blue, alpha: 1.0)
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
         
-        // // Blend with white to lighten the color
-        // let blendFactor: CGFloat = 0.8
-        // let lightenedRed = averageRed + (1.0 - averageRed) * blendFactor
-        // let lightenedGreen = averageGreen + (1.0 - averageGreen) * blendFactor
-        // let lightenedBlue = averageBlue + (1.0 - averageBlue) * blendFactor
+        averageUIColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
         
-        return UIColor(red: averageRed, green: averageGreen, blue: averageBlue, alpha: 1.0)
+        // Boost saturation and brightness for vibrant pastels
+        let boostedSaturation: CGFloat = 0.1 // Fixed moderate saturation for vibrancy
+        let boostedBrightness: CGFloat = 0.98 // Very light brightness for pastel look
+        
+        return UIColor(hue: hue, saturation: boostedSaturation, brightness: boostedBrightness, alpha: 1.0)
     }
     
     private func averageColor(for inputImage: CIImage, in rect: CGRect) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {

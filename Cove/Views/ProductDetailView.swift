@@ -88,7 +88,7 @@ struct ProductDetailView: View {
             if let data = data, let image = UIImage(data: data) {
                 DispatchQueue.main.async {
                     self.uiImage = image
-                    if let uiColor = image.edgeAverageColor {
+                    if let uiColor = image.averageColor {
                         self.averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
                     }
                 }

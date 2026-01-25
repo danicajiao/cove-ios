@@ -20,9 +20,10 @@ struct LikeButton : View {
     var body: some View {
         ZStack {
             Circle()
-                .frame(width: 35, height: 35)
+                .frame(width: 26, height: 26)
                 .foregroundColor(.white)
             Image(systemName: enabled ? "heart.fill" : "heart")
+                .font(.system(size: 14))
                 .foregroundColor(enabled ? .pink : .black)
         }
         .scaleEffect(scale)

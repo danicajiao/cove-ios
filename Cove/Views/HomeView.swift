@@ -45,8 +45,8 @@ struct HomeView: View {
                     text: $search,
                     returnKeyType: .next,
                     autocapitalizationType: UITextAutocapitalizationType.none,
-                    keyboardType: .emailAddress,
-                    textContentType: .username,
+                    keyboardType: .default,
+                    leftIcon: "magnifyingglass",
                     tag: 0
                 )
                 .padding(.horizontal, 20)

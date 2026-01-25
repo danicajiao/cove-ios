@@ -25,13 +25,14 @@ struct CustomTextField: View {
     var textContentType: UITextContentType?
     var uiFont: UIFont?
     var label: String?
+    var leftIcon: String?
     
     var tag: Int?
     var inputAccessoryView: UIToolbar?
     
     var onCommit: (() -> Void)?
     
-    init(placeholder: String, text: Binding<String>, isSecureTextEntry: Bool = false, returnKeyType: UIReturnKeyType, autocapitalizationType: UITextAutocapitalizationType = .none, keyboardType: UIKeyboardType = .default, textContentType: UITextContentType? = nil, uiFont: UIFont? = UIFont(name: "Lato-Regular", size: 14), label: String? = nil, tag: Int? = nil, inputAccessoryView: UIToolbar? = nil, onCommit: (() -> Void)? = nil) {
+    init(placeholder: String, text: Binding<String>, isSecureTextEntry: Bool = false, returnKeyType: UIReturnKeyType, autocapitalizationType: UITextAutocapitalizationType = .none, keyboardType: UIKeyboardType = .default, textContentType: UITextContentType? = nil, uiFont: UIFont? = UIFont(name: "Lato-Regular", size: 14), label: String? = nil, leftIcon: String? = nil, tag: Int? = nil, inputAccessoryView: UIToolbar? = nil, onCommit: (() -> Void)? = nil) {
         self.placeholder = placeholder
         self._text = text
         self.isSecureTextEntry = isSecureTextEntry
@@ -42,6 +43,7 @@ struct CustomTextField: View {
         self.textContentType = textContentType
         self.uiFont = uiFont
         self.label = label
+        self.leftIcon = leftIcon
         self.tag = tag
         self.inputAccessoryView = inputAccessoryView
         self.onCommit = onCommit
@@ -56,7 +58,12 @@ struct CustomTextField: View {
                     .padding(.horizontal, 10)
                     .foregroundStyle(.black.opacity(0.5))
             }
-            HStack {
+            HStack (spacing: 10) {
+                if let leftIcon = leftIcon {
+                    Image(systemName: leftIcon)
+                        .font(.system(size: 14))
+                        .foregroundColor(.black.opacity(0.5))
+                }
                 UITextFieldRepresentable(
                     placeholder: placeholder,
                     text: $text,
@@ -183,6 +190,7 @@ private struct UITextFieldRepresentable: UIViewRepresentable {
             text: $email,
             returnKeyType: .next,
             label: "Email",
+            leftIcon: "envelope",
             tag: 0
         )
         CustomTextField(

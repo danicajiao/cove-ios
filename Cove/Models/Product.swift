@@ -18,23 +18,39 @@ protocol Product : Codable, Identifiable, Hashable {
     var defaultImageURL: String { get }
     var isFavorite: Bool? { get set }
     var productDetailsID: String { get }
+}
+
+struct ExampleProduct: Product {
+    @DocumentID var id: String?
+    @ServerTimestamp var createdAt: Timestamp?
+    var categoryID: String
+    var defaultPrice: Float
+    var defaultImageURL: String
+    var info: ExampleInfo
+    var isFavorite: Bool?
+    var productDetailsID: String
     
-//    associatedtype CodingKeys: RawRepresentable where CodingKeys.RawValue: StringProtocol
+    struct ExampleInfo : Codable {
+        var name: String
+        var desc: String
+    }
     
-//    init(from decoder: Decoder) throws
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
     
-//    init(defaultPrice: Float, defaultImgPath: String, createdAt: Timestamp, imgData: Data) {
-//        self.defaultPrice = defaultPrice
-//        self.defaultImgPath = defaultImgPath
-//        self.createdAt = createdAt
-//        self.imgData = imgData
-//    }
-    
-//    // This initializer is used for previews
-//    init(defaultPrice: Float, defaultImgPath: String, imgData: Data, createdAt: Timestamp) {
-//        self.defaultPrice = defaultPrice
-//        self.defaultImgPath = defaultImgPath
-//        self.imgData = imgData
-//        self.createdAt = createdAt
-//    }
+    static func == (lhs: ExampleProduct, rhs: ExampleProduct) -> Bool {
+        return lhs.id == rhs.id
+    }
+
+    static let placeholder = ExampleProduct(
+        id: "aaaaa123445",
+        createdAt: Timestamp.init(),
+        categoryID: "some categoryID",
+        defaultPrice: 23,
+        defaultImageURL: "some url",
+        info: ExampleInfo(name: "Some name", desc: "Some description"),
+        isFavorite: true,
+        productDetailsID: "12345"
+    )
 }

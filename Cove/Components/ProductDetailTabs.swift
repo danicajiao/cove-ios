@@ -16,7 +16,7 @@ struct ProductDetailTabs: View {
                 HStack(spacing: 0) {
                     if self.viewModel.detailSelection == .description {
                         Text("Description")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
+                            .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundColor(.accent)
                             .frame(minWidth: 120, minHeight: 40)
                             .background {
@@ -30,7 +30,7 @@ struct ProductDetailTabs: View {
                             }
                     } else {
                         Text("Description")
-                            .font(Font.custom("Poppins-Regular", size: 16))
+                            .font(Font.custom("Lato-Regular", size: 16))
                             .foregroundColor(.grey)
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
@@ -42,7 +42,7 @@ struct ProductDetailTabs: View {
                     
                     if self.viewModel.detailSelection == .tracklist {
                         Text("Tracklist")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
+                            .font(Font.custom("Lato-Regular", size: 16))
                             .foregroundColor(.accent)
                             .frame(minWidth: 90, minHeight: 40)
                             .background {
@@ -56,7 +56,7 @@ struct ProductDetailTabs: View {
                             }
                     } else {
                         Text("Tracklist")
-                            .font(Font.custom("Poppins-Regular", size: 16))
+                            .font(Font.custom("Lato-Regular", size: 16))
                             .foregroundColor(.grey)
                             .frame(minWidth: 90, minHeight: 40)
                             .onTapGesture {
@@ -68,7 +68,7 @@ struct ProductDetailTabs: View {
                     
                     if self.viewModel.detailSelection == .about {
                         Text("About")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
+                            .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundColor(.accent)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)

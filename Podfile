@@ -15,6 +15,7 @@ target 'Cove' do
     pod 'GoogleSignIn'
     pod 'FBSDKLoginKit'
     pod 'RiveRuntime'
+    pod 'CHTCollectionViewWaterfallLayout'
 end
 
 post_install do |installer|

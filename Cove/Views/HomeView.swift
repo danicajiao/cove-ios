@@ -12,12 +12,14 @@ import FirebaseStorage
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     
-//    @FirestoreQuery(collectionPath: "products") var products: [Product]
+    @State var search: String = ""
+
+//    private var columns: [GridItem] = [
+//        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
+//        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20)
+//    ]
     
-    private var columns: [GridItem] = [
-        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
-        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20)
-    ]
+    private var columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 2)
     
     var body: some View {
         let _ = Self._printChanges()
@@ -27,74 +29,54 @@ struct HomeView: View {
                     // TODO: Implement time-based greeting message
                     Text("Good morning, Daniel")
                         .frame(maxWidth: 215, alignment: .leading)
-                        .font(Font.custom("Poppins-SemiBold", size: 26))
-                        .padding(EdgeInsets(top: 28, leading: 0, bottom: 0, trailing: 0))
+                        .font(Font.custom("Gazpacho-Black", size: 25))
+                        .lineSpacing(6) // SwiftUI lineSpacing = Figma line height - Font size
                     Spacer()
                     // TODO: Add notifications button to the right of greeting Text
                     Image(systemName: "bell.fill")
                         .resizable()
                         .frame(width: 25, height: 25)
-                        .padding(EdgeInsets(top: 28, leading: 0, bottom: 0, trailing: 0))
-                        .foregroundColor(.accent)
+                        .foregroundColor(.accentColor)
                 }
-                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                
-                TextField("\(Image(systemName: "magnifyingglass")) Espresso, light roast, floral", text: /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Value@*/.constant("")/*@END_MENU_TOKEN@*/)
-                    .font(Font.custom("Poppins-Regular", size: 14))
-                    .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.grey, lineWidth: 1)
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                .padding(.horizontal, 20)
+
+                CustomTextField(
+                    placeholder: "Find records, coffee, home, and more",
+                    text: $search,
+                    returnKeyType: .next,
+                    autocapitalizationType: UITextAutocapitalizationType.none,
+                    keyboardType: .emailAddress,
+                    textContentType: .username,
+                    tag: 0
+                )
+                .padding(.horizontal, 20)
+
                 
                 VStack {
-                    HStack {
-                        Text("Categories")
-                            .font(Font.custom("Poppins-SemiBold", size: 22))
-                        Spacer()
-                        // TODO: Navigate to Categories scene
-                        Button("See all \(Image(systemName: "arrow.forward"))") {
-                        }
-                        .foregroundColor(.accent)
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                    SectionHeader(title: "Categories")
+                        .padding(.horizontal, 20)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
+                        HStack(spacing: 12) {
                             ForEach(viewModel.categories, id: \.self) { category in
-                                LargeButton(category: category)
+                                SmallCategoryButton(category: category)
                             }
                         }
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                        .padding(.horizontal, 20)
                     }
+                    .scrollClipDisabled()
                 }
                 
                 VStack {
-                    HStack {
-                        Text("Featured")
-                            .font(Font.custom("Poppins-SemiBold", size: 22))
-                        Spacer()
-                        // TODO: Navigate to Categories scene
-                        Button("See all \(Image(systemName: "arrow.forward"))") {
-                        }
-                        .foregroundColor(.accent)
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                    SectionHeader(title: "Featured")
+                        .padding(.horizontal, 20)
                     
                     BannerButton(bannerType: 1)
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                        .padding(.horizontal, 20)
                 }
                 
                 VStack {
-                    HStack {
-                        Text("For You")
-                            .font(Font.custom("Poppins-SemiBold", size: 22))
-                        Spacer()
-//                        Button("See all \(Image(systemName: "arrow.forward"))") {
-//                        }
-//                        .foregroundColor(.accent)
-                    }
+                    SectionHeader(title: "Popular")
                     
                     if !viewModel.products.isEmpty {
                         LazyVGrid(
@@ -108,23 +90,19 @@ struct HomeView: View {
                         }
                     }
                     
-                    
+//                    if !viewModel.products.isEmpty {
+//                        WaterfallCollection(products: viewModel.products)
+//                            // .frame(height: 600) // Adjust height as needed
+//                    }
                 }
-                .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                .padding(.horizontal, 20)
                 
                 BannerButton(bannerType: 2)
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                    .padding(.horizontal, 20)
                 
                 VStack {
-                    HStack {
-                        Text("Our Favorite Brands")
-                            .font(Font.custom("Poppins-SemiBold", size: 22))
-                        Spacer()
-                        Button("See all \(Image(systemName: "arrow.forward"))") {
-                        }
-                        .foregroundColor(.accent)
-                    }
-                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                    SectionHeader(title: "Stores")
+                        .padding(.horizontal, 20)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
@@ -146,33 +124,14 @@ struct HomeView: View {
                                 }
                             }
                         }
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                        .padding(.horizontal, 20)
                     }
                 }
-                
-//                VStack {
-//                    HStack {
-//                        Text("Origins")
-//                            .font(Font.custom("Poppins-SemiBold", size: 22))
-//                        Spacer()
-//                        // TODO: Navigate to Browse scene
-//                        Button("See all \(Image(systemName: "arrow.forward"))") {
-//                        }
-//                        .foregroundColor(.accent)
-//                    }
-//                    .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-//
-//                    ScrollView(.horizontal, showsIndicators: false) {
-//                        HStack(spacing: 10) {
-//                            ForEach(viewModel.origins, id: \.self) { origin in
-//                                OriginButton(origin: origin)
-//                            }
-//                        }
-//                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20))
-//                    }
-//                }
             }
+            .padding(.top, 30)
         }
+//        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.background.ignoresSafeArea(.all))
         .onAppear {
             print("homeView appeared")
             Task {
@@ -183,7 +142,7 @@ struct HomeView: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()
     }

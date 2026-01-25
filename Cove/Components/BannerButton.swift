@@ -10,81 +10,67 @@ import SwiftUI
 struct BannerButton: View {
     let bannerType: Int
     
-//    init(bannerType: Int) {
-//        self.bannerType = bannerType
-//        print("Banner init")
-//    }
-    
     var body: some View {
-        
         switch bannerType {
         case 1:
             Image("coffee-subscription-2048px-3198-3x2-1")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(maxHeight: 160)
-                .cornerRadius(8)
-                .clipped()
+                .frame(height: 148)
                 .overlay {
                     GeometryReader { geometry in
-                        ZStack {
-                            Rectangle()
-                                .background(.ultraThinMaterial)
-                                .foregroundColor(.clear)
-                                .cornerRadius(8)
-
-                            VStack {
+                        VStack {
+                            VStack(alignment: .leading) {
                                 Text("Select craft roasters")
-                                    .font(Font.custom("Poppins-Regular", size: 14))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text("70%")
-                                        .font(Font.custom("Poppins-Semibold", size: 36))
+                                    .font(Font.custom("Gazpacho-Bold", size: 12))
+                                    .frame(width: 70, alignment: .leading)
+                                
+                                Spacer()
+                                
+                                HStack(alignment: .center) {
+                                    Text("40%")
+                                        .font(Font.custom("Gazpacho-Black", size: 34))
                                     Text("off")
+                                        .font(Font.custom("Gazpacho-Bold", size: 14))
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
+                                
+                                Spacer()
+                                
                                 Text("See all items \(Image(systemName: "arrow.right"))")
-                                    .font(Font.custom("Poppins-Regular", size: 12))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .font(Font.custom("Lato-Regular", size: 10))
+                                
                             }
-                            .foregroundColor(.blue)
-                            .padding(10)
+                            .padding(14)
+                            .frame(width: geometry.size.height - (11 * 2), height: geometry.size.height - (11 * 2))
+                            .background(.white)
+                            .cornerRadius(8)
                         }
-                        .padding(10)
-                        .frame(maxWidth: geometry.size.height, maxHeight: geometry.size.height)
+                        .frame(width: geometry.size.height, height: geometry.size.height)
+                        .foregroundStyle(.black)
                     }
                 }
+                .cornerRadius(12)
+                .customShadow()
         default:
-            ZStack {
-                Image("How-To-Store-Coffee-Beans-Gear-Patrol-Lead-Full")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .scaleEffect(1.1)
-                    .offset(x: 100, y: 0)
-                
-                Rectangle()
-                    .foregroundColor(.bannerGradient)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.55, y: 0), endPoint: UnitPoint(x: 0.6, y: 0))
-                    )
-                
+            HStack(spacing: 0) {
                 VStack(alignment: .leading) {
                     Text("New")
-                        .font(Font.custom("Poppins-Semibold", size: 36))
-                        .foregroundColor(.accent)
+                        .font(Font.custom("Gazpacho-Black", size: 36))
                     Text("Stumpton Huye Mountain")
-                        .font(Font.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.accent)
+                        .font(Font.custom("Lato-Regular", size: 14))
                 }
-                .offset(x: -70, y: 0)
+                .frame(maxWidth: .infinity)
+                
+                Image("How-To-Store-Coffee-Beans-Gear-Patrol-Lead-Full")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 150)
+                    .clipped()
             }
-            .frame(maxHeight: 114)
-            .mask {
-                Rectangle()
-            }
-            .cornerRadius(8)
+            .frame(height: 120)
+            .background(.white)
+            .cornerRadius(12)
+            .customShadow()
         }
     }
 }
@@ -92,11 +78,11 @@ struct BannerButton: View {
 struct BannerButton_Previews: PreviewProvider {
     static var previews: some View {
         BannerButton(bannerType: 1)
-            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+            .padding(.horizontal, 20)
             .previewLayout(.sizeThatFits)
         
         BannerButton(bannerType: 2)
-            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+            .padding(.horizontal, 20)
             .previewLayout(.sizeThatFits)
     }
 }

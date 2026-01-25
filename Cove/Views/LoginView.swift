@@ -135,9 +135,8 @@ struct LoginView: View {
                 
                 Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(20)
-            .background(Color.background)
+            .background(Color.background.ignoresSafeArea(.all))
             .overlay(alignment: .topLeading) {
                 BackButton()
                     .padding(20)

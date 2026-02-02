@@ -15,7 +15,7 @@ struct LoginView: View {
     @State private var errorMessage: String? = nil
         
     @State var email: String = ""
-    @State var password: String = "" 
+    @State var password: String = ""
     @State var loading: Bool = false
     
     var body: some View {
@@ -23,12 +23,14 @@ struct LoginView: View {
             VStack(spacing: 20) {
                 Text("Cove.")
                     .font(.custom("Gazpacho-Heavy", size: 40))
+                    .foregroundStyle(.textPrimary)
                 
                 SpectrumDivider()
                 
                 Group {
                     Text("Log in to your account")
                         .font(.custom("Lato-Bold", size: 28))
+                        .foregroundStyle(.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     VStack(spacing: 4) {
@@ -106,6 +108,7 @@ struct LoginView: View {
                         .padding(.trailing)
                     Text("OR")
                         .font(.custom("Lato-Regular", size: 12))
+                        .foregroundStyle(.black.opacity(0.5))
                     Capsule()
                         .fill(.gray.opacity(0.5))
                         .frame(height: 2)
@@ -123,20 +126,20 @@ struct LoginView: View {
                 HStack(spacing: 0) {
                     Text("Don't have an account? ")
                         .font(.custom("Lato-Regular", size: 14))
-                        .foregroundColor(.black.opacity(0.5))
+                        .foregroundStyle(.black.opacity(0.5))
                     Button {
                         self.appState.path.append(.signup)
                     } label: {
                         Text("Sign up")
                             .font(.custom("Lato-Regular", size: 14))
-                            .foregroundColor(.black)
+                            .foregroundColor(.textPrimary)
                     }
                 }
                 
                 Spacer()
             }
             .padding(20)
-            .background(Color.background.ignoresSafeArea(.all))
+            .background(Color.backgroundPrimary.ignoresSafeArea(.all))
             .overlay(alignment: .topLeading) {
                 BackButton()
                     .padding(20)

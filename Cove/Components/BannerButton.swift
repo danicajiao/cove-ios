@@ -23,6 +23,7 @@ struct BannerButton: View {
                             VStack(alignment: .leading) {
                                 Text("Select craft roasters")
                                     .font(Font.custom("Gazpacho-Bold", size: 12))
+                                    .foregroundStyle(.textPrimary)
                                     .frame(width: 70, alignment: .leading)
                                 
                                 Spacer()
@@ -33,11 +34,13 @@ struct BannerButton: View {
                                     Text("off")
                                         .font(Font.custom("Gazpacho-Bold", size: 14))
                                 }
+                                .foregroundStyle(.textPrimary)
                                 
                                 Spacer()
                                 
                                 Text("See all items \(Image(systemName: "arrow.right"))")
                                     .font(Font.custom("Lato-Regular", size: 10))
+                                    .foregroundStyle(.textPrimary)
                                 
                             }
                             .padding(14)
@@ -46,7 +49,6 @@ struct BannerButton: View {
                             .cornerRadius(8)
                         }
                         .frame(width: geometry.size.height, height: geometry.size.height)
-                        .foregroundStyle(.black)
                     }
                 }
                 .cornerRadius(12)
@@ -59,6 +61,7 @@ struct BannerButton: View {
                     Text("Stumpton Huye Mountain")
                         .font(Font.custom("Lato-Regular", size: 14))
                 }
+                .foregroundStyle(.textPrimary)
                 .frame(maxWidth: .infinity)
                 
                 Image("How-To-Store-Coffee-Beans-Gear-Patrol-Lead-Full")

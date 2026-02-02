@@ -129,7 +129,7 @@ struct ProductDetailView: View {
 //                    }
 //                    .frame(height: 300)
 //                }
-                
+//                
                 VStack {
                     if let uiImage = uiImage {
                         Image(uiImage: uiImage)
@@ -145,105 +145,105 @@ struct ProductDetailView: View {
                 }
                 .frame(height: 300)
 
-//                Group {
-//                    VStack(spacing: 20) {
-//                        VStack(spacing: 8) {
-//                            Text(headerStr)
-//                                .font(Font.custom("Gazpacho-Black", size: 22))
-//                                .frame(maxWidth: .infinity, alignment: .leading)
-//
-//                            HStack {
-//                                Text("$\(Int(self.price))")
-//                                    .font(Font.custom("Lato-Bold", size: 22))
-//                                    .foregroundColor(.accent)
-//
-//                                Spacer()
-//
-//                                Button {
-//                                    if count > 1 {
-//                                        count = count - 1
-//                                    }
-//                                } label: {
-//                                    Image(systemName: "minus.square")
-//                                        .resizable()
-//                                        .frame(width: 20, height: 20)
-//                                }
-//                                .foregroundColor(.accent)
-//                                .disabled(count == 1 ? true : false)
-//
-//                                Text(String(count))
-//                                    .font(Font.custom("Lato-Regular", size: 14))
-//                                    .frame(width: 30, height: 20)
-//
-//                                Button {
-//                                    if count < 15 {
-//                                        count = count + 1
-//                                    }
-//                                } label: {
-//                                    Image(systemName: "plus.square")
-//                                        .resizable()
-//                                        .frame(width: 20, height: 20)
-//                                }
-//                                .foregroundColor(.accent)
-//                                .disabled(count == 15 ? true : false)
-//                            }
-//                        }
-//
-//
-//                        NavigationLink(destination: Text("Item Reviews!")) {
-//                            HStack {
-//                                VStack(alignment: .leading, spacing: 10) {
-//                                    HStack {
-//                                        RatingView(rating: 4)
-//                                        Text("4.3")
-//                                            .font(Font.custom("Lato-Regular", size: 14))
-//                                    }
-//                                    Text("22 Reviews \(Image(systemName: "chevron.right"))")
-//                                        .font(Font.custom("Lato-Regular", size: 14))
-//                                        .foregroundColor(.grey)
-//                                }
-//
-//                                Spacer()
-//
-//                                Circle()
-//                                    .frame(width: 35, height: 35)
-//                                    .foregroundColor(.white)
-//                                    .overlay {
-//                                        Circle()
-//                                            .frame(width: 30, height: 30)
-//                                    }
-//
-//                            }
-//                            .frame(maxWidth: .infinity, alignment: .leading)
-//                            .padding(10)
-//                            .background(.white)
-//                            .cornerRadius(8)
-//                            .customShadow()
-//                        }
-//                        .buttonStyle(PlainButtonStyle())
-//                        
-//                        
-//                        ProductDetailTabs(viewModel: self.viewModel)
-//
-//                        SectionHeader(title: "Similar to this")
-//                        
-//                        ScrollView(.horizontal) {
-//                            HStack(spacing: 20) {
-//                                ForEach(self.viewModel.similarProducts, id: \.id) { product in
-//                                    ProductCardView(product: product)
-//                                }
-//                            }
-////                            .padding(50)
-//                        }
-////                        .padding(-50)
-//                        
-//                    }
-//                    .padding(20)
-//                }
-//                .background {
-//                    Color.white
-//                }
-//                .cornerRadius(20)
+                Group {
+                    VStack(spacing: 20) {
+                        VStack(spacing: 8) {
+                            Text(headerStr)
+                                .font(Font.custom("Gazpacho-Black", size: 22))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            HStack {
+                                Text("$\(Int(self.price))")
+                                    .font(Font.custom("Lato-Bold", size: 22))
+                                    .foregroundColor(.accent)
+
+                                Spacer()
+
+                                Button {
+                                    if count > 1 {
+                                        count = count - 1
+                                    }
+                                } label: {
+                                    Image(systemName: "minus.square")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                }
+                                .foregroundColor(.accent)
+                                .disabled(count == 1 ? true : false)
+
+                                Text(String(count))
+                                    .font(Font.custom("Lato-Regular", size: 14))
+                                    .frame(width: 30, height: 20)
+
+                                Button {
+                                    if count < 15 {
+                                        count = count + 1
+                                    }
+                                } label: {
+                                    Image(systemName: "plus.square")
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                }
+                                .foregroundColor(.accent)
+                                .disabled(count == 15 ? true : false)
+                            }
+                        }
+
+
+                        NavigationLink(destination: Text("Item Reviews!")) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    HStack {
+                                        RatingView(rating: 4)
+                                        Text("4.3")
+                                            .font(Font.custom("Lato-Regular", size: 14))
+                                    }
+                                    Text("22 Reviews \(Image(systemName: "chevron.right"))")
+                                        .font(Font.custom("Lato-Regular", size: 14))
+                                        .foregroundColor(.grey)
+                                }
+
+                                Spacer()
+
+                                Circle()
+                                    .frame(width: 35, height: 35)
+                                    .foregroundColor(.white)
+                                    .overlay {
+                                        Circle()
+                                            .frame(width: 30, height: 30)
+                                    }
+
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .background(.white)
+                            .cornerRadius(8)
+                            .customShadow()
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        
+                        ProductDetailTabs(viewModel: self.viewModel)
+
+                        SectionHeader(title: "Similar to this")
+                        
+                        ScrollView(.horizontal) {
+                            HStack(spacing: 20) {
+                                ForEach(self.viewModel.similarProducts, id: \.id) { product in
+                                    ProductCardView(product: product)
+                                }
+                            }
+//                            .padding(50)
+                        }
+//                        .padding(-50)
+                        
+                    }
+                    .padding(20)
+                }
+                .background {
+                    Color.white
+                }
+                .cornerRadius(20)
             }
         }
         .overlay(alignment: .top) {

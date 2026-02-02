@@ -28,18 +28,18 @@ struct ProductCardView: View {
 
         if let coffeeProduct = product as? CoffeeProduct {
             // product is a CoffeeProduct
-            self.headerStr = coffeeProduct.info.roastery
-            self.bodyStr = coffeeProduct.info.name
+            self.headerStr = coffeeProduct.info.name
+            self.bodyStr = coffeeProduct.info.roastery
             self.price = coffeeProduct.defaultPrice
         } else if let musicProduct = product as? MusicProduct {
             // product is a MusicProduct
-            self.headerStr = musicProduct.info.artist
-            self.bodyStr = musicProduct.info.album
+            self.headerStr = musicProduct.info.album
+            self.bodyStr = musicProduct.info.artist
             self.price = musicProduct.defaultPrice
         } else if let apparelProduct = product as? ApparelProduct {
             // product is a ApparelProduct
-            self.headerStr = apparelProduct.info.brand
-            self.bodyStr = apparelProduct.info.name
+            self.headerStr = apparelProduct.info.name
+            self.bodyStr = apparelProduct.info.brand
             self.price = apparelProduct.defaultPrice
         }
     }
@@ -52,9 +52,10 @@ struct ProductCardView: View {
                         Image(uiImage: uiImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit) // Maintain aspect ratio
+                            .frame(maxHeight: .infinity)
                     } else {
                         ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: 150)
+                            .frame(maxHeight: .infinity)
                             .onAppear {
                                 fetchImage()
                             }
@@ -63,23 +64,23 @@ struct ProductCardView: View {
                     VStack (spacing: 6) {
                         VStack (spacing: 0) {
                             Text(headerStr)
-                                .font(Font.custom("Lato-Bold", size: 10))
-                                .foregroundColor(.grey)
+                                .font(Font.custom("Gazpacho-Black", size: 10))
+                                .foregroundStyle(.textPrimary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
                             Text(bodyStr)
-                                .font(Font.custom("Lato-Regular", size: 12))
-                                .foregroundColor(.grey)
+                                .font(Font.custom("Lato-Regular", size: 10))
+                                .foregroundStyle(.grey)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         
                         Text("$\(Int(self.price))")
-                            .font(Font.custom("Lato-Regular", size: 14))
-                            .fontWeight(.bold)
+                            .font(Font.custom("Lato-Bold", size: 14))
+                            .foregroundStyle(.textPrimary)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -161,7 +162,7 @@ extension UIImage {
               let outputImage = filter.outputImage else { return nil }
         
         var bitmap = [UInt8](repeating: 0, count: 4)
-        let context = CIContext(options: [.workingColorSpace: kCFNull])
+        let context = CIContext(options: [.workingColorSpace: NSNull()])
         context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
         
         let red = CGFloat(bitmap[0]) / 255

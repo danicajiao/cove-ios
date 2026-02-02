@@ -61,7 +61,7 @@ struct SmallSocialButton: View {
         } label: {
             Circle()
                 .fill(self.color)
-                .strokeBorder(.black)
+                .strokeBorder(.borderPrimary, lineWidth: 1)
                 .frame(width: 55, height: 55)
                 .overlay {
                     Image(self.imgName)

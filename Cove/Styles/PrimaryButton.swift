@@ -26,7 +26,7 @@ struct PrimaryButton: PrimitiveButtonStyle {
             .foregroundStyle(.white)
             .background {
                 Capsule()
-                    .fill(.black)
+                    .fill(.buttonPrimary)
             }
             // animation defaults
             .opacity(isPressed ? 0.2 : 1)

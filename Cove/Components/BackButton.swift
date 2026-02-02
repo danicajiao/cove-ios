@@ -16,14 +16,14 @@ struct BackButton: View {
         } label: {
             Circle()
                 .fill(.white)
-                .strokeBorder(.black, lineWidth: 1)
+                .strokeBorder(.borderPrimary, lineWidth: 1)
                 .frame(width: 36, height: 36)
                 .overlay {
                     Image(systemName: "arrow.left")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 16, height: 16)
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.textPrimary)
                 }
         }
     }

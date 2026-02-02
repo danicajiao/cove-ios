@@ -86,10 +86,10 @@ struct CustomTextField: View {
             }
             .padding(.horizontal, 10)
             .frame(height: 50)
-            .background(Color.white)
+            .background(.white)
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color.black, lineWidth: 1)
+                    .strokeBorder(.borderPrimary, lineWidth: 1)
             }
         }
     }

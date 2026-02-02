@@ -31,12 +31,13 @@ struct HomeView: View {
                         .frame(maxWidth: 215, alignment: .leading)
                         .font(Font.custom("Gazpacho-Black", size: 25))
                         .lineSpacing(6) // SwiftUI lineSpacing = Figma line height - Font size
+                        .foregroundStyle(.textPrimary)
                     Spacer()
                     // TODO: Add notifications button to the right of greeting Text
                     Image(systemName: "bell.fill")
                         .resizable()
                         .frame(width: 25, height: 25)
-                        .foregroundColor(.accentColor)
+                        .foregroundStyle(.accent)
                 }
                 .padding(.horizontal, 20)
 

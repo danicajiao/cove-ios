@@ -23,12 +23,14 @@ struct SignupView: View {
             VStack(spacing: 20) {
                 Text("Cove.")
                     .font(.custom("Gazpacho-Heavy", size: 40))
+                    .foregroundStyle(.textPrimary)
                 
                 SpectrumDivider()
                 
                 Group {
                     Text("Create your account")
                         .font(.custom("Lato-Bold", size: 28))
+                        .foregroundStyle(.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     VStack(spacing: 4) {
@@ -103,6 +105,7 @@ struct SignupView: View {
                         .padding(.trailing)
                     Text("OR")
                         .font(.custom("Lato-Regular", size: 12))
+                        .foregroundStyle(.black.opacity(0.5))
                     Capsule()
                         .fill(.gray.opacity(0.5))
                         .frame(height: 2)
@@ -120,13 +123,13 @@ struct SignupView: View {
                 HStack(spacing: 0) {
                     Text("Already have an email? ")
                         .font(.custom("Lato-Regular", size: 14))
-                        .foregroundColor(.black.opacity(0.5))
+                        .foregroundStyle(.black.opacity(0.5))
                     Button {
                         self.appState.path.append(.login)
                     } label: {
                         Text("Log In")
                             .font(.custom("Lato-Regular", size: 14))
-                            .foregroundColor(.black)
+                            .foregroundStyle(.textPrimary)
                     }
                 }
                 
@@ -134,7 +137,7 @@ struct SignupView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(20)
-            .background(Color.background)
+            .background(.backgroundPrimary)
             .overlay(alignment: .topLeading) {
                 BackButton()
                     .padding(20)

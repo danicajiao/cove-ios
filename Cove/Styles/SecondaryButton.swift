@@ -22,12 +22,12 @@ struct SecondaryButton: PrimitiveButtonStyle {
         configuration.label
             .font(.custom("Lato-Regular", size: 14))
             .padding()
-            .foregroundStyle(Color(.Colors.Fills.primary))
+            .foregroundStyle(Color.Colors.Fills.primary)
             .frame(maxWidth: self.width, maxHeight: self.height)
             .background {
                 Capsule()
-                    .fill(Color(.Colors.Fills.secondary))
-                    .strokeBorder(Color(.Colors.Strokes.primary), lineWidth: 1)
+                    .fill(Color.Colors.Fills.secondary)
+                    .strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1)
             }
             .contentShape(.capsule)
             // animation defaults

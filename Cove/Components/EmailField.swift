@@ -40,7 +40,7 @@ struct EmailField: View {
 
     EmailField(text: $email, focus: $focusedField)
         .padding()
-        .background(Color(.Colors.Backgrounds.secondary))
+        .background(Color.Colors.Backgrounds.secondary)
         .onAppear {
             focusedField = Field.email
         }

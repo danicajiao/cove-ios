@@ -48,7 +48,7 @@ struct SmallCategoryButton: View {
                 .customShadow()
         case "Home":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("6a24c9162480919.63d6b3eceb963")
                         .resizable()
@@ -85,7 +85,7 @@ struct SmallCategoryButton: View {
                 .customShadow()
         default:
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("817b69111912037.600a933bbd858")
                         .resizable()

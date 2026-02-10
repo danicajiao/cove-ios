@@ -168,7 +168,7 @@ struct ProductDetailView: View {
 //                                        .resizable()
 //                                        .frame(width: 20, height: 20)
 //                                }
-//                                .foregroundColor(.accent)
+//                                .foregroundStyle(.accent)
 //                                .disabled(count == 1 ? true : false)
 
 //                                Text(String(count))
@@ -184,7 +184,7 @@ struct ProductDetailView: View {
 //                                        .resizable()
 //                                        .frame(width: 20, height: 20)
 //                                }
-//                                .foregroundColor(.accent)
+//                                .foregroundStyle(.accent)
 //                                .disabled(count == 15 ? true : false)
                             }
                         }
@@ -207,7 +207,7 @@ struct ProductDetailView: View {
 
                                 Circle()
                                     .frame(width: 35, height: 35)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .overlay {
                                         Circle()
                                             .frame(width: 30, height: 30)
@@ -253,11 +253,11 @@ struct ProductDetailView: View {
                 } label: {
                     RoundedRectangle(cornerRadius: 5)
                         .frame(width: 30, height: 30)
-                        .foregroundColor(.black)
+                        .foregroundStyle(.black)
                         .opacity(0.2)
                         .overlay {
                             Image(systemName: "chevron.left")
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                         }
                 }
                 Spacer()

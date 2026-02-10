@@ -107,7 +107,7 @@ struct BagView: View {
                 }
             }
         }
-        .background(Color(.Colors.Backgrounds.primary).ignoresSafeArea(.all))
+        .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .safeAreaInset(edge: .bottom) {
             HStack {
                 VStack(alignment: .leading) {

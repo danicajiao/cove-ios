@@ -31,13 +31,13 @@ struct HomeView: View {
                         .frame(maxWidth: 215, alignment: .leading)
                         .font(Font.custom("Gazpacho-Black", size: 25))
                         .lineSpacing(6) // SwiftUI lineSpacing = Figma line height - Font size
-                        .foregroundStyle(Color(.Colors.Fills.primary))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                     Spacer()
                     // TODO: Add notifications button to the right of greeting Text
                     Image(systemName: "bell.fill")
                         .resizable()
                         .frame(width: 25, height: 25)
-                        .foregroundStyle(Color(.Colors.Brand.accent))
+                        .foregroundStyle(Color.Colors.Brand.accent)
                 }
                 .padding(.horizontal, 20)
 
@@ -108,18 +108,25 @@ struct HomeView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(viewModel.brands, id: \.id) { brand in
-                                VStack {
-                                    AsyncImage(url: URL(string: brand.imageURL)) { image in
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 100, height: 100)
-                                    } placeholder: {
-                                        ProgressView()
-                                    }
+                                VStack(spacing: 5) {
+                                    Circle()
+                                        .fill(Color.Colors.Fills.secondary)
+                                        .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
+                                        .frame(width: 161, height: 161)
+                                        .overlay {
+                                            AsyncImage(url: URL(string: brand.imageURL)) { image in
+                                                image
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 91, height: 91)
+                                            } placeholder: {
+                                                ProgressView()
+                                            }
+                                        }
+                                    
                                     Text(brand.name)
                                         .font(Font.custom("Lato-Bold", size: 14))
-                                        .foregroundStyle(Color(.Colors.Fills.primary))
+                                        .foregroundStyle(Color.Colors.Fills.primary)
                                         .frame(width: 100)
                                         .multilineTextAlignment(.center)
                                 }
@@ -132,7 +139,7 @@ struct HomeView: View {
             .padding(.top, 30)
         }
 //        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.Colors.Backgrounds.primary).ignoresSafeArea(.all))
+        .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .onAppear {
             print("homeView appeared")
             Task {

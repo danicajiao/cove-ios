@@ -31,15 +31,16 @@ struct BagView: View {
                 
                 if self.bag.bagProducts.isEmpty {
                     RoundedRectangle(cornerRadius: 10)
-                        .foregroundColor(.background)
+                        .fill(Color.Colors.Backgrounds.secondary)
                         .overlay {
                             Text("Products you add to your bag can be found here!")
                                 .multilineTextAlignment(.center)
                                 .font(Font.custom("Poppins-Regular", size: 16))
-                                .foregroundColor(.grey)
+                                .foregroundStyle(Color.Colors.Fills.primary)
                                 .padding(50)
                             
                         }
+                        .border(Color.Colors.Strokes.primary, width: 1)
                         .frame(height: 300)
                         .padding([.leading, .trailing], 20)
                 } else {
@@ -57,8 +58,8 @@ struct BagView: View {
                 
                 VStack {
                     Rectangle()
-                        .frame(height: 5)
-                        .foregroundColor(.background)
+                        .frame(height: 4)
+                        .foregroundStyle(Color.Colors.Fills.quinary)
                     
                     HStack {
                         TextField("Insert your coupon code", text: /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Value@*/.constant("")/*@END_MENU_TOKEN@*/)
@@ -67,7 +68,7 @@ struct BagView: View {
                             .frame(maxHeight: .infinity)
                             .overlay {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.grey, lineWidth: 1)
+                                    .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
                             }
                         
                         Button {
@@ -81,8 +82,8 @@ struct BagView: View {
                     .padding([.top, .bottom], 10)
                     
                     Rectangle()
-                        .frame(height: 5)
-                        .foregroundColor(.background)
+                        .frame(height: 4)
+                        .foregroundStyle(Color.Colors.Fills.quinary)
                 }
                 
                 if !self.bag.bagProducts.isEmpty {
@@ -106,15 +107,16 @@ struct BagView: View {
                 }
             }
         }
+        .background(Color(.Colors.Backgrounds.primary).ignoresSafeArea(.all))
         .safeAreaInset(edge: .bottom) {
             HStack {
                 VStack(alignment: .leading) {
                     Text("Total")
                         .font(Font.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                     Text("$\(self.bag.total)")
                         .font(Font.custom("Poppins-SemiBold", size: 20))
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                 }
                 
                 Button {
@@ -127,7 +129,7 @@ struct BagView: View {
             .background {
                 Color.white.ignoresSafeArea()
             }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.background), alignment: .top)
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
         }
         .onAppear {
             self.bag.total = 0

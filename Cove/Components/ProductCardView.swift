@@ -64,15 +64,15 @@ struct ProductCardView: View {
                     VStack (spacing: 6) {
                         VStack (spacing: 0) {
                             Text(headerStr)
-                                .font(Font.custom("Gazpacho-Black", size: 10))
-                                .foregroundStyle(.textPrimary)
+                                .font(Font.custom("Gazpacho-Black", size: 12))
+                                .foregroundStyle(Color.Colors.Fills.primary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
                             Text(bodyStr)
-                                .font(Font.custom("Lato-Regular", size: 10))
-                                .foregroundStyle(.grey)
+                                .font(Font.custom("Lato-Regular", size: 12))
+                                .foregroundStyle(Color.Colors.Fills.tertiary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,7 +80,7 @@ struct ProductCardView: View {
                         
                         Text("$\(Int(self.price))")
                             .font(Font.custom("Lato-Bold", size: 14))
-                            .foregroundStyle(.textPrimary)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)

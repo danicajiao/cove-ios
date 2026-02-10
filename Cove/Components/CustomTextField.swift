@@ -56,13 +56,13 @@ struct CustomTextField: View {
                     .font(.custom("Lato-Bold", size: 12))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 10)
-                    .foregroundStyle(.black.opacity(0.5))
+                    .foregroundStyle(Color(.Colors.Fills.tertiary))
             }
             HStack (spacing: 10) {
                 if let leftIcon = leftIcon {
                     Image(systemName: leftIcon)
                         .font(.system(size: 14))
-                        .foregroundColor(.black.opacity(0.5))
+                        .foregroundColor(Color(.Colors.Fills.quaternary))
                 }
                 UITextFieldRepresentable(
                     placeholder: placeholder,
@@ -80,7 +80,7 @@ struct CustomTextField: View {
                         isHidden?.toggle()
                     } label: {
                         Image(systemName: (isHidden ?? true) ? "eye.slash" : "eye")
-                            .accentColor(.black.opacity(0.5))
+                            .foregroundStyle(Color(.Colors.Fills.quaternary))
                     }
                 }
             }
@@ -89,7 +89,7 @@ struct CustomTextField: View {
             .background(.white)
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(.borderPrimary, lineWidth: 1)
+                    .strokeBorder(Color(.Colors.Strokes.primary), lineWidth: 1)
             }
         }
     }

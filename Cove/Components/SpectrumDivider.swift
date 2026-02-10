@@ -11,19 +11,18 @@ struct SpectrumDivider: View {
     @State private var animateGradient = false
 
     let spectrum: [Color] = [
-        .spectrumRed,
-        .spectrumOrange,
-        .spectrumYellow,
-        .spectrumGreen,
-        .spectrumBlue,
-        .spectrumViolet,
-        .spectrumRed,
-        .spectrumOrange,
-        .spectrumYellow,
-        .spectrumGreen,
-        .spectrumBlue,
-        .spectrumViolet,
-        .spectrumRed
+        .Colors.Brand.Palette.red,
+        .Colors.Brand.Palette.orange,
+        .Colors.Brand.Palette.yellow,
+        .Colors.Brand.Palette.green,
+        .Colors.Brand.Palette.blue,
+        .Colors.Brand.Palette.violet,
+        .Colors.Brand.Palette.red,
+        .Colors.Brand.Palette.orange,
+        .Colors.Brand.Palette.yellow,
+        .Colors.Brand.Palette.green,
+        .Colors.Brand.Palette.blue,
+        .Colors.Brand.Palette.violet
     ]
     
     var body: some View {

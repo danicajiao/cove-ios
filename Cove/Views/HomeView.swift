@@ -31,13 +31,13 @@ struct HomeView: View {
                         .frame(maxWidth: 215, alignment: .leading)
                         .font(Font.custom("Gazpacho-Black", size: 25))
                         .lineSpacing(6) // SwiftUI lineSpacing = Figma line height - Font size
-                        .foregroundStyle(.textPrimary)
+                        .foregroundStyle(Color(.Colors.Fills.primary))
                     Spacer()
                     // TODO: Add notifications button to the right of greeting Text
                     Image(systemName: "bell.fill")
                         .resizable()
                         .frame(width: 25, height: 25)
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color(.Colors.Brand.accent))
                 }
                 .padding(.horizontal, 20)
 
@@ -118,8 +118,8 @@ struct HomeView: View {
                                         ProgressView()
                                     }
                                     Text(brand.name)
-                                        .font(Font.custom("Poppins-Regular", size: 14))
-                                        .foregroundColor(.grey)
+                                        .font(Font.custom("Lato-Bold", size: 14))
+                                        .foregroundStyle(Color(.Colors.Fills.primary))
                                         .frame(width: 100)
                                         .multilineTextAlignment(.center)
                                 }
@@ -132,7 +132,7 @@ struct HomeView: View {
             .padding(.top, 30)
         }
 //        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.background.ignoresSafeArea(.all))
+        .background(Color(.Colors.Backgrounds.primary).ignoresSafeArea(.all))
         .onAppear {
             print("homeView appeared")
             Task {

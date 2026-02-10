@@ -18,7 +18,7 @@ struct ProductRow: View {
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .background {
-                            Color.backdrop
+                            Color.Colors.Backgrounds.secondary
                         }
                         .cornerRadius(10)
                 } placeholder: {
@@ -31,9 +31,10 @@ struct ProductRow: View {
                 VStack(alignment: .leading) {
                     Text(coffeeProduct.info.name)
                         .font(Font.custom("Poppins-Regular", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                     Text(coffeeProduct.info.roastery)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                     
                     Spacer()
                     
@@ -47,7 +48,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
@@ -63,7 +64,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -79,7 +80,7 @@ struct ProductRow: View {
                     Spacer()
                     Text("$\(String(Int(coffeeProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }
             .frame(height: 80)
@@ -101,9 +102,10 @@ struct ProductRow: View {
                 VStack(alignment: .leading) {
                     Text(musicProduct.info.album)
                         .font(Font.custom("Poppins-Regular", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                     Text(musicProduct.info.artist)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                     
                     Spacer()
                     
@@ -117,7 +119,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
@@ -133,7 +135,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -149,7 +151,7 @@ struct ProductRow: View {
                     Spacer()
                     Text("$\(String(Int(musicProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }
             .frame(height: 80)
@@ -171,9 +173,10 @@ struct ProductRow: View {
                 VStack(alignment: .leading) {
                     Text(apparelProduct.info.name)
                         .font(Font.custom("Poppins-Regular", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                     Text(apparelProduct.info.brand)
                         .font(Font.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                     
                     Spacer()
                     
@@ -187,7 +190,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
                         
                         Text(String(bagProduct.quantity))
@@ -203,7 +206,7 @@ struct ProductRow: View {
                                 .resizable()
                                 .frame(width: 20, height: 20)
                         }
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
@@ -219,7 +222,7 @@ struct ProductRow: View {
                     Spacer()
                     Text("$\(String(Int(apparelProduct.defaultPrice)))")
                         .font(Font.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(.accent)
+                        .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }
             .frame(height: 80)

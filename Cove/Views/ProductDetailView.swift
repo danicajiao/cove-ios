@@ -155,37 +155,37 @@ struct ProductDetailView: View {
                             HStack {
                                 Text("$\(Int(self.price))")
                                     .font(Font.custom("Lato-Bold", size: 22))
-                                    .foregroundColor(.accent)
+                                    .foregroundStyle(Color.Colors.Fills.primary)
 
                                 Spacer()
 
-                                Button {
-                                    if count > 1 {
-                                        count = count - 1
-                                    }
-                                } label: {
-                                    Image(systemName: "minus.square")
-                                        .resizable()
-                                        .frame(width: 20, height: 20)
-                                }
-                                .foregroundColor(.accent)
-                                .disabled(count == 1 ? true : false)
+//                                Button {
+//                                    if count > 1 {
+//                                        count = count - 1
+//                                    }
+//                                } label: {
+//                                    Image(systemName: "minus.square")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                }
+//                                .foregroundColor(.accent)
+//                                .disabled(count == 1 ? true : false)
 
-                                Text(String(count))
-                                    .font(Font.custom("Lato-Regular", size: 14))
-                                    .frame(width: 30, height: 20)
-
-                                Button {
-                                    if count < 15 {
-                                        count = count + 1
-                                    }
-                                } label: {
-                                    Image(systemName: "plus.square")
-                                        .resizable()
-                                        .frame(width: 20, height: 20)
-                                }
-                                .foregroundColor(.accent)
-                                .disabled(count == 15 ? true : false)
+//                                Text(String(count))
+//                                    .font(Font.custom("Lato-Regular", size: 14))
+//                                    .frame(width: 30, height: 20)
+//
+//                                Button {
+//                                    if count < 15 {
+//                                        count = count + 1
+//                                    }
+//                                } label: {
+//                                    Image(systemName: "plus.square")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                }
+//                                .foregroundColor(.accent)
+//                                .disabled(count == 15 ? true : false)
                             }
                         }
 
@@ -200,7 +200,7 @@ struct ProductDetailView: View {
                                     }
                                     Text("22 Reviews \(Image(systemName: "chevron.right"))")
                                         .font(Font.custom("Lato-Regular", size: 14))
-                                        .foregroundColor(.grey)
+                                        .foregroundStyle(Color.Colors.Fills.tertiary)
                                 }
 
                                 Spacer()
@@ -319,7 +319,7 @@ struct ProductDetailView: View {
             .background {
                 Color.white.ignoresSafeArea()
             }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.background), alignment: .top)
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
         }
         .navigationBarHidden(true)
         .onAppear {

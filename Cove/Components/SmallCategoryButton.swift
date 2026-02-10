@@ -23,6 +23,7 @@ struct SmallCategoryButton: View {
                 .overlay(alignment: .topLeading) {
                     Text(category)
                         .font(Font.custom("Gazpacho-Black", size: 14))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .padding(10)
                 }
                 .frame(width: 130, height: 60)
@@ -39,6 +40,7 @@ struct SmallCategoryButton: View {
                 .overlay(alignment: .topLeading) {
                     Text(category)
                         .font(Font.custom("Gazpacho-Black", size: 14))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .padding(10)
                 }
                 .frame(width: 130, height: 60)
@@ -56,6 +58,7 @@ struct SmallCategoryButton: View {
                 .overlay(alignment: .topLeading) {
                     Text(category)
                         .font(Font.custom("Gazpacho-Black", size: 14))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .padding(8)
                 }
                 .frame(width: 130, height: 60)
@@ -74,6 +77,7 @@ struct SmallCategoryButton: View {
                 .overlay(alignment: .topLeading) {
                     Text(category)
                         .font(Font.custom("Gazpacho-Black", size: 14))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .padding(10)
                 }
                 .frame(width: 130, height: 60)
@@ -91,6 +95,7 @@ struct SmallCategoryButton: View {
                 .overlay(alignment: .topLeading) {
                     Text(category)
                         .font(Font.custom("Gazpacho-Black", size: 14))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .padding(10)
                 }
                 .frame(width: 130, height: 60)

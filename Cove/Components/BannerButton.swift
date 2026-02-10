@@ -23,7 +23,6 @@ struct BannerButton: View {
                             VStack(alignment: .leading) {
                                 Text("Select craft roasters")
                                     .font(Font.custom("Gazpacho-Bold", size: 12))
-                                    .foregroundStyle(.textPrimary)
                                     .frame(width: 70, alignment: .leading)
                                 
                                 Spacer()
@@ -34,18 +33,16 @@ struct BannerButton: View {
                                     Text("off")
                                         .font(Font.custom("Gazpacho-Bold", size: 14))
                                 }
-                                .foregroundStyle(.textPrimary)
                                 
                                 Spacer()
                                 
                                 Text("See all items \(Image(systemName: "arrow.right"))")
                                     .font(Font.custom("Lato-Regular", size: 10))
-                                    .foregroundStyle(.textPrimary)
-                                
                             }
                             .padding(14)
                             .frame(width: geometry.size.height - (11 * 2), height: geometry.size.height - (11 * 2))
                             .background(.white)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .cornerRadius(8)
                         }
                         .frame(width: geometry.size.height, height: geometry.size.height)
@@ -61,7 +58,7 @@ struct BannerButton: View {
                     Text("Stumpton Huye Mountain")
                         .font(Font.custom("Lato-Regular", size: 14))
                 }
-                .foregroundStyle(.textPrimary)
+                .foregroundStyle(Color.Colors.Fills.primary)
                 .frame(maxWidth: .infinity)
                 
                 Image("How-To-Store-Coffee-Beans-Gear-Patrol-Lead-Full")

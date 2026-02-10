@@ -13,7 +13,7 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(Font.custom("Lato-Bold", size: 20))
-                .foregroundStyle(.textPrimary)
+                .foregroundStyle(Color(.Colors.Fills.primary))
             Spacer()
             Button {
                 // TODO: Navigate to Categories View
@@ -26,7 +26,7 @@ struct SectionHeader: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 14)
                 }
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color(.Colors.Brand.accent))
             }
         }
     }

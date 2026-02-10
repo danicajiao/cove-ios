@@ -15,15 +15,15 @@ struct BackButton: View {
             _ = self.appState.path.popLast()
         } label: {
             Circle()
-                .fill(.white)
-                .strokeBorder(.borderPrimary, lineWidth: 1)
+                .fill(Color(.Colors.Fills.secondary))
+                .strokeBorder(Color(.Colors.Strokes.primary), lineWidth: 1)
                 .frame(width: 36, height: 36)
                 .overlay {
                     Image(systemName: "arrow.left")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 16, height: 16)
-                        .foregroundStyle(.textPrimary)
+                        .foregroundStyle(Color(.Colors.Fills.primary))
                 }
         }
     }

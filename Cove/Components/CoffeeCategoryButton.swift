@@ -23,7 +23,7 @@ struct CoffeeCategoryButton: View {
                     .scaleEffect(1.2)
                     .offset(x: 30, y: 2)
                 Rectangle()
-                    .foregroundColor(.fruityGradient)
+                    .foregroundStyle(Color.Colors.Category.fruity)
                     .mask (
                         LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
                     )
@@ -44,7 +44,7 @@ struct CoffeeCategoryButton: View {
                     .scaleEffect(2.5)
                     .offset(x: 30, y: 0)
                 Rectangle()
-                    .foregroundColor(.chocoGradient)
+                    .foregroundStyle(Color.Colors.Category.choco)
                     .mask (
                         LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
                     )
@@ -65,7 +65,7 @@ struct CoffeeCategoryButton: View {
                     .scaleEffect(1.4)
                     .offset(x: 30, y: -4)
                 Rectangle()
-                    .foregroundColor(.citrusGradient)
+                    .foregroundStyle(Color.Colors.Category.citrus)
                     .mask (
                         LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
                     )
@@ -86,7 +86,7 @@ struct CoffeeCategoryButton: View {
                     .scaleEffect(1.0)
                     .offset(x: 30, y: 0)
                 Rectangle()
-                    .foregroundColor(.earthyGradient)
+                    .foregroundStyle(Color.Colors.Category.earthy)
                     .mask (
                         LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
                     )
@@ -107,7 +107,7 @@ struct CoffeeCategoryButton: View {
                     .scaleEffect(1.7)
                     .offset(x: 35, y: -6)
                 Rectangle()
-                    .foregroundColor(.floralGradient)
+                    .foregroundStyle(Color.Colors.Category.floral)
                     .mask (
                         LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.5, y: 0), endPoint: UnitPoint(x: 0.55, y: 0))
                     )

@@ -40,18 +40,15 @@ class HomeViewModel: ObservableObject {
                 // Decode document's categoryID to determine what product type it is
                 let categoryID = d["categoryID"] as? String
                 do {
-                    if categoryID == ProductTypes.coffee.rawValue {
-                        // Decode as a CoffeeProduct
+                    if categoryID == ProductTypes.coffee.rawValue { // Decode as a CoffeeProduct if categoryID maps to coffee ProductType enum
                         let coffeeProduct = try d.data(as: CoffeeProduct.self)
                         fetchedProductIDs.append(d.documentID)
                         return coffeeProduct
-                    } else if categoryID == ProductTypes.music.rawValue {
-                        // Decode as a MusicProduct
+                    } else if categoryID == ProductTypes.music.rawValue {   // Decode as a MusicProduct if categoryID maps to music ProductType enum
                         let musicProduct = try d.data(as: MusicProduct.self)
                         fetchedProductIDs.append(d.documentID)
                         return musicProduct
-                    } else if categoryID == ProductTypes.apparel.rawValue {
-                        // Decode as a ApparelProduct
+                    } else if categoryID == ProductTypes.apparel.rawValue { // Decode as a ApparelProduct if categoryID maps to apparel ProductType enum
                         let apparelProduct = try d.data(as: ApparelProduct.self)
                         fetchedProductIDs.append(d.documentID)
                         return apparelProduct

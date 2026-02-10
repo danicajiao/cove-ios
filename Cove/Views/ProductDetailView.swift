@@ -14,10 +14,13 @@ struct ProductDetailView: View {
     @EnvironmentObject var bag: Bag
     @StateObject var viewModel: ProductDetailViewModel
     
-    var product: (any Product)?
+    var product: any Product
     var headerStr: String = "Header"
     var bodyStr: String = "Body"
     var price: Float = 9
+    
+    @State private var uiImage: UIImage? = nil
+    @State private var averageColor: Color = .white // Default background color
     
     @State var count: Int = 1
 //    @State var detailSelection: ProductDetailViewModel.DetailSelection
@@ -26,6 +29,10 @@ struct ProductDetailView: View {
     @State var viewPagerSize: CGSize = .zero
     
     init(product: any Product) {
+        self.product = product
+        
+        self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: product))
+        
         if let coffeeProduct = product as? CoffeeProduct {
             // Product is a CoffeeProduct
             self.product = coffeeProduct
@@ -50,9 +57,6 @@ struct ProductDetailView: View {
             self.headerStr = apparelProduct.info.brand
             self.bodyStr = apparelProduct.info.name
             self.price = apparelProduct.defaultPrice
-        } else {
-            self.product = nil
-            self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(product: nil))
         }
     }
     
@@ -71,6 +75,27 @@ struct ProductDetailView: View {
         return (keyWindow?.safeAreaInsets.top)!
     }
     
+    private func fetchImage() {
+        guard let imageURL = URL(string: product.defaultImageURL) else { return }
+        let storageRef = Storage.storage().reference(forURL: imageURL.absoluteString)
+
+        storageRef.getData(maxSize: 10 * 1024 * 1024) { data, error in
+            if let error = error {
+                print("Error fetching image: \(error.localizedDescription)")
+                return
+            }
+
+            if let data = data, let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    self.uiImage = image
+                    if let uiColor = image.averageColor {
+                        self.averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
+                    }
+                }
+            }
+        }
+    }
+    
     /// A preference key to store a view's rect
     public struct ViewSizeKey: PreferenceKey {
         public typealias Value = CGSize
@@ -82,70 +107,85 @@ struct ProductDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                if let product = self.product {
-                    AsyncImage(url: URL(string: product.defaultImageURL)) { image in
-                        image
+//                if let product = self.product {
+//                    AsyncImage(url: URL(string: product.defaultImageURL)) { image in
+//                        image
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fit)
+//                            .cornerRadius(10)
+//                            .padding([.leading, .trailing], getSafeAreaTop())
+//                            .padding(.bottom, 20)
+//                            .background {
+//                                AsyncImage(url: URL(string: product.defaultImageURL)) { image in
+//                                    image
+//                                        .resizable()
+//                                        .aspectRatio(contentMode: .fit)
+//                                        .padding(-getSafeAreaTop())
+//                                        .blur(radius: 200)
+//                                } placeholder: { }
+//                            }
+//                    } placeholder: {
+//                        ProgressView()
+//                    }
+//                    .frame(height: 300)
+//                }
+//                
+                VStack {
+                    if let uiImage = uiImage {
+                        Image(uiImage: uiImage)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .cornerRadius(10)
-                            .padding([.leading, .trailing], getSafeAreaTop())
-                            .padding(.bottom, 20)
-                            .background {
-                                AsyncImage(url: URL(string: product.defaultImageURL)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .padding(-getSafeAreaTop())
-                                        .blur(radius: 200)
-                                } placeholder: { }
-                            }
-                    } placeholder: {
+                            .aspectRatio(contentMode: .fit) // Maintain aspect ratio
+                    } else {
                         ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .onAppear {
+                                fetchImage()
+                            }
                     }
-                    .frame(height: 300)
                 }
+                .frame(height: 300)
 
                 Group {
                     VStack(spacing: 20) {
                         VStack(spacing: 8) {
                             Text(headerStr)
-                                .font(Font.custom("Poppins-Regular", size: 22))
+                                .font(Font.custom("Gazpacho-Black", size: 22))
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
                             HStack {
                                 Text("$\(Int(self.price))")
-                                    .font(Font.custom("Poppins-SemiBold", size: 22))
-                                    .foregroundColor(.accent)
+                                    .font(Font.custom("Lato-Bold", size: 22))
+                                    .foregroundStyle(Color.Colors.Fills.primary)
 
                                 Spacer()
 
-                                Button {
-                                    if count > 1 {
-                                        count = count - 1
-                                    }
-                                } label: {
-                                    Image(systemName: "minus.square")
-                                        .resizable()
-                                        .frame(width: 20, height: 20)
-                                }
-                                .foregroundColor(.accent)
-                                .disabled(count == 1 ? true : false)
+//                                Button {
+//                                    if count > 1 {
+//                                        count = count - 1
+//                                    }
+//                                } label: {
+//                                    Image(systemName: "minus.square")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                }
+//                                .foregroundStyle(.accent)
+//                                .disabled(count == 1 ? true : false)
 
-                                Text(String(count))
-                                    .font(Font.custom("Poppins-Regular", size: 14))
-                                    .frame(width: 30, height: 20)
-
-                                Button {
-                                    if count < 15 {
-                                        count = count + 1
-                                    }
-                                } label: {
-                                    Image(systemName: "plus.square")
-                                        .resizable()
-                                        .frame(width: 20, height: 20)
-                                }
-                                .foregroundColor(.accent)
-                                .disabled(count == 15 ? true : false)
+//                                Text(String(count))
+//                                    .font(Font.custom("Lato-Regular", size: 14))
+//                                    .frame(width: 30, height: 20)
+//
+//                                Button {
+//                                    if count < 15 {
+//                                        count = count + 1
+//                                    }
+//                                } label: {
+//                                    Image(systemName: "plus.square")
+//                                        .resizable()
+//                                        .frame(width: 20, height: 20)
+//                                }
+//                                .foregroundStyle(.accent)
+//                                .disabled(count == 15 ? true : false)
                             }
                         }
 
@@ -156,18 +196,18 @@ struct ProductDetailView: View {
                                     HStack {
                                         RatingView(rating: 4)
                                         Text("4.3")
-                                            .font(Font.custom("Poppins-Regular", size: 14))
+                                            .font(Font.custom("Lato-Regular", size: 14))
                                     }
                                     Text("22 Reviews \(Image(systemName: "chevron.right"))")
-                                        .font(Font.custom("Poppins-Regular", size: 14))
-                                        .foregroundColor(.grey)
+                                        .font(Font.custom("Lato-Regular", size: 14))
+                                        .foregroundStyle(Color.Colors.Fills.tertiary)
                                 }
 
                                 Spacer()
 
                                 Circle()
                                     .frame(width: 35, height: 35)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .overlay {
                                         Circle()
                                             .frame(width: 30, height: 30)
@@ -176,19 +216,16 @@ struct ProductDetailView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(10)
-                            .background {
-                                Rectangle()
-                                    .foregroundColor(.blue)
-                            }
+                            .background(.white)
                             .cornerRadius(8)
+                            .customShadow()
                         }
                         .buttonStyle(PlainButtonStyle())
                         
+                        
                         ProductDetailTabs(viewModel: self.viewModel)
 
-                        Text("Similar Products")
-                            .font(Font.custom("Poppins-SemiBold", size: 18))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        SectionHeader(title: "Similar to this")
                         
                         ScrollView(.horizontal) {
                             HStack(spacing: 20) {
@@ -196,9 +233,9 @@ struct ProductDetailView: View {
                                     ProductCardView(product: product)
                                 }
                             }
-                            .padding(50)
+//                            .padding(50)
                         }
-                        .padding(-50)
+//                        .padding(-50)
                         
                     }
                     .padding(20)
@@ -216,11 +253,11 @@ struct ProductDetailView: View {
                 } label: {
                     RoundedRectangle(cornerRadius: 5)
                         .frame(width: 30, height: 30)
-                        .foregroundColor(.black)
+                        .foregroundStyle(.black)
                         .opacity(0.2)
                         .overlay {
                             Image(systemName: "chevron.left")
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                         }
                 }
                 Spacer()
@@ -229,26 +266,26 @@ struct ProductDetailView: View {
         }
         .safeAreaInset(edge: .bottom) {
             HStack {
-                if let product = self.product {
+//                if let product = self.product {
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.background, lineWidth: 1)
+                        .stroke(.gray, lineWidth: 1)
                         .frame(width: 55, height: 55)
                         .overlay {
                             LikeButton(enabled: product.isFavorite ?? false)
                         }
-                }
+//                }
                 
                 Button {
                     
                     if !self.bag.bagProducts.contains(where: { bagProduct in
-                        bagProduct.product.id == self.product!.id
+                        bagProduct.product.id == self.product.id
                     }) {
-                        self.bag.bagProducts.append(BagProduct(product: self.product!, quantity: count))
+                        self.bag.bagProducts.append(BagProduct(product: self.product, quantity: count))
                         self.bag.totalItems += self.count
                     } else {
                         // Get the index of the existing product that matches product being added
                         let indexOfExisting = self.bag.bagProducts.firstIndex { bagProduct in
-                            bagProduct.product.id == self.product!.id
+                            bagProduct.product.id == self.product.id
                         }
                         // If the index was not found, return
                         guard let i = indexOfExisting else {
@@ -260,9 +297,9 @@ struct ProductDetailView: View {
                     }
                     
                     if !self.bag.categories.contains(where: { category in
-                        category == self.product!.categoryID
+                        category == self.product.categoryID
                     }) {
-                        self.bag.categories.append(self.product!.categoryID)
+                        self.bag.categories.append(self.product.categoryID)
                     }
 //                    let keyExists = self.bag.categories[self.product!.categoryID] != nil
 //
@@ -282,7 +319,7 @@ struct ProductDetailView: View {
             .background {
                 Color.white.ignoresSafeArea()
             }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundColor(Color.background), alignment: .top)
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
         }
         .navigationBarHidden(true)
         .onAppear {

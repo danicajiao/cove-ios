@@ -5,7 +5,7 @@
 //  Created by Daniel Cajiao on 12/16/22.
 //
 
-import SwiftUI
+//import SwiftUI
 import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
@@ -170,24 +170,45 @@ class AppState: ObservableObject {
         
         if GIDSignIn.sharedInstance.hasPreviousSignIn() {
             GIDSignIn.sharedInstance.restorePreviousSignIn { [unowned self] user, error in
-                authenticateUser(for: user, with: error) { error in
-                    onFailure(error)
+                // If restore fails, fall back to fresh sign-in
+                if error != nil {
+                    print("⚠️ Failed to restore previous sign-in, attempting fresh sign-in...")
+                    GIDSignIn.sharedInstance.signOut()
+                    self.performFreshGoogleSignIn(onFailure: onFailure)
+                } else {
+                    authenticateUser(for: user, with: error) { error in
+                        onFailure(error)
+                    }
                 }
             }
         } else {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-            guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
-            // 5
-            GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
-                guard let result = signInResult else {
-                    // Inspect error
-                    self.authMethod = nil
-                    print(error?.localizedDescription ?? "")
-                    return
+            performFreshGoogleSignIn(onFailure: onFailure)
+        }
+    }
+    
+    private func performFreshGoogleSignIn(onFailure: @escaping (Error) -> Void) {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
+        
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
+            guard let result = signInResult else {
+                // Inspect error with detailed logging
+                self.authMethod = nil
+                if let error = error {
+                    print("❌ Google Sign In Error:")
+                    print("Description: \(error.localizedDescription)")
+                    let nsError = error as NSError
+                    print("Domain: \(nsError.domain)")
+                    print("Code: \(nsError.code)")
+                    print("UserInfo: \(nsError.userInfo)")
+                    if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+                        print("Underlying Error: \(underlyingError)")
+                    }
                 }
-                self.authenticateUser(for: result.user, with: error) { error in
-                    onFailure(error)
-                }
+                return
+            }
+            self.authenticateUser(for: result.user, with: error) { error in
+                onFailure(error)
             }
         }
     }
@@ -197,7 +218,15 @@ class AppState: ObservableObject {
         // 1
         if let error = error {
             self.authMethod = nil
-            print(error.localizedDescription)
+            
+            // Detailed error logging
+            print("❌ Google Auth Error (before Firebase):")
+            print("Description: \(error.localizedDescription)")
+            let nsError = error as NSError
+            print("Domain: \(nsError.domain)")
+            print("Code: \(nsError.code)")
+            print("UserInfo: \(nsError.userInfo)")
+            
             return
         }
 
@@ -215,7 +244,20 @@ class AppState: ObservableObject {
                 GIDSignIn.sharedInstance.signOut()
                 
                 self.authMethod = nil
-                print(error.localizedDescription)
+                
+                // Detailed error logging
+                print("❌ Firebase Auth Error:")
+                print("Description: \(error.localizedDescription)")
+                let nsError = error as NSError
+                print("Domain: \(nsError.domain)")
+                print("Code: \(nsError.code)")
+                print("UserInfo: \(nsError.userInfo)")
+                
+                // Log token info for debugging (be careful with sensitive data in production)
+                print("Access Token exists: \(user?.accessToken.tokenString != nil)")
+                print("ID Token exists: \(user?.idToken?.tokenString != nil)")
+                
+                onFailure(error)
             } else {
                 self.authState = .loggedIn
                 self.path.append(.main)

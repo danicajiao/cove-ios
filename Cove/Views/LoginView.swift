@@ -15,7 +15,7 @@ struct LoginView: View {
     @State private var errorMessage: String? = nil
         
     @State var email: String = ""
-    @State var password: String = "" 
+    @State var password: String = ""
     @State var loading: Bool = false
     
     var body: some View {
@@ -23,12 +23,14 @@ struct LoginView: View {
             VStack(spacing: 20) {
                 Text("Cove.")
                     .font(.custom("Gazpacho-Heavy", size: 40))
+                    .foregroundStyle(Color.Colors.Fills.primary)
                 
                 SpectrumDivider()
                 
                 Group {
                     Text("Log in to your account")
                         .font(.custom("Lato-Bold", size: 28))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     VStack(spacing: 4) {
@@ -59,7 +61,7 @@ struct LoginView: View {
                                 Text("Forgot password?")
                                     .font(.custom("Lato-Regular", size: 14))
                                     .underline()
-                                    .foregroundStyle(.black.opacity(0.5))
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
                             }
                             Spacer()
                             Button {
@@ -67,7 +69,7 @@ struct LoginView: View {
                             } label: {
                                 Text("Face ID \(Image(systemName: "faceid"))")
                                     .font(.custom("Lato-Regular", size: 16))
-                                    .foregroundStyle(.black.opacity(0.5))
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
                             }
                         }
                         .padding(.horizontal, 10)
@@ -100,14 +102,15 @@ struct LoginView: View {
                 
                 HStack {
                     Capsule()
-                        .fill(.gray.opacity(0.5))
+                        .fill(Color.Colors.Fills.quaternary)
                         .frame(height: 2)
                         .padding(.leading, 60)
                         .padding(.trailing)
                     Text("OR")
                         .font(.custom("Lato-Regular", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.quaternary)
                     Capsule()
-                        .fill(.gray.opacity(0.5))
+                        .fill(Color.Colors.Fills.quaternary)
                         .frame(height: 2)
                         .padding(.trailing, 60)
                         .padding(.leading)
@@ -123,21 +126,20 @@ struct LoginView: View {
                 HStack(spacing: 0) {
                     Text("Don't have an account? ")
                         .font(.custom("Lato-Regular", size: 14))
-                        .foregroundColor(.black.opacity(0.5))
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                     Button {
                         self.appState.path.append(.signup)
                     } label: {
                         Text("Sign up")
                             .font(.custom("Lato-Regular", size: 14))
-                            .foregroundColor(.black)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                     }
                 }
                 
                 Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(20)
-            .background(Color.background)
+            .background(Color.Colors.Backgrounds.primary)
             .overlay(alignment: .topLeading) {
                 BackButton()
                     .padding(20)

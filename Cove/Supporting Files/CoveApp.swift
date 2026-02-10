@@ -61,6 +61,7 @@ struct CoveApp: App {
                         SplashView()
                             .transition(.opacity)
                     }
+//                    HomeView()
                 }
                 .animation(.default, value: networkMonitor.isConnected)
                 .navigationDestination(for: Path.self) { path in

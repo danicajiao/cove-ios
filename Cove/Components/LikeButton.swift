@@ -20,10 +20,11 @@ struct LikeButton : View {
     var body: some View {
         ZStack {
             Circle()
-                .frame(width: 35, height: 35)
-                .foregroundColor(.white)
+                .frame(width: 26, height: 26)
+                .foregroundStyle(Color.Colors.Fills.secondary)
             Image(systemName: enabled ? "heart.fill" : "heart")
-                .foregroundColor(enabled ? .pink : .black)
+                .font(.system(size: 14))
+                .foregroundStyle(enabled ? .pink : Color.Colors.Strokes.primary)
         }
         .scaleEffect(scale)
         .onLongPressGesture(minimumDuration: 2.5, maximumDistance: .infinity, pressing: { pressing in

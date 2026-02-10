@@ -26,10 +26,12 @@ struct WelcomeView: View {
             VStack(alignment: .leading) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("A new way to shop local")
-                        .font(.custom("Gazpacho-Black", size: 30))
-                        .containerRelativeFrame(.horizontal, count: 100, span: 50, spacing: 0)
+                        .font(.custom("Gazpacho-Bold", size: 30))
+                        .foregroundStyle(Color.Colors.Fills.primary)
+                        .containerRelativeFrame(.horizontal, count: 2, span: 1, spacing: 0)
                     Text("Cove.")
                         .font(.custom("Gazpacho-Heavy", size: 60))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                 }
                 
                 Button {
@@ -49,7 +51,7 @@ struct WelcomeView: View {
             .padding(20)
         }
         .ignoresSafeArea(edges: .top)
-        .background(Color.background)
+        .background(Color.Colors.Backgrounds.primary)
         .onAppear {
             print(self.appState.path)
         }

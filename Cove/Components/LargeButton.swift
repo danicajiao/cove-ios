@@ -14,7 +14,7 @@ struct LargeButton: View {
         switch category {
         case "Music":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("727a7238365525.576d3001c7656 2")
                         .resizable()
@@ -29,7 +29,7 @@ struct LargeButton: View {
                 .cornerRadius(8)
         case "Coffee":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-subscription-2048px-3198-3x2-1")
                         .resizable()
@@ -45,7 +45,7 @@ struct LargeButton: View {
                 .cornerRadius(8)
         case "Home":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("6a24c9162480919.63d6b3eceb963")
                         .resizable()
@@ -62,7 +62,7 @@ struct LargeButton: View {
                 .cornerRadius(8)
         case "Bevs":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("58533a99308279.5ef03e3c0da5a")
                         .resizable()
@@ -81,7 +81,7 @@ struct LargeButton: View {
                 .cornerRadius(8)
         default:
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("817b69111912037.600a933bbd858")
                         .resizable()

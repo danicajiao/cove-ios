@@ -23,10 +23,10 @@ struct PrimaryButton: PrimitiveButtonStyle {
             .padding()
             .frame(maxWidth: self.width)
             .frame(height: self.height)
-            .foregroundStyle(.white)
+            .foregroundStyle(Color.Colors.Fills.secondary)
             .background {
                 Capsule()
-                    .fill(.black)
+                    .fill(Color.Colors.Fills.primary)
             }
             // animation defaults
             .opacity(isPressed ? 0.2 : 1)

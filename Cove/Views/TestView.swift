@@ -7,130 +7,93 @@
 
 import SwiftUI
 import UIKit
+import CHTCollectionViewWaterfallLayout
 
-class TestViewController: UIViewController {
-    var textField = UITextField()
-    weak var delegate: UITextFieldDelegate?
+// MARK: - SwiftUI Wrapper
+struct WaterfallCollectionView: UIViewControllerRepresentable {
+    // Example data for demonstration
+    let items: [String] = Array(1...50).map { "Item \($0)" }
     
-    // Gets called during super.init
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    func makeUIViewController(context: Context) -> UICollectionViewController {
+        // Initialize the waterfall layout
+        let layout = CHTCollectionViewWaterfallLayout()
+        layout.columnCount = 2 // Number of columns
+        layout.minimumColumnSpacing = 10
+        layout.minimumInteritemSpacing = 10
+        layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         
-        print("viewDidLoad HIT")
-                
-        textField.delegate = delegate
-        textField.backgroundColor = .yellow
-        textField.translatesAutoresizingMaskIntoConstraints = false
-//        self.view.translatesAutoresizingMaskIntoConstraints = false
+        // Create the UICollectionViewController
+        let collectionViewController = UICollectionViewController(collectionViewLayout: layout)
+        collectionViewController.collectionView.dataSource = context.coordinator
+        collectionViewController.collectionView.delegate = context.coordinator
+        collectionViewController.collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
         
-        print("Intrinsic textfield size: \(textField.intrinsicContentSize)")
-
-        self.view.addSubview(textField)
-        
-        print("viewDidLoad -> textField.frame.height \(textField.frame.height)")
-        
-        NSLayoutConstraint.activate([
-            textField.widthAnchor.constraint(equalTo: self.view.widthAnchor),
-//            textField.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.frame.height), // Minimum height of 64 points
-//            textField.heightAnchor.constraint(equalTo: self.view.heightAnchor)
-//            self.view.widthAnchor.constraint(equalToConstant: 64),
-            self.view.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.intrinsicContentSize.height)
-        ])
+        return collectionViewController
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        print("viewDidLayoutSubviews HIT")
-        print("viewDidLayoutSubviews -> textField.frame.height \(textField.frame.height)")
-        
-//        NSLayoutConstraint.activate([
-//            self.view.heightAnchor.constraint(greaterThanOrEqualToConstant: textField.frame.height)
-//        ])
-//        
-//        print(self.view.constraints)
-
+    func updateUIViewController(_ uiViewController: UICollectionViewController, context: Context) {
+        // Handle updates if necessary
+        uiViewController.collectionView.reloadData()
     }
-}
-
-struct TestViewRepresentable: UIViewControllerRepresentable {
-    typealias UIViewControllerType = TestViewController
-
-    @Binding var text: String
     
-    class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: TestViewRepresentable
+    // MARK: - Coordinator
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate, CHTCollectionViewDelegateWaterfallLayout {
+        var parent: WaterfallCollectionView
         
-        init(parent: TestViewRepresentable) {
+        init(_ parent: WaterfallCollectionView) {
             self.parent = parent
         }
         
-        func textFieldDidChangeSelection(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
+        // MARK: - UICollectionViewDataSource
+        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+            parent.items.count
         }
         
-        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            textField.resignFirstResponder()
-            return true
+        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath)
+            cell.contentView.backgroundColor = .blue
+            
+            // Add a label to display the item (for demonstration purposes)
+            if cell.contentView.subviews.isEmpty {
+                let label = UILabel(frame: cell.contentView.bounds)
+                label.textAlignment = .center
+                label.textColor = .white
+                label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+                label.tag = 100 // Tag for reuse
+                cell.contentView.addSubview(label)
+            }
+            
+            if let label = cell.contentView.viewWithTag(100) as? UILabel {
+                label.text = parent.items[indexPath.item]
+            }
+            
+            return cell
         }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
-    }
-    
-    func makeUIViewController(context: Context) -> TestViewController {
-        print("makeUIViewController HIT")
-        let viewController = TestViewController()
-        viewController.delegate = context.coordinator // Setting the coordinator as the delegate
-        viewController.textField.text = text
-        print("makeUIViewController -> textField.frame.height \(viewController.textField.frame.height)")
-        return viewController
-    }
-
-    func updateUIViewController(_ uiViewController: TestViewController, context: Context) {
-        // Update the view controller if needed
-        print("updateUIViewController HIT")
-        uiViewController.textField.text = text
-        print("updateUIViewController -> textField.frame.height \(uiViewController.textField.frame.height)")
+        
+        // MARK: - CHTCollectionViewDelegateWaterfallLayout
+        func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+            // Return a size with a random height for demonstration
+            let width = (collectionView.bounds.width - 30) / 2 // Adjust for column spacing and insets
+            let height = CGFloat.random(in: 100...200)
+            return CGSize(width: width, height: height)
+        }
     }
 }
 
-#Preview {
-    @Previewable @State var password: String = "hello"
-    @Previewable @State var rightAreaToggle: Bool = true
-    @Previewable @State var bottomAreaToggle: Bool = true
-    
-    VStack {
-        Text(password)
-        HStack {
-            TestViewRepresentable(text: $password)
-                .border(.green)
-//                .frame(width: 100, height: 10)
-                .background(Color.blue)
-            if rightAreaToggle {
-                Text("Right of the TextField")
-                    .border(.purple)
-            }
-        }
-        if bottomAreaToggle {
-            HStack {
-                Rectangle()
-                    .fill(Color.green)
-                    .frame(maxWidth: .infinity, maxHeight: 100)
-                Rectangle()
-                    .fill(Color.cyan)
-                    .frame(width: 100, height: 100)
-            }
-        }
-        HStack{
-            Toggle("right", isOn: $rightAreaToggle)
-            Toggle("bottom", isOn: $bottomAreaToggle)
-        }
-        TextField("Placeholder", text: $password)
-//            .frame(width: 100, height: 100)
-            .background(Color.yellow)
+// MARK: - SwiftUI Preview
+struct TestView: View {
+    var body: some View {
+        WaterfallCollectionView()
+            .ignoresSafeArea()
     }
-    .border(.red)
-    .padding()
+}
+
+struct TestView_Previews: PreviewProvider {
+    static var previews: some View {
+        TestView()
+    }
 }

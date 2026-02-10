@@ -14,7 +14,7 @@ struct OriginButton: View {
         switch origin {
         case "Colombia":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-origin-colombia")
                         .resizable()
@@ -31,7 +31,7 @@ struct OriginButton: View {
                 .cornerRadius(8)
         case "Guatemala":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-origin-guatemala")
                         .resizable()
@@ -47,7 +47,7 @@ struct OriginButton: View {
                 .cornerRadius(8)
         case "Ethiopia":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-origin-ethiopia")
                         .resizable()
@@ -63,7 +63,7 @@ struct OriginButton: View {
                 .cornerRadius(8)
         case "Costa Rica":
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-origin-costa-rica")
                         .resizable()
@@ -79,7 +79,7 @@ struct OriginButton: View {
                 .cornerRadius(8)
         default:
             Rectangle()
-                .foregroundColor(.clear)
+                .foregroundStyle(.clear)
                 .overlay {
                     Image("coffee-origin-kenya")
                         .resizable()

@@ -16,12 +16,12 @@ struct ProductDetailTabs: View {
                 HStack(spacing: 0) {
                     if self.viewModel.detailSelection == .description {
                         Text("Description")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .font(Font.custom("Lato-Bold", size: 16))
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 120, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.Colors.)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -30,8 +30,8 @@ struct ProductDetailTabs: View {
                             }
                     } else {
                         Text("Description")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .font(Font.custom("Lato-Regular", size: 16))
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -42,12 +42,12 @@ struct ProductDetailTabs: View {
                     
                     if self.viewModel.detailSelection == .tracklist {
                         Text("Tracklist")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .font(Font.custom("Lato-Regular", size: 16))
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 90, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -56,8 +56,8 @@ struct ProductDetailTabs: View {
                             }
                     } else {
                         Text("Tracklist")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .font(Font.custom("Lato-Regular", size: 16))
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 90, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -68,13 +68,13 @@ struct ProductDetailTabs: View {
                     
                     if self.viewModel.detailSelection == .about {
                         Text("About")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .font(Font.custom("Lato-Bold", size: 16))
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -84,7 +84,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("About")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .onTapGesture {
@@ -99,7 +99,7 @@ struct ProductDetailTabs: View {
                 if self.viewModel.detailSelection == .description {
                     Text(musicProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 else if self.viewModel.detailSelection == .tracklist {
@@ -108,11 +108,11 @@ struct ProductDetailTabs: View {
                             HStack {
                                 Text(track.title)
                                     .font(Font.custom("Poppins-Regular", size: 16))
-                                    .foregroundColor(.grey)
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
                                 
                                 Text(String(track.durationSec))
                                     .font(Font.custom("Poppins-Regular", size: 16))
-                                    .foregroundColor(.accent)
+                                    .foregroundStyle(Color.Colors.Brand.accent)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -121,7 +121,7 @@ struct ProductDetailTabs: View {
                 else if self.viewModel.detailSelection == .about {
                     Text(musicProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 
@@ -133,11 +133,11 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .description {
                         Text("Description")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 120, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -147,7 +147,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("Description")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -159,11 +159,11 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .origin {
                         Text("Origin")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -173,7 +173,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("Origin")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -185,12 +185,12 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .about {
                         Text("About")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -200,7 +200,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("About")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .onTapGesture {
@@ -215,7 +215,7 @@ struct ProductDetailTabs: View {
                 if self.viewModel.detailSelection == .description {
                     Text(coffeeProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 else if self.viewModel.detailSelection == .origin {
@@ -224,10 +224,10 @@ struct ProductDetailTabs: View {
                             HStack {
                                 Text(originDetail.title)
                                     .font(Font.custom("Poppins-SemiBold", size: 16))
-                                    .foregroundColor(.grey)
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
                                 Text(originDetail.content)
                                     .font(Font.custom("Poppins-Regular", size: 16))
-                                    .foregroundColor(.accent)
+                                    .foregroundStyle(Color.Colors.Brand.accent)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -236,7 +236,7 @@ struct ProductDetailTabs: View {
                 else if self.viewModel.detailSelection == .about {
                     Text(coffeeProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -247,11 +247,11 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .description {
                         Text("Description")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 120, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -261,7 +261,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("Description")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -273,11 +273,11 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .specifications {
                         Text("Specifics")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 100, minHeight: 40)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -287,7 +287,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("Specifics")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 100, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
@@ -299,12 +299,12 @@ struct ProductDetailTabs: View {
                     if self.viewModel.detailSelection == .about {
                         Text("About")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundColor(.accent)
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.backdrop)
+//                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
@@ -314,7 +314,7 @@ struct ProductDetailTabs: View {
                     } else {
                         Text("About")
                             .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundColor(.grey)
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
                         //                                    .padding(10)
                             .onTapGesture {
@@ -329,7 +329,7 @@ struct ProductDetailTabs: View {
                 if self.viewModel.detailSelection == .description {
                     Text(apparelProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 else if self.viewModel.detailSelection == .specifications {
@@ -338,11 +338,11 @@ struct ProductDetailTabs: View {
                             VStack(alignment: .leading) {
                                 Text(spec.title)
                                     .font(Font.custom("Poppins-SemiBold", size: 16))
-                                    .foregroundColor(.grey)
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
                                 ForEach(spec.content, id: \.self) { el in
                                     Text(el)
                                         .font(Font.custom("Poppins-Regular", size: 16))
-                                        .foregroundColor(.grey)
+                                        .foregroundStyle(Color.Colors.Fills.tertiary)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -352,7 +352,7 @@ struct ProductDetailTabs: View {
                 else if self.viewModel.detailSelection == .about {
                     Text(apparelProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundColor(.grey)
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

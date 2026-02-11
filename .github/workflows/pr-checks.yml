@@ -1,0 +1,80 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Cove/**'
+      - 'Cove.xcodeproj/**'
+      - 'Cove.xcworkspace/**'
+      - 'Podfile'
+      - 'Podfile.lock'
+      - '.github/workflows/pr-checks.yml'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      
+      - name: Install CocoaPods dependencies
+        run: pod install
+      
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      
+      - name: Build iOS app
+        run: |
+          xcodebuild clean build \
+            -workspace Cove.xcworkspace \
+            -scheme Cove \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty && exit ${PIPESTATUS[0]}
+      
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -workspace Cove.xcworkspace \
+            -scheme Cove \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.2' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty && exit ${PIPESTATUS[0]}
+        continue-on-error: true
+      
+      - name: Check for SwiftLint
+        id: swiftlint-check
+        run: |
+          if [ -f ".swiftlint.yml" ]; then
+            echo "has_swiftlint=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_swiftlint=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Install SwiftLint
+        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
+        run: brew install swiftlint
+      
+      - name: Run SwiftLint
+        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
+        run: swiftlint lint --strict

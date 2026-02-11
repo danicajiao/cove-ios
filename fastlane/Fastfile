@@ -77,7 +77,15 @@ platform :ios do
     )
     
     # Upload to TestFlight
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_filepath: "#{Dir.home}/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8",
+      in_house: false
+    )
+    
     upload_to_testflight(
+      api_key: api_key,
       skip_waiting_for_build_processing: true,
       distribute_external: false,
       changelog: "New build from CI/CD"
@@ -85,7 +93,7 @@ platform :ios do
     
     # Commit and push the version bump
     commit_version_bump(
-      message: "Bump build number to #{lane_context[SharedValues::BUILD_NUMBER]}",
+      message: "chore: increment build number to #{lane_context[SharedValues::BUILD_NUMBER]} [skip ci]",
       xcodeproj: "Cove.xcodeproj"
     )
     
@@ -122,14 +130,31 @@ platform :ios do
       }
     )
     
+    # Set up API key for App Store Connect
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_filepath: "#{Dir.home}/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8",
+      in_house: false
+    )
+    
     # Upload to App Store Connect
     upload_to_app_store(
+      api_key: api_key,
       skip_metadata: false,
       skip_screenshots: true,
       submit_for_review: false,
       automatic_release: false,
       force: true
     )
+    
+    # Commit and push the version bump
+    commit_version_bump(
+      message: "chore: bump version to #{version} (build #{lane_context[SharedValues::BUILD_NUMBER]}) [skip ci]",
+      xcodeproj: "Cove.xcodeproj"
+    )
+    
+    push_to_git_remote
   end
   
   desc "Run linting"

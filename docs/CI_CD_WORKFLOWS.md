@@ -42,16 +42,19 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 **Steps:**
 1. Checkout code
 2. Install dependencies (Ruby, Fastlane, CocoaPods)
-3. **Auto-increment build number** (`CFBundleVersion`)
-4. Commit and push build number change
-5. Import code signing certificates
-6. Download provisioning profiles
-7. Build and archive the app
-8. Export IPA
-9. Upload to TestFlight
+3. Configure git for version commits
+4. Import code signing certificates and provisioning profiles
+5. Set up App Store Connect API key
+6. **Run `fastlane beta` lane** which:
+   - Installs CocoaPods dependencies
+   - Auto-increments build number (syncs with TestFlight)
+   - Builds and archives the app
+   - Uploads to TestFlight
+   - Commits and pushes version bump
 
 **Versioning:**
 - `CFBundleVersion` (Build Number): **Auto-incremented** (1, 2, 3, 4...)
+- Build number syncs with latest TestFlight build to avoid conflicts
 - `CFBundleShortVersionString` (Marketing Version): **Unchanged** (stays at current version like 1.0)
 
 ### 3. Release to App Store (`release-appstore.yml`)
@@ -62,18 +65,20 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 
 **Steps:**
 1. Extract version from release tag (e.g., `v1.1.0` → `1.1.0`)
-2. **Update marketing version** in Info.plist
-3. **Auto-increment build number**
-4. Commit version updates
-5. Import code signing certificates
-6. Build and archive the app
-7. Export IPA
-8. Upload to App Store Connect
-9. Update release notes with build information
+2. Install dependencies and configure environment
+3. Import code signing certificates and provisioning profiles
+4. Set up App Store Connect API key
+5. **Run `fastlane release version:X.Y.Z` lane** which:
+   - Updates marketing version to release tag version
+   - Auto-increments build number (syncs with TestFlight)
+   - Builds and archives the app
+   - Submits to App Store Connect
+   - Commits and pushes version bump
+6. Updates GitHub release notes with build information
 
 **Versioning:**
 - `CFBundleShortVersionString`: **Manually set via release tag** (e.g., 1.0.0 → 1.1.0)
-- `CFBundleVersion`: **Auto-incremented** for each release
+- `CFBundleVersion`: **Auto-incremented** and synced with TestFlight
 
 **Creating a Release:**
 ```bash
@@ -210,14 +215,21 @@ xcodebuild build \
 ### Running Tests
 ```bash
 xcodebuild test \
+### Running Tests
+```bash
+xcodebuild test \
   -workspace Cove.xcworkspace \
   -scheme Cove \
   -destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
-### Incrementing Build Number
+### Deploying with Fastlane
 ```bash
-./scripts/ci/increment-build-number.sh "Cove/Supporting Files/Info.plist"
+# Deploy to TestFlight
+bundle exec fastlane beta
+
+# Submit to App Store (specify version)
+bundle exec fastlane release version:1.1.0
 ```
 
 ## Troubleshooting

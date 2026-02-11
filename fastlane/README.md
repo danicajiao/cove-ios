@@ -54,9 +54,14 @@ For deployment lanes, you'll need:
 
 ## CI/CD Integration
 
-These lanes are used by GitHub Actions workflows:
-- `deploy-testflight.yml` - Calls `beta` lane
-- `release-appstore.yml` - Calls `release` lane
-- `pr-checks.yml` - Calls `build` and `test` lanes
+These lanes are integrated with GitHub Actions workflows:
+- `deploy-testflight.yml` - Uses `fastlane beta` to deploy to TestFlight
+- `release-appstore.yml` - Uses `fastlane release` to submit to App Store
+- `pr-checks.yml` - Can optionally use `fastlane build` and `fastlane test`
+
+**Note:** The workflows use Fastlane for all iOS automation, providing:
+- Consistent build and deployment process
+- Automatic build number management with TestFlight synchronization
+- Single tool for local development and CI/CD
 
 See `docs/CI_CD_WORKFLOWS.md` for complete documentation.

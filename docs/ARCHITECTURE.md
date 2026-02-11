@@ -137,26 +137,34 @@ deploy-testflight.yml
 ├── Uses: Xcode + increment script
 └── Requires: All GitHub secrets
 
+### Workflow Files (.github/workflows/)
+```
+pr-checks.yml
+├── Triggers on: Pull Request
+├── Uses: Xcode build commands
+└── No dependencies on Fastlane
+
+deploy-testflight.yml
+├── Triggers on: Push to main
+├── Uses: Fastlane beta lane
+└── Requires: All GitHub secrets
+
 release-appstore.yml
 ├── Triggers on: Release creation
-├── Uses: Xcode + PlistBuddy
+├── Uses: Fastlane release lane
 └── Requires: All GitHub secrets
-```
-
-### Scripts (scripts/ci/)
-```
-increment-build-number.sh
-├── Purpose: Auto-increment CFBundleVersion
-├── Uses: PlistBuddy (macOS built-in)
-└── Updates: Cove/Supporting Files/Info.plist
 ```
 
 ### Fastlane (fastlane/)
 ```
 Fastfile
-├── Purpose: Alternative automation method
-├── Lanes: build, test, beta, release
-└── Status: Optional (workflows use xcodebuild directly)
+├── Purpose: iOS automation for CI/CD and local development
+├── Lanes: build, test, beta, release, bump_build
+└── Features: 
+    - TestFlight build number synchronization
+    - Automated version bumping and git commits
+    - Code signing and archiving
+    - Upload to TestFlight and App Store Connect
 ```
 
 ### Documentation (docs/)
@@ -172,22 +180,33 @@ ARCHITECTURE.md        → This file
 
 ### Build Number (CFBundleVersion)
 
-```python
-# Pseudo-code for build number increment
-current_build = read_from_plist("CFBundleVersion")  # e.g., "5"
-new_build = int(current_build) + 1                   # e.g., 6
-write_to_plist("CFBundleVersion", str(new_build))   # Save as "6"
+```ruby
+# Fastlane bump_build lane logic
+current_build = get_build_number(xcodeproj: "Cove.xcodeproj")
+
+# Try to sync with TestFlight to avoid conflicts
+begin
+  latest_testflight = latest_testflight_build_number
+  new_build = max(current_build, latest_testflight) + 1
+rescue
+  # Fall back to simple increment if TestFlight unavailable
+  new_build = current_build + 1
+end
+
+increment_build_number(build_number: new_build, xcodeproj: "Cove.xcodeproj")
 ```
 
-**Location:** `scripts/ci/increment-build-number.sh`
+**Location:** `fastlane/Fastfile` - `bump_build` lane
 
 ### Marketing Version (CFBundleShortVersionString)
 
-```python
-# Pseudo-code for marketing version update
-tag = "v1.1.0"
-version = tag.strip("v")                             # "1.1.0"
-write_to_plist("CFBundleShortVersionString", version)
+```ruby
+# Fastlane release lane logic
+version = options[:version]  # From workflow (e.g., "1.1.0")
+increment_version_number(
+  version_number: version,
+  xcodeproj: "Cove.xcodeproj"
+)
 ```
 
 **Location:** `release-appstore.yml` workflow

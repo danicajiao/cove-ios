@@ -45,23 +45,10 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
 
-      - name: Update marketing version
-        run: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" "Cove/Supporting Files/Info.plist"
-
-      - name: Increment build number
-        id: increment
-        run: |
-          chmod +x scripts/ci/increment-build-number.sh
-          ./scripts/ci/increment-build-number.sh "Cove/Supporting Files/Info.plist"
-
-      - name: Commit version updates
+      - name: Configure git for version bumps
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "Cove/Supporting Files/Info.plist"
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }} (build ${{ steps.increment.outputs.build_number }})"
-          git push
 
       - name: Import Code Signing Certificates
         uses: apple-actions/import-codesign-certs@v2
@@ -74,66 +61,28 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
-      - name: Install CocoaPods dependencies
-        run: pod install
-
-      - name: Build and Archive
-        run: |
-          xcodebuild archive \
-            -workspace Cove.xcworkspace \
-            -scheme Cove \
-            -sdk iphoneos \
-            -configuration Release \
-            -archivePath $PWD/build/Cove.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}"
-
-      - name: Export IPA
-        run: |
-          cat > ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>${{ secrets.APPLE_TEAM_ID }}</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.danicajiao.cove</key>
-              <string>${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}</string>
-            </dict>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath $PWD/build/Cove.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath $PWD/build
-
-      - name: Upload to App Store Connect
+      - name: Set up App Store Connect API Key
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
         run: |
-          # Create private_keys directory for API key
           mkdir -p ~/private_keys
           echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
 
-          # Upload to App Store Connect using altool
-          xcrun altool --upload-app \
-            -f build/Cove.ipa \
-            -t ios \
-            --apiKey $APP_STORE_CONNECT_API_KEY_ID \
-            --apiIssuer $APP_STORE_CONNECT_API_ISSUER_ID
+      - name: Release to App Store using Fastlane
+        env:
+          PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}
+          MATCH_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: bundle exec fastlane release version:${{ steps.version.outputs.version }}
+
+      - name: Get build number for release notes
+        id: build_info
+        run: |
+          BUILD_NUMBER=$(grep -A1 "CFBundleVersion" "Cove/Supporting Files/Info.plist" | tail -n1 | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Update release notes
         uses: actions/github-script@v7
@@ -147,7 +96,7 @@ jobs:
             });
 
             const body = release.data.body || '';
-            const updatedBody = `${body}\n\n---\n\n**Build Information**\n- Version: ${{ steps.version.outputs.version }}\n- Build Number: ${{ steps.increment.outputs.build_number }}\n- Submitted to App Store: ${new Date().toISOString()}`;
+            const updatedBody = `${body}\n\n---\n\n**Build Information**\n- Version: ${{ steps.version.outputs.version }}\n- Build Number: ${{ steps.build_info.outputs.build_number }}\n- Submitted to App Store: ${new Date().toISOString()}`;
 
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,

@@ -10,12 +10,12 @@ import FirebaseFirestore
 struct MusicProduct: Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
-    var categoryID: String
+    var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
     var info: MusicInfo
     var isFavorite: Bool?
-    var productDetailsID: String
+    var productDetailsId: String
 
     struct MusicInfo : Codable {
         var artist: String

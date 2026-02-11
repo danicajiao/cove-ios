@@ -13,22 +13,22 @@ protocol Product : Codable, Identifiable, Hashable {
     
     var id: String? { get }
     var createdAt: Timestamp? { get }
-    var categoryID: String { get }
+    var categoryId: String { get }
     var defaultPrice: Float { get }
     var defaultImageURL: String { get }
     var isFavorite: Bool? { get set }
-    var productDetailsID: String { get }
+    var productDetailsId: String { get }
 }
 
 struct ExampleProduct: Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
-    var categoryID: String
+    var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
     var info: ExampleInfo
     var isFavorite: Bool?
-    var productDetailsID: String
+    var productDetailsId: String
     
     struct ExampleInfo : Codable {
         var name: String
@@ -46,11 +46,11 @@ struct ExampleProduct: Product {
     static let placeholder = ExampleProduct(
         id: "aaaaa123445",
         createdAt: Timestamp.init(),
-        categoryID: "some categoryID",
+        categoryId: "some categoryID",
         defaultPrice: 23,
         defaultImageURL: "some url",
         info: ExampleInfo(name: "Some name", desc: "Some description"),
         isFavorite: true,
-        productDetailsID: "12345"
+        productDetailsId: "12345"
     )
 }

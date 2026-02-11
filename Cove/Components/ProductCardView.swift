@@ -178,12 +178,12 @@ struct ProductCardView_Previews: PreviewProvider {
     static let product = ApparelProduct(
         id: "12345aaa",
         createdAt: Timestamp.init(),
-        categoryID: "apparel category id",
+        categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "some url",
         info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name", colors: []),
         isFavorite: true,
-        productDetailsID: "12345"
+        productDetailsId: "12345"
     )
 
     static var previews: some View {

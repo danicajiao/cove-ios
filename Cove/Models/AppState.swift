@@ -294,12 +294,12 @@ class AppState: ObservableObject {
     }
     
     func logOut() {
-        guard let providerID = Auth.auth().currentUser?.providerData.first?.providerID as String? else {
+        guard let providerId = Auth.auth().currentUser?.providerData.first?.providerID as String? else {
             print("No user is logged in")
             return
         }
         
-        switch providerID {
+        switch providerId {
         case AuthMethod.apple.rawValue:
             print("Logging out apple user")
         case AuthMethod.facebook.rawValue:

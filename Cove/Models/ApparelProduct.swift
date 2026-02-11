@@ -10,12 +10,12 @@ import FirebaseFirestore
 struct ApparelProduct: Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
-    var categoryID: String
+    var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
     var info: ApparelInfo
     var isFavorite: Bool?
-    var productDetailsID: String
+    var productDetailsId: String
 
     struct ApparelInfo : Codable {
         var brand: String
@@ -29,7 +29,7 @@ struct ApparelProduct: Product {
             var sizes: [SizeInfo]
             
             struct SizeInfo: Codable {
-                var inventoryID: String
+                var inventoryId: String
                 var size: String
             }
         }

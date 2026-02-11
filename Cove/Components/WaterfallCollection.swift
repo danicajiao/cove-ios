@@ -223,23 +223,23 @@ struct ContentView: View {
     let product1 = ApparelProduct(
         id: "1aaaa",
         createdAt: Timestamp.init(),
-        categoryID: "apparel category id",
+        categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "gs://cove-6a685.appspot.com/product-images/1h6szGnA2L14XROhtIZx/pant.jpg",
         info: ApparelProduct.ApparelInfo(brand: "Some apparel brand", name: "Some apparel", colors: []),
         isFavorite: true,
-        productDetailsID: "apparel details id"
+        productDetailsId: "apparel details id"
     )
     
     let product2 = CoffeeProduct(
         id: "2aaaa",
         createdAt: Timestamp.init(),
-        categoryID: "coffee category id",
+        categoryId: "coffee category id",
         defaultPrice: 18,
         defaultImageURL: "gs://cove-6a685.appspot.com/product-images/YwZotBIfctX8wPNOMDWq/RTL-1015_2.jpeg",
         info: CoffeeProduct.CoffeeInfo(name: "Some coffee name", roastery: "Some roastery"),
         isFavorite: true,
-        productDetailsID: "coffee details id"
+        productDetailsId: "coffee details id"
     )
     
     var body: some View {

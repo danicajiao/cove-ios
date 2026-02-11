@@ -108,7 +108,6 @@ tags
 [._]*.un~
 
 ### Xcode ###
-**/*.plist
 
 ## Xcode 8 and earlier
 
@@ -124,6 +123,10 @@ tags
 
 ### Firebase ###
 GoogleService-Info.plist
+
+### Scripts ###
+scripts/node_modules/
+scripts/serviceAccountKey.json
 
 ### macOS ###
 .DS_Store

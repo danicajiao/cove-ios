@@ -10,9 +10,9 @@ import FirebaseFirestore
 struct CoffeeProductDetails : ProductDetails {
     @DocumentID var id: String?
     var about: String
-    var categoryID: String
+    var categoryId: String
     @ServerTimestamp var createdAt: Timestamp?
-    var productID: String
+    var productId: String
     var description: String
     var origin: [OriginInfo]
     

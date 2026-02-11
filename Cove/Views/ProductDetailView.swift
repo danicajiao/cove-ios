@@ -87,7 +87,9 @@ struct ProductDetailView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
+            #if DEBUG
             print(self.appState.path)
+            #endif
         }
     }
 }

@@ -44,7 +44,7 @@ jobs:
             -workspace Cove.xcworkspace \
             -scheme Cove \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run tests
@@ -53,7 +53,7 @@ jobs:
             -workspace Cove.xcworkspace \
             -scheme Cove \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
         continue-on-error: true
 

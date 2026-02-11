@@ -30,17 +30,6 @@ struct ProductDetailView: View {
         GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
     ]
     
-    func getSafeAreaTop() -> CGFloat {
-        let keyWindow = UIApplication.shared.connectedScenes
-            .filter({$0.activationState == .foregroundActive})
-            .map({$0 as? UIWindowScene})
-            .compactMap({$0})
-            .first?.windows
-            .filter({$0.isKeyWindow}).first
-        
-        return keyWindow?.safeAreaInsets.top ?? 0
-    }
-    
     private func fetchImage() {
         guard let product = viewModel.product,
               let imageURL = URL(string: product.defaultImageURL) else { return }
@@ -140,17 +129,6 @@ private struct ProductDetailContent: View {
     
     var price: Float {
         return product.defaultPrice
-    }
-    
-    func getSafeAreaTop() -> CGFloat {
-        let keyWindow = UIApplication.shared.connectedScenes
-            .filter({$0.activationState == .foregroundActive})
-            .map({$0 as? UIWindowScene})
-            .compactMap({$0})
-            .first?.windows
-            .filter({$0.isKeyWindow}).first
-        
-        return keyWindow?.safeAreaInsets.top ?? 0
     }
     
     var body: some View {

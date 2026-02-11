@@ -166,7 +166,7 @@ private struct ProductDetailContent: View {
                          .frame(height: 300)
                  } else {
                      ProgressView()
-                         .frame(maxWidth: .infinity, height: 300)
+                         .frame(maxWidth: .infinity)
                          .onAppear {
                              fetchImage()
                          }

@@ -183,7 +183,7 @@ struct ProductCardView_Previews: PreviewProvider {
         categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "some url",
-        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name", colors: []),
+        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
         isFavorite: true,
         productDetailsId: "12345"
     )

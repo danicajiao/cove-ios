@@ -15,17 +15,8 @@ struct MainView: View {
     
     var body: some View {
         TabView(selection: $tabState.currentTab) {
-            NavigationStack {
+            TabNavigationStack {
                 HomeView()
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .product(let id):
-                            ProductDetailView(productId: id)
-                                .environmentObject(bag)
-                        default:
-                            EmptyView()
-                        }
-                    }
             }
             .onTapGesture {
                 tabState.currentTab = "home"
@@ -36,17 +27,8 @@ struct MainView: View {
             }
             .tag("home")
             
-            NavigationStack {
+            TabNavigationStack {
                 Text("Browse View")
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .product(let id):
-                            ProductDetailView(productId: id)
-                                .environmentObject(bag)
-                        default:
-                            EmptyView()
-                        }
-                    }
             }
             .onTapGesture {
                 tabState.currentTab = "browse"
@@ -57,17 +39,8 @@ struct MainView: View {
             }
             .tag("browse")
             
-            NavigationStack {
+            TabNavigationStack {
                 BagView()
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .product(let id):
-                            ProductDetailView(productId: id)
-                                .environmentObject(bag)
-                        default:
-                            EmptyView()
-                        }
-                    }
             }
             .onTapGesture {
                 tabState.currentTab = "bag"
@@ -79,17 +52,8 @@ struct MainView: View {
             .badge(bag.totalItems)
             .tag("bag")
             
-            NavigationStack {
+            TabNavigationStack {
                 Text("Favorites View")
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .product(let id):
-                            ProductDetailView(productId: id)
-                                .environmentObject(bag)
-                        default:
-                            EmptyView()
-                        }
-                    }
             }
             .onTapGesture {
                 tabState.currentTab = "favorites"
@@ -100,17 +64,8 @@ struct MainView: View {
             }
             .tag("favorites")
             
-            NavigationStack {
+            TabNavigationStack {
                 ProfileTabView()
-                    .navigationDestination(for: Path.self) { path in
-                        switch path {
-                        case .product(let id):
-                            ProductDetailView(productId: id)
-                                .environmentObject(bag)
-                        default:
-                            EmptyView()
-                        }
-                    }
             }
             .onTapGesture {
                 tabState.currentTab = "profile"

@@ -159,20 +159,18 @@ private struct ProductDetailContent: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                 VStack {
-                     if let uiImage = uiImage {
-                         Image(uiImage: uiImage)
-                             .resizable()
-                             .aspectRatio(contentMode: .fit) // Maintain aspect ratio
-                     } else {
-                         ProgressView()
-                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                             .onAppear {
-                                 fetchImage()
-                             }
-                     }
+                 if let uiImage = uiImage {
+                     Image(uiImage: uiImage)
+                         .resizable()
+                         .aspectRatio(contentMode: .fit) // Maintain aspect ratio
+                         .frame(height: 300)
+                 } else {
+                     ProgressView()
+                         .frame(maxWidth: .infinity, height: 300)
+                         .onAppear {
+                             fetchImage()
+                         }
                  }
-                 .frame(height: 300)
 
                  Group {
                      VStack(spacing: 20) {

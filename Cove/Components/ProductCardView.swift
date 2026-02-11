@@ -46,6 +46,8 @@ struct ProductCardView: View {
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
+            // Note: product.id should never be nil as it comes from Firestore
+            // Empty string fallback is for safety, though it would result in a failed fetch
             NavigationLink(value: Path.product(id: product.id ?? "")) {
                 VStack(spacing: 0) {
                     if let uiImage = uiImage {

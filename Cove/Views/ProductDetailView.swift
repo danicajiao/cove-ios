@@ -297,16 +297,16 @@ struct ProductDetailView: View {
                     }
                     
                     if !self.bag.categories.contains(where: { category in
-                        category == self.product.categoryID
+                        category == self.product.categoryId
                     }) {
-                        self.bag.categories.append(self.product.categoryID)
+                        self.bag.categories.append(self.product.categoryId)
                     }
-//                    let keyExists = self.bag.categories[self.product!.categoryID] != nil
+//                    let keyExists = self.bag.categories[self.product!.categoryId] != nil
 //
 //                    if keyExists {
-//                        self.bag.categories[self.product!.categoryID]! += 1
+//                        self.bag.categories[self.product!.categoryId]! += 1
 //                    } else {
-//                        self.bag.categories[self.product!.categoryID] = 1
+//                        self.bag.categories[self.product!.categoryId] = 1
 //                    }
                     
                     print(self.bag.bagProducts)

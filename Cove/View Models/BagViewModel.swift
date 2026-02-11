@@ -11,7 +11,7 @@ import FirebaseFirestore
 class BagViewModel: ObservableObject {
     @Published var similarProducts = [any Product]()
     var tempCategories = [String]()
-    var fetchedProductIDs = [String]()
+    var fetchedProductIds = [String]()
 
     /// Fetches similar products from Firebase and populates the similarProducts array used in the HomeView
     func fetchSimilarProducts(categories: [String]) async throws {
@@ -29,33 +29,33 @@ class BagViewModel: ObservableObject {
         // Get a reference to Firestore
         print("Fetching similar products...")
         
-        fetchedProductIDs = [String]()
+        fetchedProductIds = [String]()
         
         let db = Firestore.firestore()
 
         do {
             // Fetch 'product' documents from the 'products' collection
-            var snapshot = try await db.collection("products").whereField("categoryID", in: categories).getDocuments()
+            var snapshot = try await db.collection("products").whereField("categoryId", in: categories).getDocuments()
 
             // Map fetched documents to the `products` array
             var products: [any Product] = snapshot.documents.compactMap { d in
-                // Decode document's categoryID to determine what product type it is
-                let categoryID = d["categoryID"] as? String
+                // Decode document's categoryId to determine what product type it is
+                let categoryId = d["categoryId"] as? String
                 do {
-                    if categoryID == ProductTypes.coffee.rawValue {
+                    if categoryId == ProductTypes.coffee.rawValue {
                         // Decode as a CoffeeProduct
                         let coffeeProduct = try d.data(as: CoffeeProduct.self)
-                        fetchedProductIDs.append(d.documentID)
+                        fetchedProductIds.append(d.documentID)
                         return coffeeProduct
-                    } else if categoryID == ProductTypes.music.rawValue {
+                    } else if categoryId == ProductTypes.music.rawValue {
                         // Decode as a MusicProduct
                         let musicProduct = try d.data(as: MusicProduct.self)
-                        fetchedProductIDs.append(d.documentID)
+                        fetchedProductIds.append(d.documentID)
                         return musicProduct
-                    } else if categoryID == ProductTypes.apparel.rawValue {
+                    } else if categoryId == ProductTypes.apparel.rawValue {
                         // Decode as a ApparelProduct
                         let apparelProduct = try d.data(as: ApparelProduct.self)
-                        fetchedProductIDs.append(d.documentID)
+                        fetchedProductIds.append(d.documentID)
                         return apparelProduct
                     }
                 } catch {
@@ -78,7 +78,7 @@ class BagViewModel: ObservableObject {
             }
 
             // Fetch 'favorite' documents from the logged in user's 'favorites' collection that were already fetched in the last request
-            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productID", in: fetchedProductIDs).getDocuments()
+            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds).getDocuments()
 
             for document in snapshot.documents {
                 do {
@@ -86,7 +86,7 @@ class BagViewModel: ObservableObject {
                     let favoriteProduct = try document.data(as: FavoriteProduct.self)
                     // Get the index of the already-fetched product that matches the current favorite product
                     let indexOfFavorite = products.firstIndex { fetchedProduct in
-                        fetchedProduct.id == favoriteProduct.productID
+                        fetchedProduct.id == favoriteProduct.productId
                     }
                     // If the index was not found, return
                     guard let i = indexOfFavorite else {

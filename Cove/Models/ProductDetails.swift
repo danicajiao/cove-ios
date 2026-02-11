@@ -9,7 +9,7 @@ import FirebaseFirestore
 
 protocol ProductDetails : Codable {
     var id: String? { get }
-    var categoryID: String { get }
+    var categoryId: String { get }
     var createdAt: Timestamp? { get }
-    var productID: String { get }
+    var productId: String { get }
 }

@@ -10,17 +10,17 @@ import FirebaseFirestore
 struct CoffeeProduct : Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
-    var categoryID: String
+    var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
     var info: CoffeeInfo
     var isFavorite: Bool?
-    var productDetailsID: String
+    var productDetailsId: String
 
 //    internal enum CodingKeys : String, CodingKey {
 //        case id
 //        case createdAt
-//        case categoryID
+//        case categoryId
 //        case defaultPrice
 //        case defaultImageURL
 //        case info
@@ -50,7 +50,7 @@ struct CoffeeProduct : Product {
 //
 //        id = try container.decode(DocumentID<DocumentReference>.self, forKey: .id).wrappedValue?.documentID
 //        createdAt = try container.decode(Timestamp.self, forKey: .createdAt).dateValue()
-//        categoryID = try container.decode(DocumentReference.self, forKey: .categoryID)
+//        categoryId = try container.decode(DocumentReference.self, forKey: .categoryId)
 //        defaultPrice = try container.decode(Float.self, forKey: .defaultPrice)
 //        defaultImageURL = try container.decode(String.self, forKey: .defaultImageURL)
 //
@@ -63,17 +63,17 @@ struct CoffeeProduct : Product {
 //        sku = try container.decode(String.self, forKey: .sku)
 //    }
     
-//    init(defaultPrice: Float, defaultImgPath: String, createdAt: Timestamp, sku: String, categoryID: DocumentReference, info: Info) {
+//    init(defaultPrice: Float, defaultImgPath: String, createdAt: Timestamp, sku: String, categoryId: DocumentReference, info: Info) {
 //        self.sku = sku
-//        self.categoryID = categoryID
+//        self.categoryId = categoryId
 //        self.info = info
 //        super.init(defaultPrice: defaultPrice, defaultImgPath: defaultImgPath, createdAt: createdAt)
 //    }
 //
 //    // This initializer is used for previews
-//    init(defaultPrice: Float, defaultImgPath: String, imgData: Data, createdAt: Timestamp, sku: String, categoryID: DocumentReference, info: Info) {
+//    init(defaultPrice: Float, defaultImgPath: String, imgData: Data, createdAt: Timestamp, sku: String, categoryId: DocumentReference, info: Info) {
 //        self.sku = sku
-//        self.categoryID = categoryID
+//        self.categoryId = categoryId
 //        self.info = info
 //        super.init(defaultPrice: defaultPrice, defaultImgPath: defaultImgPath, imgData: imgData, createdAt: createdAt)
 //    }

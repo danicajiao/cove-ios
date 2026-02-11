@@ -9,5 +9,5 @@ import FirebaseFirestore
 
 struct FavoriteProduct : Codable, Identifiable {
     @DocumentID var id: String?
-    var productID: String
+    var productId: String
 }

@@ -1,0 +1,10 @@
+{
+  "name": "cove-scripts",
+  "private": true,
+  "scripts": {
+    "migrate:id-fields": "node migrations/migrate-id-fields.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

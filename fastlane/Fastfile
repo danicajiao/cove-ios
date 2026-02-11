@@ -12,8 +12,21 @@ platform :ios do
   
   desc "Increment build number"
   lane :bump_build do
+    # Get current build number from project
+    current_build = get_build_number(xcodeproj: "Cove.xcodeproj")
+
+    # Try to get latest TestFlight build number, fall back to current if not available
+    begin
+      latest_build = latest_testflight_build_number
+      new_build = [current_build.to_i, latest_build.to_i].max + 1
+    rescue => ex
+      UI.important("Could not fetch TestFlight build number: #{ex.message}")
+      UI.important("Using current build number from project")
+      new_build = current_build.to_i + 1
+    end
+
     increment_build_number(
-      build_number: latest_testflight_build_number + 1,
+      build_number: new_build,
       xcodeproj: "Cove.xcodeproj"
     )
   end

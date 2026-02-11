@@ -124,6 +124,11 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
         run: |
+          # Create private_keys directory for API key
+          mkdir -p ~/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+
+          # Upload to App Store Connect using altool
           xcrun altool --upload-app \
             -f build/Cove.ipa \
             -t ios \

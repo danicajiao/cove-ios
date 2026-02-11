@@ -1,7 +1,7 @@
-name: PR Quality Checks
+name: CI - Main
 
 on:
-  pull_request:
+  push:
     branches:
       - main
     paths:
@@ -10,7 +10,7 @@ on:
       - 'Cove.xcworkspace/**'
       - 'Podfile'
       - 'Podfile.lock'
-      - '.github/workflows/pr-checks.yml'
+      - '.github/workflows/ci-main.yml'
 
 jobs:
   build-and-test:

@@ -11,64 +11,124 @@ struct MainView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var bag: Bag
     @StateObject private var tabState = TabState()
+    @State private var opacity: Double = 0
     
     var body: some View {
         TabView(selection: $tabState.currentTab) {
-            HomeView()
-                .onTapGesture {
-                    tabState.currentTab = "home"
-                }
-                .tabItem {
-                    Label("Home", systemImage: tabState.currentTab == "home" ? "house.fill" : "house")
-                        .environment(\.symbolVariants, .none)
-                }
-                .tag("home")
-                .navigationBarHidden(true)
+            NavigationStack {
+                HomeView()
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .product(let id):
+                            ProductDetailView(productId: id)
+                                .environmentObject(bag)
+                        default:
+                            EmptyView()
+                        }
+                    }
+            }
+            .onTapGesture {
+                tabState.currentTab = "home"
+            }
+            .tabItem {
+                Label("Home", systemImage: tabState.currentTab == "home" ? "house.fill" : "house")
+                    .environment(\.symbolVariants, .none)
+            }
+            .tag("home")
             
-            Text("Browse View")
-                .onTapGesture {
-                    tabState.currentTab = "browse"
-                }
-                .tabItem {
-                    Label("Browse", systemImage: tabState.currentTab == "browse" ? "magnifyingglass" : "magnifyingglass")
-                        .environment(\.symbolVariants, .none)
-                }
-                .tag("browse")
+            NavigationStack {
+                Text("Browse View")
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .product(let id):
+                            ProductDetailView(productId: id)
+                                .environmentObject(bag)
+                        default:
+                            EmptyView()
+                        }
+                    }
+            }
+            .onTapGesture {
+                tabState.currentTab = "browse"
+            }
+            .tabItem {
+                Label("Browse", systemImage: tabState.currentTab == "browse" ? "magnifyingglass" : "magnifyingglass")
+                    .environment(\.symbolVariants, .none)
+            }
+            .tag("browse")
             
-            BagView()
-                .onTapGesture {
-                    tabState.currentTab = "bag"
-                }
-                .tabItem {
-                    Label("Bag", systemImage: tabState.currentTab == "bag" ? "bag.fill" : "bag")
-                        .environment(\.symbolVariants, .none)
-                }
-                .badge(bag.totalItems)
-                .tag("bag")
+            NavigationStack {
+                BagView()
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .product(let id):
+                            ProductDetailView(productId: id)
+                                .environmentObject(bag)
+                        default:
+                            EmptyView()
+                        }
+                    }
+            }
+            .onTapGesture {
+                tabState.currentTab = "bag"
+            }
+            .tabItem {
+                Label("Bag", systemImage: tabState.currentTab == "bag" ? "bag.fill" : "bag")
+                    .environment(\.symbolVariants, .none)
+            }
+            .badge(bag.totalItems)
+            .tag("bag")
             
-            Text("Favorites View")
-                .onTapGesture {
-                    tabState.currentTab = "favorites"
-                }
-                .tabItem {
-                    Label("Favorites", systemImage: tabState.currentTab == "favorites" ? "heart.fill" : "heart")
-                        .environment(\.symbolVariants, .none)
-                }
-                .tag("favorites")
+            NavigationStack {
+                Text("Favorites View")
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .product(let id):
+                            ProductDetailView(productId: id)
+                                .environmentObject(bag)
+                        default:
+                            EmptyView()
+                        }
+                    }
+            }
+            .onTapGesture {
+                tabState.currentTab = "favorites"
+            }
+            .tabItem {
+                Label("Favorites", systemImage: tabState.currentTab == "favorites" ? "heart.fill" : "heart")
+                    .environment(\.symbolVariants, .none)
+            }
+            .tag("favorites")
             
-            ProfileTabView()
-                .onTapGesture {
-                    tabState.currentTab = "profile"
-                }
-                .tabItem {
-                    Label("Profile", systemImage: tabState.currentTab == "profile" ? "person.crop.circle.fill" : "person.crop.circle")
-                        .environment(\.symbolVariants, .none)
-                }
-                .tag("profile")
+            NavigationStack {
+                ProfileTabView()
+                    .navigationDestination(for: Path.self) { path in
+                        switch path {
+                        case .product(let id):
+                            ProductDetailView(productId: id)
+                                .environmentObject(bag)
+                        default:
+                            EmptyView()
+                        }
+                    }
+            }
+            .onTapGesture {
+                tabState.currentTab = "profile"
+            }
+            .tabItem {
+                Label("Profile", systemImage: tabState.currentTab == "profile" ? "person.crop.circle.fill" : "person.crop.circle")
+                    .environment(\.symbolVariants, .none)
+            }
+            .tag("profile")
         }
         .environmentObject(tabState)
+        .opacity(opacity)
+        .background(Color.Colors.Backgrounds.primary)
         .onAppear {
             print(self.appState.path)
+            withAnimation(.easeIn(duration: 1)) {
+                opacity = 1
+            }
         }
     }
 }

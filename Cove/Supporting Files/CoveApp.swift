@@ -51,35 +51,36 @@ struct CoveApp: App {
     
     var body: some Scene {
         WindowGroup {
-            NavigationStack(path: self.$appState.path) {
-                // Root View
-                ZStack {
-                    if networkMonitor.isConnected {
-                        WelcomeView()
-                            .transition(.opacity)
-                    } else {
-                        SplashView()
-                            .transition(.opacity)
-                    }
-//                    HomeView()
-                }
-                .animation(.default, value: networkMonitor.isConnected)
-                .navigationDestination(for: Path.self) { path in
-                    switch path {
-                    case .welcome:
-                        WelcomeView()
-                    case .login:
-                        LoginView()
-                    case .signup:
-                        SignupView()
-                    case .main:
-                        MainView()
-                            .environmentObject(bag)
-                    case .home:
-                        HomeView()
-                    case .product(let id):
-                        ProductDetailView(productId: id)
-                            .environmentObject(bag)
+            Group {
+                if appState.authState == .loggedIn {
+                    MainView()
+                        .environmentObject(bag)
+                } else {
+                    NavigationStack(path: self.$appState.path) {
+                        ZStack {
+                            if networkMonitor.isConnected {
+                                WelcomeView()
+                                    .transition(.opacity)
+                            } else {
+                                SplashView()
+                                    .transition(.opacity)
+                            }
+                        }
+                        .animation(.default, value: networkMonitor.isConnected)
+                        .navigationDestination(for: Path.self) { path in
+                            switch path {
+                            case .welcome:
+                                WelcomeView()
+                            case .login:
+                                LoginView()
+                            case .signup:
+                                SignupView()
+                            case .home:
+                                HomeView()
+                            default:
+                                EmptyView()
+                            }
+                        }
                     }
                 }
             }

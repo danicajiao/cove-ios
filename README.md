@@ -73,6 +73,14 @@ In order to make best use of GitHubs auto-referencing feature, pull request titl
 
 This will then auto-link the PR to the issue(s) and will close them once the PR is merged.
 
+### CI/CD
+This project uses automated CI/CD workflows for iOS app deployment:
+- **PR Checks**: Builds and tests run automatically on every pull request
+- **TestFlight Deployment**: Auto-deploys to TestFlight on every merge to `main`
+- **App Store Submission**: Release workflow triggered by creating a new GitHub release
+
+See [CI/CD Workflows Documentation](docs/CI_CD_WORKFLOWS.md) for complete setup and usage instructions.
+
 ## More to come
 
 Everything seen so far is subject to change overtime as I move along with development.

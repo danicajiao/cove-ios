@@ -8,7 +8,7 @@ platform :ios do
   APP_NAME = "Cove"
   WORKSPACE = "Cove.xcworkspace"
   SCHEME = "Cove"
-  BUNDLE_ID = "com.danicajiao.Cove"
+  BUNDLE_ID = "com.danicajiao.cove"
   
   desc "Increment build number"
   lane :bump_build do

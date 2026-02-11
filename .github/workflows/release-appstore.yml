@@ -102,7 +102,7 @@ jobs:
             <string>${{ secrets.APPLE_TEAM_ID }}</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.danicajiao.Cove</key>
+              <key>com.danicajiao.cove</key>
               <string>${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}</string>
             </dict>
             <key>signingCertificate</key>

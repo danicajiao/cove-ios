@@ -45,7 +45,7 @@ bundle exec fastlane release version:1.1.0
 The Fastfile is configured for the Cove app with:
 - Workspace: `Cove.xcworkspace`
 - Scheme: `Cove`
-- Bundle ID: `com.danicajiao.Cove`
+- Bundle ID: `com.danicajiao.cove`
 
 ## Environment Variables
 

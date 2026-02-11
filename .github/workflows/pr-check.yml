@@ -1,0 +1,67 @@
+name: PR - Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  version-check:
+    name: Check Version Availability
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from Info.plist
+        id: app-version
+        run: |
+          # Extract CFBundleShortVersionString from Info.plist using grep and sed
+          VERSION=$(grep -A 1 "CFBundleShortVersionString" "Cove/Supporting Files/Info.plist" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/' | tr -d '[:space:]')
+          
+          if [ -z "$VERSION" ]; then
+            echo "::error::Failed to extract version from Info.plist"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION"
+
+      - name: Check if tag exists
+        id: check-tag
+        run: |
+          # Fetch all tags
+          git fetch --tags
+          
+          if git rev-parse "v${{ steps.app-version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "❌ Tag v${{ steps.app-version.outputs.version }} already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag v${{ steps.app-version.outputs.version }} is available"
+          fi
+
+      - name: Fail if version already released
+        if: steps.check-tag.outputs.exists == 'true'
+        run: |
+          echo "::error::Version ${{ steps.app-version.outputs.version }} has already been released!"
+          echo "::error::Please update the version in Info.plist (CFBundleShortVersionString) before merging this PR."
+          echo ""
+          echo "To update the version:"
+          echo "1. Open the project in Xcode"
+          echo "2. Select the target and go to General tab"
+          echo "3. Update the 'Version' field (currently: ${{ steps.app-version.outputs.version }})"
+          echo "4. Or edit Cove/Supporting Files/Info.plist directly and update CFBundleShortVersionString"
+          echo ""
+          echo "Version format: MAJOR.MINOR.PATCH (e.g., 1.0.0, 1.1.0, 2.0.0)"
+          exit 1
+
+      - name: Version check passed
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          echo "✅ Version check passed!"
+          echo "Version ${{ steps.app-version.outputs.version }} is available for release."

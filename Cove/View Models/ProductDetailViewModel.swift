@@ -9,7 +9,7 @@ import FirebaseFirestore
 import FirebaseAuth
 
 class ProductDetailViewModel : ObservableObject {
-    var product: (any Product)?
+    @Published var product: (any Product)?
     @Published var productDetails: ProductDetails?
     @Published var detailSelection: DetailSelection
     @Published var similarProducts: [any Product]
@@ -24,10 +24,51 @@ class ProductDetailViewModel : ObservableObject {
         case tracklist
     }
     
-    init(product: (any Product)?) {
-        self.product = product
+    init(productId: String) {
+        self.product = nil
         self.detailSelection = .description
         self.similarProducts = [any Product]()
+        
+        Task {
+            await fetchProduct(productId)
+            if let product = self.product {
+                try? await fetchProductDetails()
+                try? await fetchSimilarProducts()
+            }
+        }
+    }
+    
+    func fetchProduct(_ id: String) async {
+        print("Fetching product with id: \(id)")
+        let db = Firestore.firestore()
+        
+        do {
+            // Fetch the product document from Firestore
+            let snapshot = try await db.collection("products").document(id).getDocument()
+            
+            // Get the categoryId to determine the product type
+            let categoryId = snapshot["categoryId"] as? String
+            
+            // Decode based on product type
+            if categoryId == ProductTypes.coffee.rawValue {
+                let coffeeProduct = try snapshot.data(as: CoffeeProduct.self)
+                await MainActor.run {
+                    self.product = coffeeProduct
+                }
+            } else if categoryId == ProductTypes.music.rawValue {
+                let musicProduct = try snapshot.data(as: MusicProduct.self)
+                await MainActor.run {
+                    self.product = musicProduct
+                }
+            } else if categoryId == ProductTypes.apparel.rawValue {
+                let apparelProduct = try snapshot.data(as: ApparelProduct.self)
+                await MainActor.run {
+                    self.product = apparelProduct
+                }
+            }
+        } catch {
+            print("Error fetching product: \(error)")
+        }
     }
     
     func fetchProductDetails() async throws {

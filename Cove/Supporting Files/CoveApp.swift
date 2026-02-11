@@ -77,8 +77,8 @@ struct CoveApp: App {
                             .environmentObject(bag)
                     case .home:
                         HomeView()
-                    case .product(let product):
-                        ProductDetailView(product: product)
+                    case .product(let id):
+                        ProductDetailView(productId: id)
                             .environmentObject(bag)
                     }
                 }

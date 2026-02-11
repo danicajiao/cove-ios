@@ -46,60 +46,69 @@ struct ProductCardView: View {
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            NavigationLink(value: Path.product(product)) {
-                VStack(spacing: 0) {
-                    if let uiImage = uiImage {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit) // Maintain aspect ratio
-                            .frame(maxHeight: .infinity)
-                    } else {
-                        ProgressView()
-                            .frame(maxHeight: .infinity)
-                            .onAppear {
-                                fetchImage()
-                            }
-                    }
-                    
-                    VStack (spacing: 6) {
-                        VStack (spacing: 0) {
-                            Text(headerStr)
-                                .font(Font.custom("Gazpacho-Black", size: 12))
-                                .foregroundStyle(Color.Colors.Fills.primary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            Text(bodyStr)
-                                .font(Font.custom("Lato-Regular", size: 12))
-                                .foregroundStyle(Color.Colors.Fills.tertiary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        
-                        Text("$\(Int(self.price))")
-                            .font(Font.custom("Lato-Bold", size: 14))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(8)
-                    .background(.white)
+            if let productId = product.id {
+                NavigationLink(value: Path.product(id: productId)) {
+                    cardContent
                 }
-                .frame(maxWidth: .infinity) // Take up the full width of the column
-                .frame(height: 235)
-                .background(averageColor)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .customShadow()
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                // If no product ID, show card without navigation
+                cardContent
             }
-            .buttonStyle(PlainButtonStyle())
             
             LikeButton(enabled: self.favorited)
                 // .shadow(color: .dropShadow, radius: 20)
                 .padding(10)
         }
+    }
+    
+    private var cardContent: some View {
+        VStack(spacing: 0) {
+            if let uiImage = uiImage {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit) // Maintain aspect ratio
+                    .frame(maxHeight: .infinity)
+            } else {
+                ProgressView()
+                    .frame(maxHeight: .infinity)
+                    .onAppear {
+                        fetchImage()
+                    }
+            }
+            
+            VStack (spacing: 6) {
+                VStack (spacing: 0) {
+                    Text(headerStr)
+                        .font(Font.custom("Gazpacho-Black", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.primary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text(bodyStr)
+                        .font(Font.custom("Lato-Regular", size: 12))
+                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                
+                Text("$\(Int(self.price))")
+                    .font(Font.custom("Lato-Bold", size: 14))
+                    .foregroundStyle(Color.Colors.Fills.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(8)
+            .background(.white)
+        }
+        .frame(maxWidth: .infinity) // Take up the full width of the column
+        .frame(height: 235)
+        .background(averageColor)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .customShadow()
     }
 
     private func fetchImage() {
@@ -181,7 +190,7 @@ struct ProductCardView_Previews: PreviewProvider {
         categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "some url",
-        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name", colors: []),
+        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
         isFavorite: true,
         productDetailsId: "12345"
     )

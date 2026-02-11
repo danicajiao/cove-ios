@@ -226,7 +226,7 @@ struct ContentView: View {
         categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "gs://cove-6a685.appspot.com/product-images/1h6szGnA2L14XROhtIZx/pant.jpg",
-        info: ApparelProduct.ApparelInfo(brand: "Some apparel brand", name: "Some apparel", colors: []),
+        info: ApparelProduct.ApparelInfo(brand: "Some apparel brand", name: "Some apparel"),
         isFavorite: true,
         productDetailsId: "apparel details id"
     )

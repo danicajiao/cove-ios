@@ -20,19 +20,6 @@ struct ApparelProduct: Product {
     struct ApparelInfo : Codable {
         var brand: String
         var name: String
-        var colors: [ColorInfo]
-        
-        struct ColorInfo : Codable {
-            var color: String
-            var imageURL: String
-            var price: Float
-            var sizes: [SizeInfo]
-            
-            struct SizeInfo: Codable {
-                var inventoryId: String
-                var size: String
-            }
-        }
     }
     
     func hash(into hasher: inout Hasher) {

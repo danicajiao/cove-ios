@@ -9,7 +9,7 @@ import FirebaseFirestore
 import FirebaseAuth
 
 class ProductDetailViewModel : ObservableObject {
-    var product: (any Product)?
+    @Published var product: (any Product)?
     @Published var productDetails: ProductDetails?
     @Published var detailSelection: DetailSelection
     @Published var similarProducts: [any Product]
@@ -24,10 +24,66 @@ class ProductDetailViewModel : ObservableObject {
         case tracklist
     }
     
-    init(product: (any Product)?) {
-        self.product = product
+    init(productId: String) {
+        self.product = nil
         self.detailSelection = .description
         self.similarProducts = [any Product]()
+        
+        Task {
+            await fetchProduct(productId)
+            if self.product != nil {
+                do {
+                    try await fetchProductDetails()
+                    try await fetchSimilarProducts()
+                } catch {
+                    print("Error fetching product details or similar products: \(error)")
+                }
+            }
+        }
+    }
+    
+    func fetchProduct(_ id: String) async {
+        print("Fetching product with id: \(id)")
+        let db = Firestore.firestore()
+        
+        do {
+            // Fetch the product document from Firestore
+            let snapshot = try await db.collection("products").document(id).getDocument()
+            
+            // Check if document exists
+            guard snapshot.exists else {
+                print("Product with id \(id) does not exist")
+                return
+            }
+            
+            // Get the categoryId to determine the product type
+            guard let categoryId = snapshot["categoryId"] as? String else {
+                print("Product document missing categoryId field")
+                return
+            }
+            
+            // Decode based on product type
+            if categoryId == ProductTypes.coffee.rawValue {
+                let coffeeProduct = try snapshot.data(as: CoffeeProduct.self)
+                await MainActor.run {
+                    self.product = coffeeProduct
+                }
+            } else if categoryId == ProductTypes.music.rawValue {
+                let musicProduct = try snapshot.data(as: MusicProduct.self)
+                await MainActor.run {
+                    self.product = musicProduct
+                }
+            } else if categoryId == ProductTypes.apparel.rawValue {
+                let apparelProduct = try snapshot.data(as: ApparelProduct.self)
+                await MainActor.run {
+                    self.product = apparelProduct
+                }
+            } else {
+                print("Unknown product category: \(categoryId)")
+            }
+        } catch {
+            print("Error fetching product: \(error)")
+        }
     }
     
     func fetchProductDetails() async throws {

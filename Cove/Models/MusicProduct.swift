@@ -20,13 +20,6 @@ struct MusicProduct: Product {
     struct MusicInfo : Codable {
         var artist: String
         var album: String
-        var formats: [FormatInfo]
-        
-        struct FormatInfo : Codable {
-            var format: String
-            var imageURL: String
-            var price: Float
-        }
     }
     
     func hash(into hasher: inout Hasher) {

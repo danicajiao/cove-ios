@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProductDetailTabs: View {
-    @StateObject var viewModel: ProductDetailViewModel
+    @ObservedObject var viewModel: ProductDetailViewModel
     
     var body: some View {
         if let musicProductDetails = self.viewModel.productDetails as? MusicProductDetails {

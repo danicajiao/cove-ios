@@ -5,7 +5,7 @@
 //  Created by Daniel Cajiao on 12/16/22.
 //
 
-//import SwiftUI
+import SwiftUI
 import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
@@ -42,7 +42,11 @@ class AppState: ObservableObject {
             if error != nil {
                 onFailure(error)
             } else {
-                self.path.append(.main)
+                DispatchQueue.main.async {
+                    self.authState = .loggedIn
+                    self.authMethod = .email
+                    self.path.removeAll()
+                }
                 onSuccess()
             }
         }
@@ -56,7 +60,11 @@ class AppState: ObservableObject {
                 onFailure(error)
 //                print(error?.localizedDescription ?? "")
             } else {
-                strongSelf.path.append(.main)
+                DispatchQueue.main.async {
+                    strongSelf.authState = .loggedIn
+                    strongSelf.authMethod = .email
+                    strongSelf.path.removeAll()
+                }
                 onSuccess()
             }
         }
@@ -225,8 +233,11 @@ class AppState: ObservableObject {
                 
                 onFailure(error)
             } else {
-                self.authState = .loggedIn
-                self.path.append(.main)
+                DispatchQueue.main.async {
+                    self.authMethod = .google
+                    self.authState = .loggedIn
+                    self.path.removeAll()
+                }
             }
         }
     }
@@ -253,8 +264,11 @@ class AppState: ObservableObject {
                 print(error.localizedDescription)
                 onFailure(error)
             } else {
-                self.authState = .loggedIn
-                self.path.append(.main)
+                DispatchQueue.main.async {
+                    self.authMethod = .facebook
+                    self.authState = .loggedIn
+                    self.path.removeAll()
+                }
             }
         }
     }
@@ -273,8 +287,11 @@ class AppState: ObservableObject {
             do {
                 try Auth.auth().signOut()
                 LoginManager().logOut()
-                self.authMethod = nil
-                self.authState = .loggedOut
+                DispatchQueue.main.async {
+                    self.authState = .loggedOut
+                    self.authMethod = nil
+                    self.path.removeAll()
+                }
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }
@@ -283,8 +300,11 @@ class AppState: ObservableObject {
             do {
                 try Auth.auth().signOut()
                 GIDSignIn.sharedInstance.signOut()
-                self.authMethod = nil
-                self.authState = .loggedOut
+                DispatchQueue.main.async {
+                    self.authState = .loggedOut
+                    self.authMethod = nil
+                    self.path.removeAll()
+                }
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }
@@ -292,8 +312,11 @@ class AppState: ObservableObject {
             print("Logging out email user")
             do {
                 try Auth.auth().signOut()
-                self.authMethod = nil
-                self.authState = .loggedOut
+                DispatchQueue.main.async {
+                    self.authState = .loggedOut
+                    self.authMethod = nil
+                    self.path.removeAll()
+                }
             } catch let signOutError as NSError {
                 print("Error signing out: %@", signOutError)
             }

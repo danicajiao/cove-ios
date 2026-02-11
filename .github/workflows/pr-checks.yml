@@ -15,7 +15,7 @@ on:
 jobs:
   build-and-test:
     name: Build and Test
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
       - name: Checkout code
@@ -38,16 +38,13 @@ jobs:
       - name: Install CocoaPods dependencies
         run: pod install
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
-
       - name: Build iOS app
         run: |
           xcodebuild clean build \
             -workspace Cove.xcworkspace \
             -scheme Cove \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Run tests
@@ -56,7 +53,7 @@ jobs:
             -workspace Cove.xcworkspace \
             -scheme Cove \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
             CODE_SIGNING_ALLOWED=NO
         continue-on-error: true
 

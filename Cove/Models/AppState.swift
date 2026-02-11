@@ -265,6 +265,7 @@ class AppState: ObservableObject {
                 onFailure(error)
             } else {
                 DispatchQueue.main.async {
+                    self.authMethod = .facebook
                     self.authState = .loggedIn
                     self.path.removeAll()
                 }

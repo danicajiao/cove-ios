@@ -31,9 +31,13 @@ class ProductDetailViewModel : ObservableObject {
         
         Task {
             await fetchProduct(productId)
-            if let product = self.product {
-                try? await fetchProductDetails()
-                try? await fetchSimilarProducts()
+            if self.product != nil {
+                do {
+                    try await fetchProductDetails()
+                    try await fetchSimilarProducts()
+                } catch {
+                    print("Error fetching product details or similar products: \(error)")
+                }
             }
         }
     }
@@ -46,8 +50,17 @@ class ProductDetailViewModel : ObservableObject {
             // Fetch the product document from Firestore
             let snapshot = try await db.collection("products").document(id).getDocument()
             
+            // Check if document exists
+            guard snapshot.exists else {
+                print("Product with id \(id) does not exist")
+                return
+            }
+            
             // Get the categoryId to determine the product type
-            let categoryId = snapshot["categoryId"] as? String
+            guard let categoryId = snapshot["categoryId"] as? String else {
+                print("Product document missing categoryId field")
+                return
+            }
             
             // Decode based on product type
             if categoryId == ProductTypes.coffee.rawValue {
@@ -65,6 +78,8 @@ class ProductDetailViewModel : ObservableObject {
                 await MainActor.run {
                     self.product = apparelProduct
                 }
+            } else {
+                print("Unknown product category: \(categoryId)")
             }
         } catch {
             print("Error fetching product: \(error)")

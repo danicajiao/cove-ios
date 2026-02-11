@@ -41,7 +41,7 @@ struct ProductDetailView: View {
             .first?.windows
             .filter({$0.isKeyWindow}).first
         
-        return (keyWindow?.safeAreaInsets.top)!
+        return keyWindow?.safeAreaInsets.top ?? 0
     }
     
     private func fetchImage() {
@@ -153,7 +153,7 @@ private struct ProductDetailContent: View {
             .first?.windows
             .filter({$0.isKeyWindow}).first
         
-        return (keyWindow?.safeAreaInsets.top)!
+        return keyWindow?.safeAreaInsets.top ?? 0
     }
     
     var body: some View {

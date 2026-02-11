@@ -46,7 +46,7 @@ struct ProductCardView: View {
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            NavigationLink(value: Path.product(id: product.id!)) {
+            NavigationLink(value: Path.product(id: product.id ?? "")) {
                 VStack(spacing: 0) {
                     if let uiImage = uiImage {
                         Image(uiImage: uiImage)

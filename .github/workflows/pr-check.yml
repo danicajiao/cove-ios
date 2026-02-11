@@ -19,8 +19,22 @@ jobs:
       - name: Extract version from Info.plist
         id: app-version
         run: |
-          # Extract CFBundleShortVersionString from Info.plist using grep and sed
-          VERSION=$(grep -A 1 "CFBundleShortVersionString" "Cove/Supporting Files/Info.plist" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/' | tr -d '[:space:]')
+          # Extract CFBundleShortVersionString from Info.plist using Python's plistlib
+          VERSION=$(python3 -c "
+import plistlib
+import sys
+try:
+    with open('Cove/Supporting Files/Info.plist', 'rb') as f:
+        plist = plistlib.load(f)
+        version = plist.get('CFBundleShortVersionString', '')
+        if version:
+            print(version)
+        else:
+            sys.exit(1)
+except Exception as e:
+    print(f'Error: {e}', file=sys.stderr)
+    sys.exit(1)
+")
           
           if [ -z "$VERSION" ]; then
             echo "::error::Failed to extract version from Info.plist"

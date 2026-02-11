@@ -21,9 +21,6 @@ struct ProductDetailView: View {
     
     @State var count: Int = 1
     
-    @State private var index = 0
-    @State var viewPagerSize: CGSize = .zero
-    
     init(productId: String) {
         self.productId = productId
         self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(productId: productId))

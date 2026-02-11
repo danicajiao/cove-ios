@@ -33,7 +33,7 @@ Before starting, ensure you have:
 base64 -i YourCertificate.p12 -o certificate.txt
 ```
 
-Open `certificate.txt` and copy the contents. This is your `CERTIFICATES_P12` secret value.
+Open `certificateb64.txt` and copy the contents. This is your `CERTIFICATES_P12` secret value.
 
 ### 1.3 Export Your Provisioning Profile
 
@@ -47,7 +47,7 @@ Open `certificate.txt` and copy the contents. This is your `CERTIFICATES_P12` se
 base64 -i YourProfile.mobileprovision -o profile.txt
 ```
 
-Open `profile.txt` and copy the contents. This is your `PROVISIONING_PROFILE` secret value.
+Open `profileb64.txt` and copy the contents. This is your `PROVISIONING_PROFILE` secret value.
 
 ### 1.5 Get Provisioning Profile Name
 
@@ -95,7 +95,7 @@ Open `apikey.txt` and copy the contents. This is your `APP_STORE_CONNECT_API_KEY
 ### 3.1 Generate PAT
 
 1. Go to [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
-2. Click **Generate new token** → **Generate new token (classic)**
+2. Click **Generate new token** → **Generate new token (fine-grained)**
 3. Give it a descriptive name (e.g., "Cove iOS CI/CD")
 4. Set expiration (recommended: 90 days or custom)
 5. Select scopes:

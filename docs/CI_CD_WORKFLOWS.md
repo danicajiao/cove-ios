@@ -27,7 +27,7 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 
 **Configuration:**
 - Runs on macOS latest
-- Uses Xcode 15.2
+- Uses Xcode 26.2
 - Builds for iOS Simulator (no code signing required)
 - Uses CocoaPods for dependency management
 
@@ -159,11 +159,11 @@ Add all required secrets to your GitHub repository:
 # 3. Save as .p12 with a password
 
 # Base64 encode the certificate
-base64 -i YourCertificate.p12 -o certificate.txt
+base64 -i YourCertificate.p12 -o certificateb64.txt
 # Copy contents of certificate.txt to CERTIFICATES_P12 secret
 
 # Base64 encode the provisioning profile
-base64 -i YourProfile.mobileprovision -o profile.txt
+base64 -i YourProfile.mobileprovision -o profileb64.txt
 # Copy contents of profile.txt to PROVISIONING_PROFILE secret
 ```
 
@@ -220,7 +220,7 @@ xcodebuild test \
 xcodebuild test \
   -workspace Cove.xcworkspace \
   -scheme Cove \
-  -destination 'platform=iOS Simulator,name=iPhone 15'
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ### Deploying with Fastlane

@@ -234,6 +234,7 @@ class AppState: ObservableObject {
                 onFailure(error)
             } else {
                 DispatchQueue.main.async {
+                    self.authMethod = .google
                     self.authState = .loggedIn
                     self.path.removeAll()
                 }

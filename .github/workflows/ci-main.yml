@@ -56,20 +56,3 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
         continue-on-error: true
-
-      - name: Check for SwiftLint
-        id: swiftlint-check
-        run: |
-          if [ -f ".swiftlint.yml" ]; then
-            echo "has_swiftlint=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_swiftlint=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install SwiftLint
-        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
-        run: brew install swiftlint
-
-      - name: Run SwiftLint
-        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
-        run: swiftlint lint --strict

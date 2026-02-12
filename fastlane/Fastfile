@@ -50,7 +50,7 @@ platform :ios do
     run_tests(
       workspace: WORKSPACE,
       scheme: SCHEME,
-      device: "iPhone 15",
+      device: "iPhone 17 Pro",
       code_coverage: true
     )
   end

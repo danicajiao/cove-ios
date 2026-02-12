@@ -10,6 +10,9 @@ on:
       - 'Cove.xcworkspace/**'
       - 'Podfile'
       - 'Podfile.lock'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'fastlane/**'
       - '.github/workflows/ci-main.yml'
 
 jobs:
@@ -35,24 +38,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      - name: Install CocoaPods dependencies
-        run: pod install
-
       - name: Build iOS app
-        run: |
-          xcodebuild clean build \
-            -workspace Cove.xcworkspace \
-            -scheme Cove \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+        run: bundle exec fastlane build
 
       - name: Run tests
-        run: |
-          xcodebuild test \
-            -workspace Cove.xcworkspace \
-            -scheme Cove \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+        run: bundle exec fastlane test
         continue-on-error: true

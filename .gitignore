@@ -130,3 +130,14 @@ scripts/serviceAccountKey.json
 
 ### macOS ###
 .DS_Store
+
+### CI/CD ###
+# Certificate and provisioning profiles
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+ExportOptions.plist
+# Gemfile.lock for Bundler (not needed in repo)
+# Uncomment if you want to track Gemfile.lock
+# Gemfile.lock

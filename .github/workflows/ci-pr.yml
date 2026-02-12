@@ -1,0 +1,48 @@
+name: CI - Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'Cove/**'
+      - '.github/workflows/ci-pr.yml'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check for SwiftLint
+        id: swiftlint-check
+        run: |
+          if [ -f ".swiftlint.yml" ]; then
+            echo "has_swiftlint=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_swiftlint=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install SwiftLint
+        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
+        run: swiftlint lint --strict
+
+      - name: Check for merge conflict markers
+        run: |
+          if grep -r "^<<<<<<< \|^=======$\|^>>>>>>> " Cove/ --include="*.swift"; then
+            echo "❌ Merge conflict markers found!"
+            exit 1
+          fi
+          echo "✓ No merge conflict markers"
+
+      - name: Validate Info.plist
+        run: |
+          plutil -lint "Cove/Supporting Files/Info.plist"
+          echo "✓ Info.plist is valid"

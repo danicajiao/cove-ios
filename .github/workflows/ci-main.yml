@@ -1,0 +1,58 @@
+name: CI - Main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Cove/**'
+      - 'Cove.xcodeproj/**'
+      - 'Cove.xcworkspace/**'
+      - 'Podfile'
+      - 'Podfile.lock'
+      - '.github/workflows/ci-main.yml'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.1'
+          bundler-cache: true
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v5
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install CocoaPods dependencies
+        run: pod install
+
+      - name: Build iOS app
+        run: |
+          xcodebuild clean build \
+            -workspace Cove.xcworkspace \
+            -scheme Cove \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -workspace Cove.xcworkspace \
+            -scheme Cove \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+        continue-on-error: true

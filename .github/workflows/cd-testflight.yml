@@ -1,0 +1,126 @@
+name: CD - Deploy to TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for deployment'
+        required: false
+        type: string
+
+jobs:
+  deploy-testflight:
+    name: Build and Deploy to TestFlight
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.1'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v5
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Configure git for version bumps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Import Code Signing Certificates
+        uses: apple-actions/import-codesign-certs@v6
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_PASSWORD }}
+
+      - name: Download Provisioning Profiles
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Set up App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          mkdir -p ~/private_keys
+          echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+
+      - name: Deploy to TestFlight using Fastlane
+        env:
+          PROVISIONING_PROFILE_SPECIFIER: ${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}
+          MATCH_PASSWORD: ${{ secrets.CERTIFICATES_PASSWORD }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: bundle exec fastlane beta
+
+      - name: Get version and build info
+        id: version-info
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "Cove/Supporting Files/Info.plist")
+          BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "Cove/Supporting Files/Info.plist")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+
+      - name: Check for duplicate release
+        env:
+          VERSION: ${{ steps.version-info.outputs.version }}
+          BUILD: ${{ steps.version-info.outputs.build }}
+        run: |
+          if git rev-parse "v${VERSION}-${BUILD}" >/dev/null 2>&1; then
+            echo "❌ Error: Tag v${VERSION}-${BUILD} already exists!"
+            echo "This indicates the build number was not properly incremented by Fastlane."
+            exit 1
+          fi
+          
+          echo "✓ Tag v${VERSION}-${BUILD} is unique and ready to be created"
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.version-info.outputs.version }}
+          BUILD: ${{ steps.version-info.outputs.build }}
+          REASON: ${{ github.event.inputs.reason }}
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            const version = process.env.VERSION;
+            const build = process.env.BUILD;
+            const reason = process.env.REASON || 'TestFlight deployment';
+            
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `v${version}-${build}`,
+              name: `v${version} (Build ${build})`,
+              body: `**TestFlight Beta Release**\n\n${reason}\n\n- Version: ${version}\n- Build: ${build}\n- Deployed: ${new Date().toISOString()}\n\n---\n\n*This release is available on TestFlight for beta testing.*`,
+              draft: false,
+              prerelease: true
+            });
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: build-logs
+          path: |
+            ~/Library/Logs/gym
+            *.log

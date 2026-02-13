@@ -1,0 +1,94 @@
+{
+  "fill" : {
+    "solid" : "display-p3:1.00000,0.98039,0.94510,1.00000"
+  },
+  "groups" : [
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "image-name" : "Vector.svg",
+          "name" : "Vector",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -182.49990000000003
+            ]
+          }
+        },
+        {
+          "image-name" : "Vector-1.svg",
+          "name" : "Vector-1",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              81.77909999999997
+            ]
+          }
+        },
+        {
+          "image-name" : "Vector-2.svg",
+          "name" : "Vector-2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              236.1581
+            ]
+          }
+        },
+        {
+          "image-name" : "Vector-3.svg",
+          "name" : "Vector-3",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              320.93409999999994
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : true,
+      "layers" : [
+        {
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Brutalist 72.svg",
+          "name" : "Brutalist 72"
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 1
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

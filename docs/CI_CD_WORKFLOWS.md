@@ -95,17 +95,17 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 2. Set up Ruby 4.0.1 with bundler cache
 3. Cache CocoaPods dependencies
 4. Configure git for version commits
-6. Import code signing certificates
-7. Download provisioning profiles
-8. Set up App Store Connect API key
-9. **Run `fastlane release version:X.Y.Z` lane** which:
+5. Import code signing certificates
+6. Download provisioning profiles
+7. Set up App Store Connect API key
+8. **Run `fastlane release version:X.Y.Z` lane** which:
    - Updates marketing version to specified version
    - Auto-increments build number (syncs with TestFlight)
    - Builds and archives the app
    - Submits to App Store Connect
    - Commits and pushes version bump
-10. Update GitHub release notes with build information (or create new release)
-11. Upload build artifacts on failure
+9. Update GitHub release notes with build information (or create new release)
+10. Upload build artifacts on failure
 
 **Versioning:**
 - `CFBundleShortVersionString`: **Manually specified via version parameter**
@@ -114,7 +114,7 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 **Usage:**
 To release to App Store, manually trigger the workflow from GitHub Actions UI. The workflow will prompt you to specify the version to release (e.g., `1.1.0`), which will be passed to the Fastlane release lane.
 
-**Note:** The workflow includes logic to parse version from git tags, but since it's triggered by workflow_dispatch (not tag push), this automatic parsing doesn't currently function. The version must be manually specified when triggering the workflow.
+**Note:** The workflow includes legacy logic to parse version from git tags (from when it was triggered by tag pushes), but this code is non-functional with the current manual trigger setup. The version must be manually specified when triggering the workflow.
 
 **Required Secrets:** All 8 secrets (see Required Secrets section below)
 

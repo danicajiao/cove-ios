@@ -82,7 +82,7 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 - Build number syncs with latest TestFlight build to avoid conflicts
 - `CFBundleShortVersionString` (Marketing Version): **Unchanged** (stays at current version)
 
-**Required Secrets:** All 9 secrets (see Required Secrets section below)
+**Required Secrets:** All 8 secrets (see Required Secrets section below)
 
 ### 4. CD - Release to App Store (`cd-appstore.yml`)
 
@@ -117,7 +117,7 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI an
 
 **Note:** The workflow includes logic to parse version from git tags, but since it's triggered by workflow_dispatch (not tag push), this parsing doesn't currently work. The version must be passed as a parameter to the Fastlane lane.
 
-**Required Secrets:** All 9 secrets (see Required Secrets section below)
+**Required Secrets:** All 8 secrets (see Required Secrets section below)
 
 ## Required Secrets
 

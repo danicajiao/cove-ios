@@ -259,8 +259,8 @@ GitHub Repository Secrets
 | Workflow | Secrets Used |
 |----------|-------------|
 | PR Checks | None |
-| TestFlight | All 9 secrets |
-| App Store Release | All 9 secrets |
+| TestFlight | All 8 secrets |
+| App Store Release | All 8 secrets |
 
 ### Security Best Practices
 1. ✅ Secrets stored in GitHub (encrypted)

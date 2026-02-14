@@ -9,15 +9,15 @@ This document provides a high-level overview of how the iOS CI/CD system works.
 │                         GitHub Repository                        │
 │                                                                   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  Developer   │  │   PR Created │  │   Release Created    │  │
-│  │  Pushes Code │  │              │  │   (Manual Trigger)   │  │
+│  │  PR Created  │  │ Push to Main │  │  Manual Deployment   │  │
+│  │              │  │              │  │      Triggers        │  │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
 │         │                  │                      │               │
 │         ▼                  ▼                      ▼               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
 │  │              │  │              │  │                      │  │
-│  │  Merge to    │  │  PR Checks   │  │  App Store Release   │  │
-│  │  Main Branch │  │  Workflow    │  │  Workflow            │  │
+│  │   CI - PR    │  │  CI - Main   │  │  CD - TestFlight    │  │
+│  │   Checks     │  │  Build/Test  │  │  CD - App Store     │  │
 │  │              │  │              │  │                      │  │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
 │         │                  │                      │               │
@@ -25,9 +25,9 @@ This document provides a high-level overview of how the iOS CI/CD system works.
           │                  │                      │
           ▼                  ▼                      ▼
    ┌─────────────┐    ┌─────────────┐      ┌─────────────┐
-   │  TestFlight │    │    Build    │      │  App Store  │
-   │  Deployment │    │     Only    │      │   Connect   │
-   │             │    │  (No Deploy)│      │             │
+   │    Lint     │    │  Build/Test │      │  TestFlight │
+   │    Only     │    │   Results   │      │  App Store  │
+   │             │    │             │      │   Connect   │
    └─────────────┘    └─────────────┘      └─────────────┘
 ```
 
@@ -36,14 +36,15 @@ This document provides a high-level overview of how the iOS CI/CD system works.
 ### 1. Development Flow (PR Checks)
 
 ```
-Pull Request → PR Checks Workflow
+Pull Request → CI-PR Workflow
                      ↓
               ┌─────────────┐
               │  Checkout   │
-              │  Install    │
-              │  Build      │
-              │  Test       │
-              │  Lint       │
+              │  SwiftLint  │
+              │  Check      │
+              │  Conflicts  │
+              │  Validate   │
+              │  Info.plist │
               └─────────────┘
                      ↓
               Status Posted
@@ -51,75 +52,105 @@ Pull Request → PR Checks Workflow
 ```
 
 **Key Points:**
+- Fast feedback (linting only)
 - No version changes
+- No build/test execution
 - No deployment
-- Fast feedback loop
 - Runs in parallel with other PRs
 
-### 2. TestFlight Flow (Continuous Deployment)
+### 2. Main Branch Flow (Continuous Validation)
 
 ```
-Merge to Main → TestFlight Workflow
+Push to Main → CI-Main Workflow
                      ↓
-        ┌───────────────────────┐
-        │  Increment Build #    │ ← Auto-increment script
-        └───────────┬───────────┘
-                    ↓
-        ┌───────────────────────┐
-        │  Commit & Push        │ ← Updates Info.plist
-        └───────────┬───────────┘
-                    ↓
-        ┌───────────────────────┐
-        │  Build & Archive      │ ← Code signing
-        └───────────┬───────────┘
-                    ↓
-        ┌───────────────────────┐
-        │  Upload to TestFlight │ ← altool
-        └───────────────────────┘
+         ┌───────────────────────┐
+         │  Setup Ruby & Pods    │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Build via Fastlane   │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Test via Fastlane    │
+         │  (continue on error)  │
+         └───────────────────────┘
 ```
 
 **Key Points:**
+- Validates build after merge
+- Runs tests but continues on failure
+- No version changes
+- No deployment
+- Uses Fastlane lanes
+
+### 3. TestFlight Flow (Manual Deployment)
+
+```
+Manual Trigger → CD-TestFlight Workflow
+                     ↓
+         ┌───────────────────────┐
+         │  Setup & Dependencies │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Code Signing Setup   │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Fastlane Beta Lane   │
+         │  - Increment Build #  │ ← Auto-increment script
+         │  - Build & Archive    │ ← Code signing
+         │  - Upload TestFlight  │ ← App Store Connect API
+         │  - Commit & Push      │ ← Updates Info.plist
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Create GitHub Release│
+         │  (prerelease=true)    │
+         └───────────────────────┘
+```
+
+**Key Points:**
+- Manually triggered via workflow_dispatch
 - Auto-increments build number (CFBundleVersion)
 - Keeps marketing version unchanged
 - Commits build number back to repo
-- Deploys to TestFlight automatically
+- Creates prerelease on GitHub
+- Deploys to TestFlight
 
-### 3. App Store Flow (Manual Release)
+### 4. App Store Flow (Manual Release)
 
 ```
-Create Release → App Store Workflow
-  (v1.1.0)              ↓
-         ┌──────────────────────────┐
-         │  Extract Version from Tag│ ← v1.1.0 → 1.1.0
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Update Marketing Version│ ← Info.plist
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Increment Build #       │ ← Auto-increment
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Commit & Push           │
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Build & Archive         │
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Submit to App Store     │
-         └──────────┬───────────────┘
-                    ↓
-         ┌──────────────────────────┐
-         │  Update Release Notes    │
-         └──────────────────────────┘
+Manual Trigger → CD-App Store Workflow
+                     ↓
+         ┌───────────────────────┐
+         │  Setup & Dependencies │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Code Signing Setup   │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Fastlane Release Lane│
+         │  - Update Version     │ ← From parameter
+         │  - Increment Build #  │ ← Auto-increment
+         │  - Build & Archive    │
+         │  - Submit App Store   │
+         │  - Commit & Push      │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │  Update Release Notes │
+         │  (or create new)      │
+         └───────────────────────┘
 ```
 
 **Key Points:**
+- Manually triggered via workflow_dispatch
 - Updates both marketing version and build number
+- Version passed as parameter to Fastlane lane
 - Submits to App Store Connect for review
 - Updates GitHub release with build info
 
@@ -127,30 +158,23 @@ Create Release → App Store Workflow
 
 ### Workflow Files (.github/workflows/)
 ```
-pr-checks.yml
-├── Triggers on: Pull Request
-├── Uses: Xcode build commands
-└── No dependencies on Fastlane
+ci-pr.yml
+├── Triggers on: Pull Request to main
+├── Validates: Linting, conflicts, Info.plist
+└── No build/test execution
 
-deploy-testflight.yml
+ci-main.yml
 ├── Triggers on: Push to main
-├── Uses: Xcode + increment script
-└── Requires: All GitHub secrets
+├── Uses: Fastlane build and test lanes
+└── No deployment
 
-### Workflow Files (.github/workflows/)
-```
-pr-checks.yml
-├── Triggers on: Pull Request
-├── Uses: Xcode build commands
-└── No dependencies on Fastlane
-
-deploy-testflight.yml
-├── Triggers on: Push to main
+cd-testflight.yml
+├── Triggers on: Manual workflow_dispatch
 ├── Uses: Fastlane beta lane
 └── Requires: All GitHub secrets
 
-release-appstore.yml
-├── Triggers on: Release creation
+cd-appstore.yml
+├── Triggers on: Manual workflow_dispatch
 ├── Uses: Fastlane release lane
 └── Requires: All GitHub secrets
 ```
@@ -245,16 +269,18 @@ GitHub Repository Secrets
 4. ✅ Personal Access Token for git operations
 5. ✅ App Store Connect API instead of username/password
 
+**Note:** The `APPLE_TEAM_ID` secret is not currently used by workflows.
+
 ## Dependency Chain
 
 ```
-GitHub Actions (Runner: macOS-latest)
+GitHub Actions (Runner: macOS-26)
     ↓
-Ruby 3.2 + Bundler
+Ruby 4.0.1 + Bundler
     ↓
-CocoaPods (via Podfile)
+Fastlane ~2.219 + CocoaPods ~1.15 (via Gemfile)
     ↓
-Xcode 15.2
+Xcode (from macOS-26 runner)
     ↓
 iOS SDK
 ```
@@ -263,33 +289,36 @@ iOS SDK
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| macOS | latest | GitHub Actions runner |
-| Xcode | 15.2 | iOS development |
-| Ruby | 3.2 | Fastlane runtime |
-| CocoaPods | 1.15 | Dependency management |
-| Fastlane | 2.219 | iOS automation (optional) |
+| macOS | macOS-26 | GitHub Actions runner |
+| Xcode | Bundled with macOS-26 | iOS development |
+| Ruby | 4.0.1 | Fastlane runtime |
+| CocoaPods | ~1.15 | Dependency management |
+| Fastlane | ~2.219 | iOS automation |
 
 ## Data Flow
 
 ### PR Check Flow
 ```
-Source Code → Build → Tests → Lint → ✓/✗ Status
+Source Code → Lint → Check Conflicts → Validate Info.plist → ✓/✗ Status
+```
+
+### Main Branch Flow
+```
+Source Code → Setup → Build (Fastlane) → Test (Fastlane) → Results
 ```
 
 ### TestFlight Flow
 ```
-Source Code → Increment → Build → Sign → Archive → Export → Upload → TestFlight
-                ↓
-           Commit Back
+Manual Trigger → Setup → Code Sign → Fastlane Beta → TestFlight + GitHub Release
+                                           ↓
+                                      Commit Back
 ```
 
 ### App Store Flow
 ```
-Release Tag → Extract → Update Version → Increment → Build → Sign →
-                                                                      ↓
-TestFlight ← Upload ← Export ← Archive ← (Build continues...)
-     ↓
-Update Release Notes
+Manual Trigger → Setup → Code Sign → Fastlane Release → App Store + Update Release
+                                           ↓
+                                      Commit Back
 ```
 
 ## Integration Points

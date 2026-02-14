@@ -92,10 +92,9 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 
 **Steps:**
 1. Checkout code with full git history
-2. Parse version from GITHUB_REF (note: currently not working as intended - workflow doesn't get tag)
-3. Set up Ruby 4.0.1 with bundler cache
-4. Cache CocoaPods dependencies
-5. Configure git for version commits
+2. Set up Ruby 4.0.1 with bundler cache
+3. Cache CocoaPods dependencies
+4. Configure git for version commits
 6. Import code signing certificates
 7. Download provisioning profiles
 8. Set up App Store Connect API key
@@ -113,9 +112,9 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 - `CFBundleVersion`: **Auto-incremented** and synced with TestFlight
 
 **Usage:**
-To release to App Store, manually trigger the workflow from GitHub Actions UI and it will prompt for the version to release.
+To release to App Store, manually trigger the workflow from GitHub Actions UI. The workflow will prompt you to specify the version to release (e.g., `1.1.0`), which will be passed to the Fastlane release lane.
 
-**Note:** The workflow includes logic to parse version from git tags, but since it's triggered by workflow_dispatch (not tag push), this parsing doesn't currently work. The version must be passed as a parameter to the Fastlane lane.
+**Note:** The workflow includes logic to parse version from git tags, but since it's triggered by workflow_dispatch (not tag push), this automatic parsing doesn't currently function. The version must be manually specified when triggering the workflow.
 
 **Required Secrets:** All 8 secrets (see Required Secrets section below)
 
@@ -262,6 +261,8 @@ bundle exec fastlane test
 ```
 
 Using xcodebuild directly:
+```bash
+xcodebuild test \
   -workspace Cove.xcworkspace \
   -scheme Cove \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro'

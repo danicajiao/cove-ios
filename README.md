@@ -75,9 +75,9 @@ This will then auto-link the PR to the issue(s) and will close them once the PR 
 
 ### CI/CD
 This project uses automated CI/CD workflows for iOS app deployment:
-- **PR Checks**: Builds and tests run automatically on every pull request
-- **TestFlight Deployment**: Auto-deploys to TestFlight on every merge to `main`
-- **App Store Submission**: Release workflow triggered by creating a new GitHub release
+- **PR Checks**: Linting runs automatically on every pull request
+- **TestFlight Deployment**: Manual deployment via workflow dispatch
+- **App Store Submission**: Manual deployment via workflow dispatch
 
 See [CI/CD Workflows Documentation](docs/CI_CD_WORKFLOWS.md) for complete setup and usage instructions.
 

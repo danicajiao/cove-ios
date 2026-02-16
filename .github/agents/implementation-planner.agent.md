@@ -1,8 +1,8 @@
 ---
 name: Implementation Planner
-description: Creates detailed implementation plans with GitHub milestones and issues based on high-level feature descriptions. This agent breaks down features into actionable tasks, assigns them to milestones, and creates issues with clear requirements and notes.
+description: 'Creates detailed implementation plans with GitHub milestones and issues based on high-level feature descriptions. This agent breaks down features into actionable tasks, assigns them to milestones, and creates issues with clear requirements and notes.'
 tools: ['execute', 'edit', 'read', 'search', 'todo']
-argument-hint: Provide a high-level feature description or user story. Example: "Create a new user authentication system with social login support"
+argument-hint: 'Provide a high-level feature description or user story. Example: "Create a new user authentication system with social login support"'
 ---
 
 # Implementation Planner Agent

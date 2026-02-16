@@ -64,6 +64,8 @@ This outputs the profile name, which is your `PROVISIONING_PROFILE_SPECIFIER` va
 2. Find your **Team ID** (e.g., `A1B2C3D4E5`)
 3. This is your `APPLE_TEAM_ID` value
 
+**Note:** This secret is not currently used by the workflows, but is included for completeness and potential future use.
+
 ## Step 2: Create App Store Connect API Key
 
 ### 2.1 Generate API Key
@@ -107,6 +109,8 @@ This token is your `GH_PAT` secret value.
 
 ## Step 4: Add Secrets to GitHub Repository
 
+**Total: 9 secrets (8 required, 1 unused)**
+
 1. Go to your GitHub repository
 2. Navigate to **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret** for each of the following:
@@ -119,7 +123,7 @@ This token is your `GH_PAT` secret value.
 | `CERTIFICATES_PASSWORD` | Password from Step 1.1 | `YourSecurePassword123` |
 | `PROVISIONING_PROFILE` | Base64 from Step 1.4 | `MIINUQYJKoZI...` |
 | `PROVISIONING_PROFILE_SPECIFIER` | Profile name from Step 1.5 | `Cove App Store Profile` |
-| `APPLE_TEAM_ID` | Team ID from Step 1.6 | `A1B2C3D4E5` |
+| `APPLE_TEAM_ID` | Team ID from Step 1.6 | `A1B2C3D4E5` *(not currently used)* |
 
 ### App Store Connect Secrets
 

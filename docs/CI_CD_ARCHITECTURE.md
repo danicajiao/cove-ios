@@ -239,13 +239,13 @@ increment_version_number(
 
 ### Secrets Storage
 ```
-GitHub Repository Secrets
+GitHub Repository Secrets (Total: 9 secrets - 8 required, 1 unused)
 ├── Code Signing Secrets (5)
 │   ├── CERTIFICATES_P12 (Base64)
 │   ├── CERTIFICATES_PASSWORD
 │   ├── PROVISIONING_PROFILE (Base64)
 │   ├── PROVISIONING_PROFILE_SPECIFIER
-│   └── APPLE_TEAM_ID
+│   └── APPLE_TEAM_ID (not currently used)
 ├── App Store Connect API (3)
 │   ├── APP_STORE_CONNECT_API_KEY_ID
 │   ├── APP_STORE_CONNECT_API_ISSUER_ID
@@ -259,8 +259,10 @@ GitHub Repository Secrets
 | Workflow | Secrets Used |
 |----------|-------------|
 | PR Checks | None |
-| TestFlight | All 8 secrets |
-| App Store Release | All 8 secrets |
+| TestFlight | 8 required secrets |
+| App Store Release | 8 required secrets |
+
+**Note:** The `APPLE_TEAM_ID` secret (9th secret) is not currently used by workflows but is documented for completeness.
 
 ### Security Best Practices
 1. ✅ Secrets stored in GitHub (encrypted)
@@ -268,8 +270,6 @@ GitHub Repository Secrets
 3. ✅ Base64 encoding for binary files
 4. ✅ Personal Access Token for git operations
 5. ✅ App Store Connect API instead of username/password
-
-**Note:** The `APPLE_TEAM_ID` secret is not currently used by workflows.
 
 ## Dependency Chain
 

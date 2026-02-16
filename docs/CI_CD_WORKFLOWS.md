@@ -120,6 +120,8 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI.
 
 ## Required Secrets
 
+**Total: 9 secrets (8 required, 1 unused)**
+
 The following secrets must be configured in your GitHub repository settings:
 
 ### Code Signing

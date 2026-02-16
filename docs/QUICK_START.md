@@ -54,35 +54,29 @@ git push origin test/ci-setup
 
 Create a PR and watch the checks run!
 
-### Step 4: Deploy to TestFlight (Manual Trigger)
+### Step 4: Deploy to TestFlight (Manual)
 
-To deploy to TestFlight:
-1. Navigate to **Actions** tab in your repository
-2. Select **"CD - Deploy to TestFlight"** workflow
-3. Click **"Run workflow"** button
-4. Optionally add a reason for the deployment
-5. Click **"Run workflow"** to confirm
+When ready to deploy to TestFlight, manually trigger the workflow:
+
+1. Go to **Actions** tab → **CD - Deploy to TestFlight**
+2. Click **Run workflow** → Select `main` branch
+3. Optionally provide a deployment reason
+4. Click **Run workflow**
 
 The workflow will:
-- ✅ Auto-increment build number
-- ✅ Build and archive the app
-- ✅ Upload to TestFlight automatically
+1. ✅ Auto-increment build number
+2. ✅ Build and archive the app
+3. ✅ Upload to TestFlight
 
 ### Step 5: Release to App Store (Manual Trigger)
 
-When ready to submit to App Store:
+When ready to submit to App Store, manually trigger the workflow:
 
-```bash
-# Tag the release
-git tag v1.1.0
-git push origin v1.1.0
+1. Go to **Actions** tab → **CD - Release to App Store**
+2. Click **Run workflow** → Select `main` branch
+3. Click **Run workflow**
 
-# Then create a GitHub Release with that tag
-# The workflow will automatically:
-# - Update marketing version to 1.1.0
-# - Increment build number
-# - Build and submit to App Store Connect
-```
+**Note:** The workflow currently uses legacy tag parsing logic that is non-functional with the manual trigger. The version cannot be specified when triggering.
 
 ## 📊 Understanding the Workflows
 
@@ -97,7 +91,7 @@ git push origin v1.1.0
 **No version changes!**
 
 ### 2. Deploy to TestFlight
-**Trigger:** Manual via GitHub Actions UI (`workflow_dispatch`)
+**Trigger:** Manual workflow dispatch with optional reason input
 
 **What it does:**
 - Auto-increments build number (1 → 2 → 3...)
@@ -107,14 +101,13 @@ git push origin v1.1.0
 **Result:** `1.0.0 (2)`, `1.0.0 (3)`, etc.
 
 ### 3. Release to App Store
-**Trigger:** Creating a GitHub release with tag `v*.*.*`
+**Trigger:** Manual workflow dispatch
 
 **What it does:**
-- Updates marketing version from tag (v1.1.0 → 1.1.0)
 - Auto-increments build number
 - Submits to App Store Connect
 
-**Result:** `1.1.0 (5)` submitted to App Store
+**Note:** Version cannot currently be specified when triggering. The workflow has legacy tag parsing logic that is non-functional with manual trigger.
 
 ## 🔄 Daily Workflow
 
@@ -123,8 +116,8 @@ git push origin v1.1.0
 1. Create feature branch
 2. Make changes
 3. Create PR → CI checks run automatically
-4. Merge PR to main
-5. Manually trigger TestFlight deployment via GitHub Actions
+4. Merge PR
+5. Manually trigger TestFlight deployment when ready
 6. Test in TestFlight
 7. Repeat!
 ```
@@ -132,10 +125,9 @@ git push origin v1.1.0
 ### For Release:
 ```
 1. Decide version number (e.g., 1.1.0)
-2. Create and push tag: git tag v1.1.0
-3. Create GitHub release with that tag
-4. Workflow automatically submits to App Store
-5. Monitor in App Store Connect
+2. Manually trigger App Store release workflow
+3. Workflow submits to App Store Connect
+4. Monitor in App Store Connect
 ```
 
 ## 🎯 Version Number Examples
@@ -143,12 +135,14 @@ git push origin v1.1.0
 | Action | Marketing Version | Build Number |
 |--------|------------------|--------------|
 | Initial state | 1.0.0 | 1 |
-| Merge PR #1 | 1.0.0 | 2 |
-| Merge PR #2 | 1.0.0 | 3 |
-| Merge PR #3 | 1.0.0 | 4 |
-| **Release v1.1.0** | **1.1.0** | **5** |
-| Merge PR #4 | 1.1.0 | 6 |
-| Merge PR #5 | 1.1.0 | 7 |
+| Manual TestFlight deploy | 1.0.0 | 2 |
+| Manual TestFlight deploy | 1.0.0 | 3 |
+| Manual TestFlight deploy | 1.0.0 | 4 |
+| **Manual App Store release** | **1.0.0** | **5** |
+| Manual TestFlight deploy | 1.0.0 | 6 |
+| Manual TestFlight deploy | 1.0.0 | 7 |
+
+**Note:** Marketing version does not automatically increment with current workflow configuration.
 
 ## 🐛 Common Issues
 

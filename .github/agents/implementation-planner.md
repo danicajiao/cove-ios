@@ -83,7 +83,7 @@ gh issue create --title "TITLE" --body "Short description" --milestone "MILESTON
 
 ### Useful Commands
 - List milestones: `gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number)\t\(.title)\t\(.state)"'`
-- View milestone details: `gh api repos/:owner/:repo/milestones/MILESTONE_NUMBER`
+- View milestone details: `gh api repos/:owner/:repo/milestones/MILESTONE_NUMBER` (use the number from list command)
 - List issues in a milestone: `gh issue list --milestone "MILESTONE_TITLE"`
 - List all issues: `gh issue list`
 - View repo info: `gh repo view`

@@ -16,7 +16,7 @@ Before you begin, ensure you have:
 
 Navigate to: **Repository Settings → Secrets and variables → Actions**
 
-Add these 9 secrets:
+Add these 9 secrets **(8 required, 1 unused)**:
 
 | Secret Name | Description |
 |------------|-------------|
@@ -24,7 +24,7 @@ Add these 9 secrets:
 | `CERTIFICATES_PASSWORD` | Certificate password |
 | `PROVISIONING_PROFILE` | Base64-encoded provisioning profile |
 | `PROVISIONING_PROFILE_SPECIFIER` | Profile name (e.g., "Cove App Store") |
-| `APPLE_TEAM_ID` | Your Apple Team ID |
+| `APPLE_TEAM_ID` | Your Apple Team ID *(not currently used)* |
 | `APP_STORE_CONNECT_API_KEY_ID` | API Key ID |
 | `APP_STORE_CONNECT_API_ISSUER_ID` | API Issuer ID |
 | `APP_STORE_CONNECT_API_KEY` | Base64-encoded API key (.p8) |

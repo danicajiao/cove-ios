@@ -67,6 +67,8 @@ Welcome to the iOS CI/CD documentation for the Cove iOS app.
 
 ## 🔑 Required Secrets
 
+**Total: 9 secrets (8 required, 1 unused)**
+
 All workflows require these GitHub secrets to be configured:
 
 ### Code Signing (5 secrets)
@@ -74,7 +76,7 @@ All workflows require these GitHub secrets to be configured:
 - `CERTIFICATES_PASSWORD`
 - `PROVISIONING_PROFILE`
 - `PROVISIONING_PROFILE_SPECIFIER`
-- `APPLE_TEAM_ID`
+- `APPLE_TEAM_ID` *(not currently used by workflows)*
 
 ### App Store Connect (3 secrets)
 - `APP_STORE_CONNECT_API_KEY_ID`

@@ -9,9 +9,10 @@ Test the Implementation Planner custom agent profile to ensure it can successful
 ## Test Results
 
 ### ✅ Successfully Tested
-1. **Issue Creation**: Created test issue [#101](https://github.com/danicajiao/cove-ios/issues/101)
-   - Title: "Test Agent Profile - Mock Issue"
-   - Body: Properly formatted with Description, Acceptance Criteria, Technical Notes, and Dependencies sections
+1. **Issue Creation**: Created test issues successfully
+   - Issue [#101](https://github.com/danicajiao/cove-ios/issues/101): "Test Agent Profile - Mock Issue"
+   - Issue [#102](https://github.com/danicajiao/cove-ios/issues/102): "Test Agent Profile - Milestone Link Demo"
+   - Both issues have properly formatted bodies with Description, Acceptance Criteria, Technical Notes, and Dependencies sections
    - State: Open
    
 2. **Issue Template**: Verified that the standard markdown template was used correctly:
@@ -39,13 +40,18 @@ Test the Implementation Planner custom agent profile to ensure it can successful
    - Error: "Resource not accessible by integration (HTTP 403)"
    - Requires elevated permissions not available to the agent
    
-2. **Label Assignment**: Cannot add labels via GitHub CLI after issue creation
+2. **Label Assignment**: Cannot add labels via GitHub CLI
    - Error: "Resource not accessible by integration (addLabelsToLabelable)"
-   - Labels should be added at creation time (parameter accepted but not applied)
+   - Label parameters are accepted by `gh issue create` but not applied
+   - Labels cannot be added after creation either
 
 3. **Issue Viewing**: Limited issue viewing capabilities
    - Some GraphQL queries fail with permission errors
    - Basic REST API access works
+
+4. **Milestone Linking**: Cannot link issues to milestones at creation
+   - Milestone parameter accepted but not applied
+   - Requires elevated permissions
 
 ## Existing Milestones
 The repository currently has these milestones:
@@ -67,8 +73,12 @@ The repository has 17 labels configured:
 
 ## Recommendations
 1. **For milestone creation**: Requires repository admin or maintainer permissions. The agent profile works correctly but needs elevated access.
-2. **For label assignment**: Use the `--label` flag during issue creation via `gh issue create` command.
-3. **Workaround**: In production use, a maintainer would need to create milestones manually or grant the necessary permissions.
+2. **For milestone linking**: Use the `--milestone` flag during issue creation, but note it requires write permissions to apply.
+3. **For label assignment**: Use the `--label` flag during issue creation via `gh issue create` command, but note it requires write permissions to apply.
+4. **Workaround**: In production use, a maintainer would need to:
+   - Create milestones manually or grant the necessary permissions
+   - Apply labels and milestone links after issue creation
+   - Or provide a token with sufficient permissions to the agent
 
 ## Agent Profile Verification
 The custom Implementation Planner agent profile demonstrated:
@@ -92,3 +102,9 @@ For full functionality in production, the agent would need a GitHub token with:
 - `repo` scope for full repository access
 - `write:issues` permission for labels
 - `write:milestones` permission for milestone creation
+
+## Test Issues Created
+- [Issue #101](https://github.com/danicajiao/cove-ios/issues/101) - Test Agent Profile - Mock Issue
+- [Issue #102](https://github.com/danicajiao/cove-ios/issues/102) - Test Agent Profile - Milestone Link Demo
+
+These issues demonstrate the agent profile's ability to create well-structured issues following the repository's conventions.

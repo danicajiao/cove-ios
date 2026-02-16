@@ -108,13 +108,13 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 10. Upload build artifacts on failure
 
 **Versioning:**
-- `CFBundleShortVersionString`: **Manually specified via version parameter**
+- `CFBundleShortVersionString`: **Derived from legacy tag parsing logic** (non-functional with manual trigger)
 - `CFBundleVersion`: **Auto-incremented** and synced with TestFlight
 
 **Usage:**
-To release to App Store, manually trigger the workflow from GitHub Actions UI. The workflow will prompt you to specify the version to release (e.g., `1.1.0`), which will be passed to the Fastlane release lane.
+To release to App Store, manually trigger the workflow from GitHub Actions UI.
 
-**Note:** The workflow includes legacy logic to parse version from git tags (from when it was triggered by tag pushes), but this code is non-functional with the current manual trigger setup. The version must be manually specified when triggering the workflow.
+**Note:** The workflow includes legacy logic to parse version from git tags (from when it was triggered by tag pushes), but this code is non-functional with the current manual trigger setup. The version cannot currently be specified when manually triggering the workflow.
 
 **Required Secrets:** All 8 secrets (see Required Secrets section below)
 

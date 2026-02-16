@@ -48,20 +48,20 @@ Welcome to the iOS CI/CD documentation for the Cove iOS app.
 ## 🚀 Three Workflows
 
 ### 1. PR Quality Checks
-**File:** `.github/workflows/pr-checks.yml`
+**File:** `.github/workflows/ci-pr.yml`
 - Runs on every pull request
 - Builds and tests the app
 - No version changes
 
 ### 2. Deploy to TestFlight
-**File:** `.github/workflows/deploy-testflight.yml`
-- Runs on push to `main` branch
+**File:** `.github/workflows/cd-testflight.yml`
+- Manual trigger (workflow_dispatch)
 - Auto-increments build number
 - Deploys to TestFlight
 
 ### 3. Release to App Store
-**File:** `.github/workflows/release-appstore.yml`
-- Runs on release creation
+**File:** `.github/workflows/cd-appstore.yml`
+- Manual trigger (workflow_dispatch)
 - Updates marketing version
 - Submits to App Store Connect
 

@@ -233,7 +233,7 @@ increment_version_number(
 )
 ```
 
-**Location:** `release-appstore.yml` workflow
+**Location:** `cd-appstore.yml` workflow
 
 ## Security Architecture
 

@@ -48,14 +48,17 @@ You have access to the terminal via the `execute` tool. Use the `gh` command-lin
 ### Listing Existing Milestones
 **Always check existing milestones first** before creating a new one:
 ```bash
-gh milestone list --state open
-gh milestone list --state all  # includes closed milestones
+# List open milestones
+gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number)\t\(.title)\t\(.state)"'
+
+# List all milestones (open and closed)
+gh api 'repos/:owner/:repo/milestones?state=all' --jq '.[] | "\(.number)\t\(.title)\t\(.state)"'
 ```
 
 ### Creating a Milestone
 Only create a new milestone if one doesn't already exist:
 ```bash
-gh milestone create "MILESTONE_TITLE" --description "DESCRIPTION"
+gh api repos/:owner/:repo/milestones -f title="MILESTONE_TITLE" -f description="DESCRIPTION"
 # Note: Due dates are optional for this side project - omit --due-date unless requested
 ```
 
@@ -79,8 +82,8 @@ gh issue create --title "TITLE" --body "Short description" --milestone "MILESTON
 ```
 
 ### Useful Commands
-- List milestones: `gh milestone list`
-- View milestone details: `gh milestone view "MILESTONE_TITLE"`
+- List milestones: `gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number)\t\(.title)\t\(.state)"'`
+- View milestone details: `gh api repos/:owner/:repo/milestones/MILESTONE_NUMBER` (use the number from list command)
 - List issues in a milestone: `gh issue list --milestone "MILESTONE_TITLE"`
 - List all issues: `gh issue list`
 - View repo info: `gh repo view`
@@ -189,7 +192,7 @@ When a single issue is complex, use **task lists within the issue**:
 **User**: "Create a plan for adding payment processing to the app"
 
 **You should**:
-1. First, check existing milestones: `gh milestone list`
+1. First, check existing milestones: `gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number)\t\(.title)\t\(.state)"'`
 2. Ask clarifying questions if needed (payment providers, currencies, etc.)
 3. Determine if you should use an existing milestone or create a new one: "Payment Processing Integration"
 4. Create issues like:
@@ -202,7 +205,7 @@ When a single issue is complex, use **task lists within the issue**:
    - "Update documentation with payment setup" (labels: `docs`)
 
 **Always follow this process**:
-1. List existing milestones to check if one already exists
+1. List existing milestones to check if one already exists (using `gh api`)
 2. Present your complete plan to the user for approval (milestone + issues with labels)
 3. Get user confirmation
 4. Execute the gh commands to create/update the milestone and create all issues

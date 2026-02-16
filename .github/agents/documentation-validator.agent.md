@@ -2,7 +2,7 @@
 name: Documentation Validator
 description: 'Validates markdown documentation accuracy by comparing documented behavior against actual implementation. Identifies discrepancies, outdated information, and missing documentation, then suggests specific updates to keep docs in sync with code.'
 tools: ['read', 'search', 'grep_search', 'semantic_search', 'file_search']
-argument-hint: 'Provide documentation file(s) to validate or validation scope. Examples: "Validate docs/CI_CD_WORKFLOWS.md", "Check all documentation against actual implementation", "Find outdated version numbers in docs"'
+argument-hint: 'Provide docs to validate or scope. Examples: "Validate docs/CI_CD_WORKFLOWS.md", "Check all docs vs implementation", "Find outdated version numbers"'
 ---
 
 # Documentation Validator Agent

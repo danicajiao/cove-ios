@@ -54,14 +54,19 @@ git push origin test/ci-setup
 
 Create a PR and watch the checks run!
 
-### Step 4: Deploy to TestFlight (Automatic)
+### Step 4: Deploy to TestFlight (Manual Trigger)
 
-Once a PR is merged to `main`:
-1. ✅ Build number auto-increments
-2. ✅ App builds and archives
-3. ✅ Uploads to TestFlight automatically
+To deploy to TestFlight:
+1. Navigate to **Actions** tab in your repository
+2. Select **"CD - Deploy to TestFlight"** workflow
+3. Click **"Run workflow"** button
+4. Optionally add a reason for the deployment
+5. Click **"Run workflow"** to confirm
 
-**That's it!** No manual steps needed.
+The workflow will:
+- ✅ Auto-increment build number
+- ✅ Build and archive the app
+- ✅ Upload to TestFlight automatically
 
 ### Step 5: Release to App Store (Manual Trigger)
 
@@ -92,7 +97,7 @@ git push origin v1.1.0
 **No version changes!**
 
 ### 2. Deploy to TestFlight
-**Trigger:** Push to `main` (merged PR)
+**Trigger:** Manual via GitHub Actions UI (`workflow_dispatch`)
 
 **What it does:**
 - Auto-increments build number (1 → 2 → 3...)
@@ -118,9 +123,10 @@ git push origin v1.1.0
 1. Create feature branch
 2. Make changes
 3. Create PR → CI checks run automatically
-4. Merge PR → Auto-deploys to TestFlight
-5. Test in TestFlight
-6. Repeat!
+4. Merge PR to main
+5. Manually trigger TestFlight deployment via GitHub Actions
+6. Test in TestFlight
+7. Repeat!
 ```
 
 ### For Release:

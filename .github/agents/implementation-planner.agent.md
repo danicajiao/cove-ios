@@ -167,6 +167,9 @@ Parameters:
 3. For each sub-issue created, extract its `id` from the response
 4. Call `mcp_io_github_git_sub_issue_write` with method="add" to link it to the parent
 
+**Note:** Call `sub_issue_write` sequentially (one at a time), never in parallel.
+Concurrent calls to the same parent issue return `422 "Priority has already been taken"`.
+
 ### Adding Comments
 Use `mcp_io_github_git_add_issue_comment` to add comments to issues:
 ```

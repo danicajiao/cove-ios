@@ -34,25 +34,6 @@ This repository contains the source files for the Xcode project.
 - [ ] Friend system for seeing what they've reviewed and favorited.
 - [ ] Personalized product recommendations (Based on favorites, and purchase history).
 
-## Signup Walkthrough
-
-- Left is signing up with a Social Provider (Google). Facebook sign up is also supported. Once I get an Apple Developer Account, Apple sign up will also be supported.
-- Right is signing up with an email (Firebase).
-- Both methods will create a user entry with Firebase Authentication.
-
-<div>
-  <img src="https://user-images.githubusercontent.com/24427074/233470161-c6d13253-7608-4e27-b48b-ebde8a243fb6.gif" width="20%"/>
-  <img src="https://user-images.githubusercontent.com/24427074/233473427-2d0a78e6-3087-437e-a204-21d6fec12585.gif" width="20%"/>
-</div>
-
-## Home and Product Details Walkthrough
-
-- This is what is currently in place for the Home view and clicking to view a product.
-
-<img src="https://user-images.githubusercontent.com/24427074/233480170-2558c859-fb3a-4580-9366-eb394ee4edab.gif" width="20%"/>
-
-GIFs created with [Kap](https://getkap.co/).
-
 ## Contributing
 
 ### Branching

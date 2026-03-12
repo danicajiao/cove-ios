@@ -9,6 +9,7 @@ import FirebaseFirestore
 import FirebaseStorage
 import FirebaseAuth
 
+@MainActor
 class HomeViewModel: ObservableObject {
     @Published var products = [any Product]()
     @Published var brands = [Brand]()
@@ -95,11 +96,7 @@ class HomeViewModel: ObservableObject {
                 }
             }
             
-            // Ensure the products array wont change while being sent to the main thread by making it constant
-            let sendableProducts = products
-            await MainActor.run(body: {
-                self.products = sendableProducts
-            })
+            self.products = products
         } catch {
             print(error)
             throw error
@@ -136,9 +133,7 @@ class HomeViewModel: ObservableObject {
                 return
             }
             
-            await MainActor.run(body: {
-                self.brands = brands
-            })
+            self.brands = brands
         } catch {
             print(error)
             throw error

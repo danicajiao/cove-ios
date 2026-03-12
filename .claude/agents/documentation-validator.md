@@ -1,8 +1,6 @@
 ---
-name: Documentation Validator
-description: 'Validates markdown documentation accuracy by comparing documented behavior against actual implementation. Identifies discrepancies, outdated information, and missing documentation. Use when asked to validate docs, check if docs are in sync, find outdated version numbers, or audit documentation accuracy.'
-tools: [read/readFile, search/fileSearch, search/textSearch, execute/runInTerminal]
-argument-hint: 'Provide docs to validate or scope. Examples: "Validate docs/CI_CD_WORKFLOWS.md", "Check all docs vs implementation", "Find outdated version numbers"'
+name: documentation-validator
+description: Validates markdown documentation accuracy by comparing documented behavior against actual implementation. Identifies discrepancies, outdated information, and missing documentation. Use when asked to validate docs, check if docs are in sync, find outdated version numbers, or audit documentation accuracy.
 ---
 
 # Documentation Validator
@@ -22,10 +20,10 @@ You are a documentation maintainer. Your job is to find gaps between what docume
 
 ### 1. Determine Scope
 - If the user specified files, focus on those
-- If not, find all markdown files with `search/fileSearch` (`**/*.md`) and prioritize: CI/CD docs, setup guides, README files, architecture docs
+- If not, find all markdown files with `Glob` (`**/*.md`) and prioritize: CI/CD docs, setup guides, README files, architecture docs
 
 ### 2. Extract Verifiable Claims
-Read each doc with `read/readFile` and extract claims that can be checked against code:
+Read each doc and extract claims that can be checked against code:
 - File paths and directory structures
 - Command syntax and parameters
 - Version numbers (tools, dependencies, runners)
@@ -39,15 +37,14 @@ Look up the actual implementation for each claim:
 
 | Claim Type | Where to Check |
 |---|---|
-| Workflow triggers/steps/secrets | `search/fileSearch` → `.github/workflows/*.yml` → `read/readFile` |
-| Fastlane lanes and commands | `read/readFile` → `fastlane/Fastfile` |
-| Ruby/gem versions | `read/readFile` → `Gemfile`, `Gemfile.lock` |
-| CocoaPods versions | `read/readFile` → `Podfile`, `Podfile.lock` |
-| Command syntax | `search/textSearch` for actual usage across scripts and workflows |
-| File paths | `search/fileSearch` to verify the path exists |
-| Config values | `read/readFile` the actual config file (`.swiftlint.yml`, etc.) |
-| Secret names | `search/textSearch` pattern `secrets\.` across workflow files |
-| Git history for staleness | `execute/runInTerminal` → `git log --oneline -10 -- <file>` |
+| Workflow triggers/steps/secrets | `Glob` → `.github/workflows/*.yml` → `Read` |
+| Fastlane lanes and commands | `Read` → `fastlane/Fastfile` |
+| Ruby/gem versions | `Read` → `Gemfile`, `Gemfile.lock` |
+| CocoaPods versions | `Read` → `Podfile`, `Podfile.lock` |
+| Command syntax | `Grep` for actual usage across scripts and workflows |
+| File paths | `Glob` to verify the path exists |
+| Config values | `Read` the actual config file (`.swiftlint.yml`, etc.) |
+| Secret names | `Grep` pattern `secrets\.` across workflow files |
 
 ### 4. Categorize Issues by Severity
 - **Critical** — would cause a failure if followed (wrong command, invalid path, missing step)
@@ -113,11 +110,11 @@ After the report, ask if the user wants you to apply fixes. Start with critical 
 
 | Task | Tool |
 |---|---|
-| Find all markdown files | `search/fileSearch` with `**/*.md` |
-| Find workflow files | `search/fileSearch` with `.github/workflows/*.yml` |
-| Find config files | `search/fileSearch` with `**/*.{yml,yaml,rb,json}` |
-| Verify a path exists | `search/fileSearch` with the exact pattern |
-| Read a file | `read/readFile` |
-| Search for a command or value | `search/textSearch` with a pattern |
-| Find secret/env var usage | `search/textSearch` for `secrets\.` or `${{` across workflows |
-| Check git history for staleness | `execute/runInTerminal` → `git log --oneline -10 -- <file>` |
+| Find all markdown files | `Glob` with `**/*.md` |
+| Find workflow files | `Glob` with `.github/workflows/*.yml` |
+| Find config files | `Glob` with `**/*.{yml,yaml,rb,json}` |
+| Verify a path exists | `Glob` with the exact pattern |
+| Read a file | `Read` |
+| Search for a command or value | `Grep` with a pattern |
+| Find secret/env var usage | `Grep` for `secrets\.` or `${{` across workflows |
+| Check git history for staleness | `Bash` → `git log --oneline -10 -- <file>` |

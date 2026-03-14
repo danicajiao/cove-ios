@@ -49,8 +49,17 @@ Codebase Notes:
 - Risks or unknowns: ...
 ```
 
-### 4. Confirm
-Wait for the user to approve, adjust, or cancel. Do not proceed without confirmation.
+### 4. Collect Figma Links for UI Sub-Issues
+Before asking for final confirmation, check whether any sub-issues are tagged `ui/ux`. For each one, ask:
+
+> "Is there an existing Figma design for **[sub-issue title]**? If so, share the frame link and it will be embedded in the issue for the UI implementer."
+
+- If the user provides a link → add the `figma` label to that sub-issue and record the URL
+- If the user says no design exists yet → create the issue without the `figma` label; it can be added later when a design is ready
+- If the user provides a link for some but not all UI sub-issues → handle each independently
+
+### 5. Confirm
+Present the final plan — including which UI sub-issues have Figma links — and wait for the user to approve, adjust, or cancel. Do not proceed without confirmation.
 
 ### 5. Execute
 1. Create the epic with `mcp__plugin_github_github__issue_write` → capture its `number` and `id`
@@ -109,6 +118,7 @@ Sub-issues will be linked to this epic.
 
 ## Technical Notes
 - Pattern to follow / files to reference: `Cove/...`
+- **Figma**: <url>  ← include only when a frame link was provided; omit the line entirely if not
 
 ## Dependencies
 - Blocked by #X (if applicable)
@@ -128,7 +138,7 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 | Asset (optional) | `figma`, `rive` |
 | Meta (sparingly) | `good first issue`, `help wanted`, `question`, `wontfix` |
 
-**Rules**: Never combine `feature` + `enhancement`. If design or animation assets are needed before implementation can start, add `figma` or `rive` to signal the dependency.
+**Rules**: Never combine `feature` + `enhancement`. Add `figma` to a `ui/ux` sub-issue only when the user has provided a Figma frame link — it signals the design exists and the issue is ready for the `figma-ui-implementer` agent. Do not add `figma` speculatively. Add `rive` when a Rive animation asset is required.
 
 **Examples**:
 - Epic: Auth System → `epic, feature, security`

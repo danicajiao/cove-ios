@@ -1,5 +1,5 @@
 //
-//  ProfileTabView.swift
+//  ProfileView.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 12/17/22.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ProfileTabView: View {
+struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ProfileViewModel()
     @State private var presentAlert = false
@@ -56,8 +56,8 @@ struct ProfileTabView: View {
     }
 }
 
-struct ProfileTabView_Previews: PreviewProvider {
+struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileTabView()
+        ProfileView()
     }
 }

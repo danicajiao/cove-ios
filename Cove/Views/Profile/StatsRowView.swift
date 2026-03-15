@@ -37,6 +37,7 @@ private struct StatBox: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
+        .background(Color.Colors.Backgrounds.secondary)
         .overlay {
             RoundedRectangle(cornerRadius: 10)
                 .stroke(Color.Colors.Strokes.primary, lineWidth: 1)

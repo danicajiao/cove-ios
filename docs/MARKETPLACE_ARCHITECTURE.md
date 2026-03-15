@@ -1,4 +1,6 @@
-# Marketplace App: Hybrid SQL, NoSQL & GraphQL Architecture
+# Marketplace Architecture: Hybrid SQL, NoSQL & GraphQL
+
+> **Note:** This is a planned backend architecture, not the current implementation. The app currently uses Firebase (Firestore + Auth + Storage) exclusively. This document describes the target design as Cove scales beyond Firebase.
 
 ## Overview
 
@@ -127,7 +129,7 @@ struct ProductResponse: Codable {
 
 class ProductService {
     func fetchProductPage(productId: String, completion: @escaping (ProductResponse?) -> Void) {
-        guard let url = URL(string: "https://api.yourmarketplace.com/graphql") else { return }
+        guard let url = URL(string: "https://api.cove.app/graphql") else { return }
         
         let query = """
         query GetProductAndReviews($id: ID!) {
@@ -159,67 +161,6 @@ class ProductService {
         }.resume()
     }
 }
-```
-
-### Web Client (JavaScript/React)
-
-```javascript
-import React, { useEffect, useState } from 'react';
-
-const ProductPage = ({ productId }) => {
-  const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const query = `
-      query GetProductAndReviews($id: ID!) {
-        product(id: $id) {
-          id
-          name
-          price
-          vendor
-          reviews(limit: 5) {
-            user
-            rating
-            comment
-          }
-        }
-      }
-    `;
-
-    fetch('https://api.yourmarketplace.com/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, variables: { id: productId } })
-    })
-      .then(res => res.json())
-      .then(data => {
-        setProduct(data.product);
-        setReviews(data.reviews);
-        setLoading(false);
-      });
-  }, [productId]);
-
-  if (loading) return <div>Loading...</div>;
-
-  return (
-    <div>
-      <h1>{product.name}</h1>
-      <p>Price: ${product.price}</p>
-      <p>Vendor: {product.vendor}</p>
-      <div>
-        {reviews.map((review, idx) => (
-          <div key={idx}>
-            <strong>{review.user}</strong> ({review.rating}/5): {review.comment}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default ProductPage;
 ```
 
 ---

@@ -2,6 +2,27 @@
 
 This document describes the CI/CD workflows configured for the Cove iOS app, including deployment to TestFlight and App Store.
 
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         GitHub Repository                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │  PR Created  │  │ Push to Main │  │  Manual Deployment   │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+│         ▼                  ▼                      ▼               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │  CI - PR     │  │  CI - Main   │  │  CD - TestFlight     │  │
+│  │  (Lint only) │  │  (Build/Test)│  │  CD - App Store      │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+└─────────┼──────────────────┼──────────────────────┼───────────────┘
+          ▼                  ▼                      ▼
+   ┌─────────────┐    ┌─────────────┐      ┌─────────────┐
+   │  PR Status  │    │  Build/Test │      │  TestFlight │
+   │  Check      │    │  Results    │      │  App Store  │
+   └─────────────┘    └─────────────┘      └─────────────┘
+```
+
 ## Overview
 
 The Cove iOS app uses GitHub Actions for continuous integration and deployment following mobile development best practices:
@@ -197,11 +218,11 @@ Add all required secrets to your GitHub repository:
 
 # Base64 encode the certificate
 base64 -i YourCertificate.p12 -o certificateb64.txt
-# Copy contents of certificate.txt to CERTIFICATES_P12 secret
+# Copy contents of certificateb64.txt to CERTIFICATES_P12 secret
 
 # Base64 encode the provisioning profile
 base64 -i YourProfile.mobileprovision -o profileb64.txt
-# Copy contents of profile.txt to PROVISIONING_PROFILE secret
+# Copy contents of profileb64.txt to PROVISIONING_PROFILE secret
 ```
 
 ### 3. Create App Store Connect API Key

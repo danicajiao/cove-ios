@@ -1,175 +1,68 @@
-# Quick Start Guide - iOS CI/CD
+# Quick Start Guide
 
-This is a quick reference guide to get started with the iOS CI/CD workflows for Cove.
+Get the Cove iOS app building and running on your local machine.
 
-## 📋 Prerequisites
+## Prerequisites
 
-Before you begin, ensure you have:
-- ✅ Apple Developer account with Admin/App Manager role
-- ✅ Access to App Store Connect
-- ✅ Access to repository settings (for configuring secrets)
-- ✅ Distribution certificate and provisioning profile
+- **Xcode 16+** (required for iOS 18 SDK)
+- **CocoaPods** — `sudo gem install cocoapods`
+- **Ruby + Bundler** — for Fastlane (optional, only needed for CI/CD lanes)
 
-## 🚀 Quick Setup (5 Steps)
+## Steps
 
-### Step 1: Configure GitHub Secrets (15 minutes)
-
-Navigate to: **Repository Settings → Secrets and variables → Actions**
-
-Add these 9 secrets **(8 required, 1 unused)**:
-
-| Secret Name | Description |
-|------------|-------------|
-| `CERTIFICATES_P12` | Base64-encoded distribution certificate |
-| `CERTIFICATES_PASSWORD` | Certificate password |
-| `PROVISIONING_PROFILE` | Base64-encoded provisioning profile |
-| `PROVISIONING_PROFILE_SPECIFIER` | Profile name (e.g., "Cove App Store") |
-| `APPLE_TEAM_ID` | Your Apple Team ID *(not currently used)* |
-| `APP_STORE_CONNECT_API_KEY_ID` | API Key ID |
-| `APP_STORE_CONNECT_API_ISSUER_ID` | API Issuer ID |
-| `APP_STORE_CONNECT_API_KEY` | Base64-encoded API key (.p8) |
-| `GH_PAT` | GitHub Personal Access Token |
-
-📖 **Detailed instructions**: See [docs/SECRETS_SETUP.md](SECRETS_SETUP.md)
-
-### Step 2: Verify Workflows Are Active (1 minute)
-
-1. Go to **Actions** tab in your repository
-2. You should see 3 workflows:
-   - ✅ PR Quality Checks
-   - ✅ Deploy to TestFlight
-   - ✅ Release to App Store
-
-### Step 3: Test PR Checks (5 minutes)
-
-Create a test PR to verify the build and test workflow:
+### 1. Clone the repository
 
 ```bash
-git checkout -b test/ci-setup
-echo "# CI Test" >> test.md
-git add test.md
-git commit -m "test: CI workflow"
-git push origin test/ci-setup
+git clone https://github.com/danicajiao/cove-ios.git
+cd cove-ios
 ```
 
-Create a PR and watch the checks run!
+### 2. Install dependencies
 
-### Step 4: Deploy to TestFlight (Manual)
-
-When ready to deploy to TestFlight, manually trigger the workflow:
-
-1. Go to **Actions** tab → **CD - Deploy to TestFlight**
-2. Click **Run workflow** → Select `main` branch
-3. Optionally provide a deployment reason
-4. Click **Run workflow**
-
-The workflow will:
-1. ✅ Auto-increment build number
-2. ✅ Build and archive the app
-3. ✅ Upload to TestFlight
-
-### Step 5: Release to App Store (Manual Trigger)
-
-When ready to submit to App Store, manually trigger the workflow:
-
-1. Go to **Actions** tab → **CD - Release to App Store**
-2. Click **Run workflow** → Select `main` branch
-3. Click **Run workflow**
-
-**Note:** The workflow currently uses legacy tag parsing logic that is non-functional with the manual trigger. The version cannot be specified when triggering.
-
-## 📊 Understanding the Workflows
-
-### 1. PR Quality Checks
-**Trigger:** Pull request to `main`
-
-**What it does:**
-- Builds the app
-- Runs tests
-- Checks code with SwiftLint (if configured)
-
-**No version changes!**
-
-### 2. Deploy to TestFlight
-**Trigger:** Manual workflow dispatch with optional reason input
-
-**What it does:**
-- Auto-increments build number (1 → 2 → 3...)
-- Keeps marketing version the same (e.g., 1.0.0)
-- Deploys to TestFlight
-
-**Result:** `1.0.0 (2)`, `1.0.0 (3)`, etc.
-
-### 3. Release to App Store
-**Trigger:** Manual workflow dispatch
-
-**What it does:**
-- Auto-increments build number
-- Submits to App Store Connect
-
-**Note:** Version cannot currently be specified when triggering. The workflow has legacy tag parsing logic that is non-functional with manual trigger.
-
-## 🔄 Daily Workflow
-
-### For Development:
-```
-1. Create feature branch
-2. Make changes
-3. Create PR → CI checks run automatically
-4. Merge PR
-5. Manually trigger TestFlight deployment when ready
-6. Test in TestFlight
-7. Repeat!
+```bash
+pod install
 ```
 
-### For Release:
-```
-1. Decide version number (e.g., 1.1.0)
-2. Manually trigger App Store release workflow
-3. Workflow submits to App Store Connect
-4. Monitor in App Store Connect
+Open the project using the **`.xcworkspace`** file, not `.xcodeproj`:
+
+```bash
+open Cove.xcworkspace
 ```
 
-## 🎯 Version Number Examples
+### 3. Add `GoogleService-Info.plist`
 
-| Action | Marketing Version | Build Number |
-|--------|------------------|--------------|
-| Initial state | 1.0.0 | 1 |
-| Manual TestFlight deploy | 1.0.0 | 2 |
-| Manual TestFlight deploy | 1.0.0 | 3 |
-| Manual TestFlight deploy | 1.0.0 | 4 |
-| **Manual App Store release** | **1.0.0** | **5** |
-| Manual TestFlight deploy | 1.0.0 | 6 |
-| Manual TestFlight deploy | 1.0.0 | 7 |
+The app requires a `GoogleService-Info.plist` file to connect to Firebase. This file contains API keys and project credentials and is **not committed to the repository**.
 
-**Note:** Marketing version does not automatically increment with current workflow configuration.
+**Access is restricted to approved developers.** Request access by opening an issue or contacting the project owner.
 
-## 🐛 Common Issues
+Once you have the file, place it at:
 
-### Build fails with "No provisioning profile"
-→ Check `PROVISIONING_PROFILE_SPECIFIER` matches exactly
+```
+Cove/Supporting Files/GoogleService-Info.plist
+```
 
-### "Incorrect password" error
-→ Verify `CERTIFICATES_PASSWORD` is correct
+### 4. Build and run
 
-### Can't push build number change
-→ Ensure `GH_PAT` has `repo` scope
+Select a simulator or connected device in Xcode and press **⌘R**.
 
-### Build number already exists in TestFlight
-→ Should never happen with auto-increment; check if script ran
+## Notes
 
-## 📚 Additional Resources
+- **Bundle ID:** `com.danicajiao.cove`
+- **Minimum deployment target:** iOS 18.0
+- Google Sign-In and Facebook Login are configured via `Info.plist` — no additional setup required beyond the `GoogleService-Info.plist`
+- For CI/CD setup, see [CI/CD Workflows Documentation](CI_CD_WORKFLOWS.md)
 
-- [Complete CI/CD Documentation](CI_CD_WORKFLOWS.md)
-- [Detailed Secrets Setup Guide](SECRETS_SETUP.md)
-- [Fastlane Configuration](../fastlane/README.md)
+## Troubleshooting
 
-## 🆘 Getting Help
+### `pod install` fails
+→ Ensure CocoaPods is up to date: `sudo gem install cocoapods`
 
-1. Check the [Troubleshooting section](CI_CD_WORKFLOWS.md#troubleshooting) in full docs
-2. Review workflow logs in GitHub Actions tab
-3. Open an issue in the repository
+### Build fails with Firebase errors
+→ Verify `GoogleService-Info.plist` is present at the correct path and added to the Xcode target
+
+### Simulator shows blank screen or crashes on launch
+→ Check that `GoogleService-Info.plist` is valid and matches the `cove-6a685` Firebase project
 
 ---
 
-**Last Updated**: February 2026
+**Last Updated**: March 2026

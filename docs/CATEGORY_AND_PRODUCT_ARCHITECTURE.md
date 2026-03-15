@@ -1,5 +1,7 @@
 # Category and Product Architecture
 
+> **Note:** This is a planned architecture, not the current implementation. The app currently uses a flat category structure with hardcoded `categoryId` values. This document describes the target design for when the category system is expanded.
+
 ## Overview
 
 This document outlines the recommended architecture for Cove's category hierarchy and product filtering system, specifically addressing multi-level categories and gender-based navigation.

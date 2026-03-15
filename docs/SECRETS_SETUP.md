@@ -30,7 +30,7 @@ Before starting, ensure you have:
 ### 1.2 Encode Certificate to Base64
 
 ```bash
-base64 -i YourCertificate.p12 -o certificate.txt
+base64 -i YourCertificate.p12 -o certificateb64.txt
 ```
 
 Open `certificateb64.txt` and copy the contents. This is your `CERTIFICATES_P12` secret value.
@@ -44,7 +44,7 @@ Open `certificateb64.txt` and copy the contents. This is your `CERTIFICATES_P12`
 ### 1.4 Encode Provisioning Profile to Base64
 
 ```bash
-base64 -i YourProfile.mobileprovision -o profile.txt
+base64 -i YourProfile.mobileprovision -o profileb64.txt
 ```
 
 Open `profileb64.txt` and copy the contents. This is your `PROVISIONING_PROFILE` secret value.

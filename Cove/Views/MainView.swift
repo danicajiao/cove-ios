@@ -65,7 +65,7 @@ struct MainView: View {
             .tag("favorites")
             
             TabNavigationStack {
-                ProfileTabView()
+                ProfileView()
             }
             .onTapGesture {
                 tabState.currentTab = "profile"

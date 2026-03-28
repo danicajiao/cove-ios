@@ -9,9 +9,8 @@ import SwiftUI
 
 struct CoffeeCategoryButton: View {
     let category: String
-    
+
     var body: some View {
-        
         // TODO: Refactor category buttons to have less reused code
         // TODO: Correct text alignment
         switch category {
@@ -24,8 +23,12 @@ struct CoffeeCategoryButton: View {
                     .offset(x: 30, y: 2)
                 Rectangle()
                     .foregroundStyle(Color.Colors.Category.fruity)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
+                    .mask(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.black, .clear]),
+                            startPoint: UnitPoint(x: 0.4, y: 0),
+                            endPoint: UnitPoint(x: 0.5, y: 0)
+                        )
                     )
                 Text(category)
                     .font(Font.custom("Poppins-Regular", size: 16))
@@ -45,8 +48,12 @@ struct CoffeeCategoryButton: View {
                     .offset(x: 30, y: 0)
                 Rectangle()
                     .foregroundStyle(Color.Colors.Category.choco)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
+                    .mask(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.black, .clear]),
+                            startPoint: UnitPoint(x: 0.4, y: 0),
+                            endPoint: UnitPoint(x: 0.5, y: 0)
+                        )
                     )
                 Text(category)
                     .font(Font.custom("Poppins-Regular", size: 14))
@@ -66,8 +73,12 @@ struct CoffeeCategoryButton: View {
                     .offset(x: 30, y: -4)
                 Rectangle()
                     .foregroundStyle(Color.Colors.Category.citrus)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
+                    .mask(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.black, .clear]),
+                            startPoint: UnitPoint(x: 0.4, y: 0),
+                            endPoint: UnitPoint(x: 0.5, y: 0)
+                        )
                     )
                 Text(category)
                     .font(Font.custom("Poppins-Regular", size: 14))
@@ -87,8 +98,12 @@ struct CoffeeCategoryButton: View {
                     .offset(x: 30, y: 0)
                 Rectangle()
                     .foregroundStyle(Color.Colors.Category.earthy)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.4, y: 0), endPoint: UnitPoint(x: 0.5, y: 0))
+                    .mask(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.black, .clear]),
+                            startPoint: UnitPoint(x: 0.4, y: 0),
+                            endPoint: UnitPoint(x: 0.5, y: 0)
+                        )
                     )
                 Text(category)
                     .font(Font.custom("Poppins-Regular", size: 14))
@@ -108,8 +123,12 @@ struct CoffeeCategoryButton: View {
                     .offset(x: 35, y: -6)
                 Rectangle()
                     .foregroundStyle(Color.Colors.Category.floral)
-                    .mask (
-                        LinearGradient(gradient: Gradient(colors: [.black, .clear]), startPoint: UnitPoint(x: 0.5, y: 0), endPoint: UnitPoint(x: 0.55, y: 0))
+                    .mask(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.black, .clear]),
+                            startPoint: UnitPoint(x: 0.5, y: 0),
+                            endPoint: UnitPoint(x: 0.55, y: 0)
+                        )
                     )
                 Text(category)
                     .font(Font.custom("Poppins-Regular", size: 14))

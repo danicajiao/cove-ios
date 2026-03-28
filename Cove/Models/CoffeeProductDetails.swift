@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct CoffeeProductDetails : ProductDetails {
+struct CoffeeProductDetails: ProductDetails {
     @DocumentID var id: String?
     var about: String
     var categoryId: String
@@ -15,8 +15,8 @@ struct CoffeeProductDetails : ProductDetails {
     var productId: String
     var description: String
     var origin: [OriginInfo]
-    
-    struct OriginInfo : Codable, Hashable {
+
+    struct OriginInfo: Codable, Hashable {
         var content: String
         var title: String
     }

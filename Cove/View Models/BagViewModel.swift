@@ -21,16 +21,16 @@ class BagViewModel: ObservableObject {
             })
             return
         }
-        
-        if self.tempCategories == categories {
+
+        if tempCategories == categories {
             return
         }
 
         // Get a reference to Firestore
         print("Fetching similar products...")
-        
+
         fetchedProductIds = [String]()
-        
+
         let db = Firestore.firestore()
 
         do {
@@ -78,7 +78,8 @@ class BagViewModel: ObservableObject {
             }
 
             // Fetch 'favorite' documents from the logged in user's 'favorites' collection that were already fetched in the last request
-            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds).getDocuments()
+            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds)
+                .getDocuments()
 
             for document in snapshot.documents {
                 do {
@@ -99,8 +100,8 @@ class BagViewModel: ObservableObject {
                     throw error
                 }
             }
-            
-            self.tempCategories = categories
+
+            tempCategories = categories
 
             // Ensure the products array wont change while being sent to the main thread by making it constant
             let sendableProducts = products

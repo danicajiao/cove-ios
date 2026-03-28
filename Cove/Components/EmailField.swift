@@ -10,7 +10,7 @@ import SwiftUI
 struct EmailField: View {
     @Binding var text: String
     @FocusState.Binding var focus: Field?
-    
+
     var body: some View {
         VStack(spacing: 5) {
             Text("Email")
@@ -35,7 +35,7 @@ struct EmailField: View {
 }
 
 #Preview {
-    @Previewable @State var email: String = ""
+    @Previewable @State var email = ""
     @Previewable @FocusState var focusedField: Field?
 
     EmailField(text: $email, focus: $focusedField)

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BannerButton: View {
     let bannerType: Int
-    
+
     var body: some View {
         switch bannerType {
         case 1:
@@ -24,18 +24,18 @@ struct BannerButton: View {
                                 Text("Select craft roasters")
                                     .font(Font.custom("Gazpacho-Bold", size: 12))
                                     .frame(width: 70, alignment: .leading)
-                                
+
                                 Spacer()
-                                
+
                                 HStack(alignment: .center) {
                                     Text("40%")
                                         .font(Font.custom("Gazpacho-Black", size: 34))
                                     Text("off")
                                         .font(Font.custom("Gazpacho-Bold", size: 14))
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 Text("See all items \(Image(systemName: "arrow.right"))")
                                     .font(Font.custom("Lato-Regular", size: 10))
                             }
@@ -60,7 +60,7 @@ struct BannerButton: View {
                 }
                 .foregroundStyle(Color.Colors.Fills.primary)
                 .frame(maxWidth: .infinity)
-                
+
                 Image("How-To-Store-Coffee-Beans-Gear-Patrol-Lead-Full")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -80,7 +80,7 @@ struct BannerButton_Previews: PreviewProvider {
         BannerButton(bannerType: 1)
             .padding(.horizontal, 20)
             .previewLayout(.sizeThatFits)
-        
+
         BannerButton(bannerType: 2)
             .padding(.horizontal, 20)
             .previewLayout(.sizeThatFits)

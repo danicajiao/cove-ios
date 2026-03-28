@@ -16,13 +16,13 @@ struct PrimaryButton: PrimitiveButtonStyle {
         self.width = width
         self.height = height
     }
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.custom("Lato-Bold", size: 14))
             .padding()
-            .frame(maxWidth: self.width)
-            .frame(height: self.height)
+            .frame(maxWidth: width)
+            .frame(height: height)
             .foregroundStyle(Color.Colors.Fills.secondary)
             .background {
                 Capsule()

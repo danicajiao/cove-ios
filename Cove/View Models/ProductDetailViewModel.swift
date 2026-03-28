@@ -5,30 +5,30 @@
 //  Created by Daniel Cajiao on 4/9/23.
 //
 
-import FirebaseFirestore
 import FirebaseAuth
+import FirebaseFirestore
 
-class ProductDetailViewModel : ObservableObject {
+class ProductDetailViewModel: ObservableObject {
     @Published var product: (any Product)?
     @Published var productDetails: ProductDetails?
     @Published var detailSelection: DetailSelection
     @Published var similarProducts: [any Product]
     var fetchedProductIds = [String]()
-    
+
     enum DetailSelection {
         case description
         case about
-        
+
         case specifications
         case origin
         case tracklist
     }
-    
+
     init(productId: String) {
-        self.product = nil
-        self.detailSelection = .description
-        self.similarProducts = [any Product]()
-        
+        product = nil
+        detailSelection = .description
+        similarProducts = [any Product]()
+
         Task {
             await fetchProduct(productId)
             if self.product != nil {
@@ -41,27 +41,27 @@ class ProductDetailViewModel : ObservableObject {
             }
         }
     }
-    
+
     func fetchProduct(_ id: String) async {
         print("Fetching product with id: \(id)")
         let db = Firestore.firestore()
-        
+
         do {
             // Fetch the product document from Firestore
             let snapshot = try await db.collection("products").document(id).getDocument()
-            
+
             // Check if document exists
             guard snapshot.exists else {
                 print("Product with id \(id) does not exist")
                 return
             }
-            
+
             // Get the categoryId to determine the product type
             guard let categoryId = snapshot["categoryId"] as? String else {
                 print("Product document missing categoryId field")
                 return
             }
-            
+
             // Decode based on product type
             if categoryId == ProductTypes.coffee.rawValue {
                 let coffeeProduct = try snapshot.data(as: CoffeeProduct.self)
@@ -85,36 +85,36 @@ class ProductDetailViewModel : ObservableObject {
             print("Error fetching product: \(error)")
         }
     }
-    
+
     func fetchProductDetails() async throws {
         // Check if product have already been fetched
-        guard let product = self.product else {
+        guard let product else {
             return
         }
-        
+
         // Get a reference to Firestore
         print("Fetching product details...")
         let db = Firestore.firestore()
-        
+
         do {
             // Fetch 'product detail' document from the 'product_details' collection
             let snapshot = try await db.collection("product_details").document(product.productDetailsId).getDocument()
 
             if product is MusicProduct {
                 let productDetails = try snapshot.data(as: MusicProductDetails.self)
-            
+
                 await MainActor.run(body: {
                     self.productDetails = productDetails
                 })
             } else if product is CoffeeProduct {
                 let productDetails = try snapshot.data(as: CoffeeProductDetails.self)
-                
+
                 await MainActor.run(body: {
                     self.productDetails = productDetails
                 })
             } else if product is ApparelProduct {
                 let productDetails = try snapshot.data(as: ApparelProductDetails.self)
-                
+
                 await MainActor.run(body: {
                     self.productDetails = productDetails
                 })
@@ -124,33 +124,33 @@ class ProductDetailViewModel : ObservableObject {
             throw error
         }
     }
-    
+
     /// Fetches products from Firebase and populates the products array used in the HomeView
     func fetchSimilarProducts() async throws {
         // Check if products have already been fetched
         if !similarProducts.isEmpty {
             return
         }
-        
+
         // Check if product have already been fetched
-        guard let product = self.product else {
+        guard let product else {
             return
         }
-        
+
         // Get a reference to Firestore
         print("Fetching similar products...")
-        
+
         fetchedProductIds = [String]()
 
         let db = Firestore.firestore()
-        
+
         do {
             // Fetch 'product' documents from the 'products' collection
             var snapshot = try await db.collection("products")
                 .whereField("categoryId", isEqualTo: product.categoryId)
                 .limit(to: 5)
                 .getDocuments()
-            
+
             // Map fetched documents to the `products` array
             var products: [any Product] = snapshot.documents.compactMap { d in
                 // Decode document's categoryId to determine what product type it is
@@ -178,22 +178,23 @@ class ProductDetailViewModel : ObservableObject {
                 }
                 return nil
             }
-            
+
             // Check if no products were fetched from last request
             if products.isEmpty {
                 print("No products returned from request")
                 return
             }
-            
+
             // Check if a user is logged in
             guard let user = Auth.auth().currentUser else {
                 print("Failed to get signed in user to fetch favorites")
                 return
             }
-            
+
             // Fetch 'favorite' documents from the logged in user's 'favorites' collection that were already fetched in the last request
-            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds).getDocuments()
-            
+            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds)
+                .getDocuments()
+
             for document in snapshot.documents {
                 do {
                     // Decode as a FavoriteProduct
@@ -213,7 +214,7 @@ class ProductDetailViewModel : ObservableObject {
                     throw error
                 }
             }
-            
+
             // Ensure the products array wont change while being sent to the main thread by making it constant
             let sendableProducts = products
             await MainActor.run(body: {

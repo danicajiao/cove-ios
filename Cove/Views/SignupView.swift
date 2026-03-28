@@ -5,34 +5,34 @@
 //  Created by Daniel Cajiao on 1/1/23.
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct SignupView: View {
     @EnvironmentObject private var appState: AppState
-    
+
     @State private var presentAlert = false
     @State private var errorMessage: String? = nil
-        
+
     @State var email: String = ""
     @State var password: String = ""
     @State var loading: Bool = false
-    
+
     var body: some View {
-        GeometryReader { proxy in
+        GeometryReader { _ in
             VStack(spacing: 20) {
                 Text("Cove.")
                     .font(.custom("Gazpacho-Heavy", size: 40))
                     .foregroundStyle(Color.Colors.Fills.primary)
-                
+
                 SpectrumDivider()
-                
+
                 Group {
                     Text("Create your account")
                         .font(.custom("Lato-Bold", size: 28))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
+
                     VStack(spacing: 4) {
                         CustomTextField(
                             placeholder: "email@provider.com",
@@ -63,19 +63,23 @@ struct SignupView: View {
                         .padding(.horizontal, 10)
                     }
                 }
-                
+
                 VStack(spacing: 10) {
                     Button {
                         loading = true
-                        self.appState.emailLogIn(email: self.email, password: self.password,
-                                                 onFailure: { error in
-                            self.presentAlert = true
-                            self.errorMessage = error?.localizedDescription
-                            loading = false
-                        }, onSuccess: {
-                            // onSuccess work here
-                            loading = false
-                        })
+                        appState.emailLogIn(
+                            email: email,
+                            password: password,
+                            onFailure: { error in
+                                presentAlert = true
+                                errorMessage = error?.localizedDescription
+                                loading = false
+                            },
+                            onSuccess: {
+                                // onSuccess work here
+                                loading = false
+                            }
+                        )
                     } label: {
                         if !loading {
                             Text("Sign Up")
@@ -86,9 +90,13 @@ struct SignupView: View {
                     }
                     .buttonStyle(PrimaryButton())
                     .alert(isPresented: $presentAlert) {
-                        Alert(title: Text("Login Failed"), message: Text(self.errorMessage ?? "Missing error message"), dismissButton: .default(Text("OK")))
+                        Alert(
+                            title: Text("Login Failed"),
+                            message: Text(errorMessage ?? "Missing error message"),
+                            dismissButton: .default(Text("OK"))
+                        )
                     }
-                    
+
                     HStack {
                         Text("By signing up, you are agreeing to our Terms of Service. View our Privacy Policy.")
                             .font(.custom("Lato-Regular", size: 14))
@@ -96,7 +104,7 @@ struct SignupView: View {
                     }
                     .padding(.horizontal, 10)
                 }
-                
+
                 HStack {
                     Capsule()
                         .fill(Color.Colors.Fills.quaternary)
@@ -112,27 +120,27 @@ struct SignupView: View {
                         .padding(.trailing, 60)
                         .padding(.leading)
                 }
-                
+
                 // TODO: Add Links to Social Provider Views
                 HStack(spacing: 30) {
                     SmallSocialButton(socialType: .apple)
                     SmallSocialButton(socialType: .facebook)
                     SmallSocialButton(socialType: .google)
                 }
-                
+
                 HStack(spacing: 0) {
                     Text("Already have an email? ")
                         .font(.custom("Lato-Regular", size: 14))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                     Button {
-                        self.appState.path.append(.login)
+                        appState.path.append(.login)
                     } label: {
                         Text("Log In")
                             .font(.custom("Lato-Regular", size: 14))
                             .foregroundStyle(Color.Colors.Fills.primary)
                     }
                 }
-                
+
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -144,11 +152,11 @@ struct SignupView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                print(self.appState.path)
+                print(appState.path)
             }
             .onDisappear {
-                self.email = ""
-                self.password = ""
+                email = ""
+                password = ""
             }
             .contentShape(Rectangle()) // Makes the entire view tappable
             .onTapGesture {
@@ -167,4 +175,3 @@ struct SignupView_Previews: PreviewProvider {
             .environmentObject(appState)
     }
 }
-

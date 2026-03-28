@@ -21,12 +21,12 @@ struct TabNavigationStack<Content: View>: View {
             content
                 .navigationDestination(for: Path.self) { path in
                     switch path {
-                    case .product(let id):
+                    case let .product(id):
                         ProductDetailView(productId: id)
                             .environmentObject(bag)
                     default:
                         #if DEBUG
-                        let _ = print("⚠️ Unhandled navigation path in TabNavigationStack: \(path)")
+                            let _ = print("⚠️ Unhandled navigation path in TabNavigationStack: \(path)")
                         #endif
                         EmptyView()
                     }

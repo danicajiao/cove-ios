@@ -5,61 +5,60 @@
 //  Created by Daniel Cajiao on 5/8/22.
 //
 
-import SwiftUI
 import FirebaseFirestore
 import FirebaseStorage
+import SwiftUI
 
 struct ProductDetailView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject var bag: Bag
     @StateObject var viewModel: ProductDetailViewModel
-    
+
     let productId: String
-    
+
     @State private var uiImage: UIImage? = nil
     @State private var averageColor: Color = .white // Default background color
-    
+
     @State var count: Int = 1
-    
+
     init(productId: String) {
         self.productId = productId
-        self._viewModel = StateObject(wrappedValue: ProductDetailViewModel(productId: productId))
+        _viewModel = StateObject(wrappedValue: ProductDetailViewModel(productId: productId))
     }
-    
+
     var rows: [GridItem] = [
-        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
+        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20),
     ]
-    
+
     private func fetchImage() {
         guard let product = viewModel.product,
               let imageURL = URL(string: product.defaultImageURL) else { return }
         let storageRef = Storage.storage().reference(forURL: imageURL.absoluteString)
 
         storageRef.getData(maxSize: 10 * 1024 * 1024) { data, error in
-            if let error = error {
+            if let error {
                 print("Error fetching image: \(error.localizedDescription)")
                 return
             }
 
-            if let data = data, let image = UIImage(data: data) {
+            if let data, let image = UIImage(data: data) {
                 DispatchQueue.main.async {
-                    self.uiImage = image
+                    uiImage = image
                     if let uiColor = image.averageColor {
-                        self.averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
+                        averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
                     }
                 }
             }
         }
     }
-    
+
     /// A preference key to store a view's rect
-    public struct ViewSizeKey: PreferenceKey {
-        public typealias Value = CGSize
-        public static var defaultValue = CGSize.zero
-        public static func reduce(value: inout Value, nextValue: () -> Value) {
-        }
+    struct ViewSizeKey: PreferenceKey {
+        typealias Value = CGSize
+        static var defaultValue = CGSize.zero
+        static func reduce(value: inout Value, nextValue: () -> Value) {}
     }
-    
+
     var body: some View {
         Group {
             if let product = viewModel.product {
@@ -88,13 +87,13 @@ struct ProductDetailView: View {
         .navigationBarHidden(true)
         .onAppear {
             #if DEBUG
-            print(self.appState.path)
+                print(appState.path)
             #endif
         }
     }
 }
 
-// Extracted content view to handle the product display
+/// Extracted content view to handle the product display
 private struct ProductDetailContent: View {
     let product: any Product
     @ObservedObject var viewModel: ProductDetailViewModel
@@ -102,11 +101,11 @@ private struct ProductDetailContent: View {
     @Binding var averageColor: Color
     @Binding var count: Int
     let fetchImage: () -> Void
-    
+
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject var bag: Bag
-    
-    // Computed properties for product-specific info
+
+    /// Computed properties for product-specific info
     var headerStr: String {
         if let coffeeProduct = product as? CoffeeProduct {
             return coffeeProduct.info.roastery
@@ -117,7 +116,7 @@ private struct ProductDetailContent: View {
         }
         return "Header"
     }
-    
+
     var bodyStr: String {
         if let coffeeProduct = product as? CoffeeProduct {
             return coffeeProduct.info.name
@@ -128,115 +127,111 @@ private struct ProductDetailContent: View {
         }
         return "Body"
     }
-    
+
     var price: Float {
-        return product.defaultPrice
+        product.defaultPrice
     }
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                 if let uiImage = uiImage {
-                     Image(uiImage: uiImage)
-                         .resizable()
-                         .aspectRatio(contentMode: .fit) // Maintain aspect ratio
-                         .frame(height: 300)
-                 } else {
-                     ProgressView()
-                         .frame(maxWidth: .infinity)
-                         .onAppear {
-                             fetchImage()
-                         }
-                 }
+                if let uiImage {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit) // Maintain aspect ratio
+                        .frame(height: 300)
+                } else {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .onAppear {
+                            fetchImage()
+                        }
+                }
 
-                 Group {
-                     VStack(spacing: 20) {
-                         VStack(spacing: 8) {
-                             Text(headerStr)
-                                 .font(Font.custom("Gazpacho-Black", size: 22))
-                                 .frame(maxWidth: .infinity, alignment: .leading)
+                Group {
+                    VStack(spacing: 20) {
+                        VStack(spacing: 8) {
+                            Text(headerStr)
+                                .font(Font.custom("Gazpacho-Black", size: 22))
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                             HStack {
-                                 Text("$\(Int(price))")
-                                     .font(Font.custom("Lato-Bold", size: 22))
-                                     .foregroundStyle(Color.Colors.Fills.primary)
+                            HStack {
+                                Text("$\(Int(price))")
+                                    .font(Font.custom("Lato-Bold", size: 22))
+                                    .foregroundStyle(Color.Colors.Fills.primary)
 
-                                 Spacer()
-                             }
-                         }
+                                Spacer()
+                            }
+                        }
 
+                        NavigationLink(destination: Text("Item Reviews!")) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    HStack {
+                                        RatingView(rating: 4)
+                                        Text("4.3")
+                                            .font(Font.custom("Lato-Regular", size: 14))
+                                    }
+                                    Text("22 Reviews \(Image(systemName: "chevron.right"))")
+                                        .font(Font.custom("Lato-Regular", size: 14))
+                                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                                }
 
-                         NavigationLink(destination: Text("Item Reviews!")) {
-                             HStack {
-                                 VStack(alignment: .leading, spacing: 10) {
-                                     HStack {
-                                         RatingView(rating: 4)
-                                         Text("4.3")
-                                             .font(Font.custom("Lato-Regular", size: 14))
-                                     }
-                                     Text("22 Reviews \(Image(systemName: "chevron.right"))")
-                                         .font(Font.custom("Lato-Regular", size: 14))
-                                         .foregroundStyle(Color.Colors.Fills.tertiary)
-                                 }
+                                Spacer()
 
-                                 Spacer()
+                                Circle()
+                                    .frame(width: 35, height: 35)
+                                    .foregroundStyle(.white)
+                                    .overlay {
+                                        Circle()
+                                            .frame(width: 30, height: 30)
+                                    }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .background(.white)
+                            .cornerRadius(8)
+                            .customShadow()
+                        }
+                        .buttonStyle(PlainButtonStyle())
 
-                                 Circle()
-                                     .frame(width: 35, height: 35)
-                                     .foregroundStyle(.white)
-                                     .overlay {
-                                         Circle()
-                                             .frame(width: 30, height: 30)
-                                     }
+                        ProductDetailTabs(viewModel: viewModel)
 
-                             }
-                             .frame(maxWidth: .infinity, alignment: .leading)
-                             .padding(10)
-                             .background(.white)
-                             .cornerRadius(8)
-                             .customShadow()
-                         }
-                         .buttonStyle(PlainButtonStyle())
-                         
-                         
-                         ProductDetailTabs(viewModel: viewModel)
+                        SectionHeader(title: "Similar to this")
 
-                         SectionHeader(title: "Similar to this")
-                         
-                         ScrollView(.horizontal) {
-                             HStack(spacing: 20) {
-                                 ForEach(viewModel.similarProducts, id: \.id) { product in
-                                     ProductCardView(product: product)
-                                 }
-                             }
-                         }
-                         
-                     }
-                     .padding(20)
-                 }
-                 .background {
-                     Color.white
-                 }
-                 .cornerRadius(20)
-             }
-         }
-         .overlay(alignment: .top) {
+                        ScrollView(.horizontal) {
+                            HStack(spacing: 20) {
+                                ForEach(viewModel.similarProducts, id: \.id) { product in
+                                    ProductCardView(product: product)
+                                }
+                            }
+                        }
+                    }
+                    .padding(20)
+                }
+                .background {
+                    Color.white
+                }
+                .cornerRadius(20)
+            }
+        }
+        .overlay(alignment: .top) {
             HStack {
                 BackButton()
                     .environmentObject(appState)
                 Spacer()
             }
             .padding(.horizontal, 20)
-         }
-         .safeAreaInset(edge: .bottom) {
-             HStack {
+        }
+        .safeAreaInset(edge: .bottom) {
+            HStack {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(.gray, lineWidth: 1)
                     .frame(width: 55, height: 55)
                     .overlay {
                         LikeButton(enabled: product.isFavorite ?? false)
                     }
-                 
+
                 Button {
                     if !bag.bagProducts.contains(where: { bagProduct in
                         bagProduct.product.id == product.id
@@ -256,13 +251,13 @@ private struct ProductDetailContent: View {
                         bag.bagProducts[i].quantity += count
                         bag.totalItems += count
                     }
-                    
+
                     if !bag.categories.contains(where: { category in
                         category == product.categoryId
                     }) {
                         bag.categories.append(product.categoryId)
                     }
-                    
+
                     print(bag.bagProducts)
                 } label: {
                     Text("Add to bag")

@@ -5,28 +5,31 @@
 //  Created by Daniel Cajiao on 2/16/22.
 //
 
+import FBSDKCoreKit
+import FirebaseAuth
+import FirebaseCore
+import GoogleSignIn
 import SwiftUI
 import UIKit
-import FirebaseCore
-import FirebaseAuth
-import GoogleSignIn
-import FBSDKCoreKit
 
-// no changes in your AppDelegate class
+/// no changes in your AppDelegate class
 class AppDelegate: NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
         FirebaseApp.configure()
         ApplicationDelegate.shared.application(
             application,
             didFinishLaunchingWithOptions: launchOptions
         )
-        
+
         print("delegate run")
         return true
     }
-    
+
     func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) -> Bool {
-        return ApplicationDelegate.shared.application(
+        ApplicationDelegate.shared.application(
             application,
             open: url,
             sourceApplication: options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String,
@@ -42,13 +45,13 @@ struct CoveApp: App {
     @StateObject var appState = AppState()
     @StateObject var bag = Bag()
     @StateObject private var networkMonitor = NetworkMonitor()
-    
+
     @State var text: String = ""
-        
+
     init() {
         print("init run")
     }
-    
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -56,7 +59,7 @@ struct CoveApp: App {
                     MainView()
                         .environmentObject(bag)
                 } else {
-                    NavigationStack(path: self.$appState.path) {
+                    NavigationStack(path: $appState.path) {
                         ZStack {
                             if networkMonitor.isConnected {
                                 WelcomeView()
@@ -84,7 +87,7 @@ struct CoveApp: App {
                     }
                 }
             }
-            .environmentObject(self.appState)
+            .environmentObject(appState)
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
             }

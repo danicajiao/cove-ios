@@ -5,22 +5,22 @@
 //  Created by Daniel Cajiao on 2/16/22.
 //
 
-import SwiftUI
 import FirebaseFirestore
 import FirebaseStorage
+import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
-    
+
     @State var search: String = ""
 
 //    private var columns: [GridItem] = [
 //        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20),
 //        GridItem(.adaptive(minimum: 100, maximum: .infinity), spacing: 20)
 //    ]
-    
+
     private var columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 2)
-    
+
     var body: some View {
         let _ = Self._printChanges()
         ScrollView(showsIndicators: false) {
@@ -52,11 +52,10 @@ struct HomeView: View {
                 )
                 .padding(.horizontal, 20)
 
-                
                 VStack {
                     SectionHeader(title: "Categories")
                         .padding(.horizontal, 20)
-                    
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(viewModel.categories, id: \.self) { category in
@@ -67,18 +66,18 @@ struct HomeView: View {
                     }
                     .scrollClipDisabled()
                 }
-                
+
                 VStack {
                     SectionHeader(title: "Featured")
                         .padding(.horizontal, 20)
-                    
+
                     BannerButton(bannerType: 1)
                         .padding(.horizontal, 20)
                 }
-                
+
                 VStack {
                     SectionHeader(title: "Popular")
-                    
+
                     if !viewModel.products.isEmpty {
                         LazyVGrid(
                             columns: columns,
@@ -90,21 +89,21 @@ struct HomeView: View {
                             }
                         }
                     }
-                    
+
 //                    if !viewModel.products.isEmpty {
 //                        WaterfallCollection(products: viewModel.products)
 //                            // .frame(height: 600) // Adjust height as needed
 //                    }
                 }
                 .padding(.horizontal, 20)
-                
+
                 BannerButton(bannerType: 2)
                     .padding(.horizontal, 20)
-                
+
                 VStack {
                     SectionHeader(title: "Stores")
                         .padding(.horizontal, 20)
-                    
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(viewModel.brands, id: \.id) { brand in
@@ -123,7 +122,7 @@ struct HomeView: View {
                                                 ProgressView()
                                             }
                                         }
-                                    
+
                                     Text(brand.name)
                                         .font(Font.custom("Lato-Bold", size: 14))
                                         .foregroundStyle(Color.Colors.Fills.primary)

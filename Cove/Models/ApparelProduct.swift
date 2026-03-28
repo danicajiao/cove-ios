@@ -17,16 +17,16 @@ struct ApparelProduct: Product {
     var isFavorite: Bool?
     var productDetailsId: String
 
-    struct ApparelInfo : Codable {
+    struct ApparelInfo: Codable {
         var brand: String
         var name: String
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     static func == (lhs: ApparelProduct, rhs: ApparelProduct) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
 }

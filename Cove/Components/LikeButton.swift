@@ -7,16 +7,16 @@
 
 import SwiftUI
 
-struct LikeButton : View {
+struct LikeButton: View {
     @State var enabled: Bool
     @State private var pressed = false
     @State private var scale = 1.0
-    
+
     func haptic() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
     }
-    
+
     var body: some View {
         ZStack {
             Circle()
@@ -28,24 +28,24 @@ struct LikeButton : View {
         }
         .scaleEffect(scale)
         .onLongPressGesture(minimumDuration: 2.5, maximumDistance: .infinity, pressing: { pressing in
-            self.pressed = pressing
+            pressed = pressing
             if pressing {
                 haptic()
                 withAnimation(.linear(duration: 0.1)) {
-                    self.scale = 1.5
+                    scale = 1.5
                 }
             } else {
                 haptic()
                 withAnimation(.easeOut(duration: 0.3)) {
-                    self.scale = 1.0
+                    scale = 1.0
                 }
-                self.enabled.toggle()
+                enabled.toggle()
             }
-        }, perform: { })
+        }, perform: {})
     }
 }
 
-//struct StatefulPreviewWrapper<Value, Content: View>: View {
+// struct StatefulPreviewWrapper<Value, Content: View>: View {
 //    @State var value: Value
 //    var content: (Binding<Value>) -> Content
 //
@@ -57,11 +57,11 @@ struct LikeButton : View {
 //        self._value = State(wrappedValue: value)
 //        self.content = content
 //    }
-//}
+// }
 //
-//struct LikeButton_Previews: PreviewProvider {
+// struct LikeButton_Previews: PreviewProvider {
 //    static var previews: some View {
 //        StatefulPreviewWrapper(false) { LikeButton(enabled: $0) }
 //        .previewLayout(.sizeThatFits)
 //    }
-//}
+// }

@@ -1,5 +1,5 @@
 //
-//  SocialButton.swift
+//  SmallSocialButton.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 12/20/22.
@@ -15,62 +15,62 @@ enum SocialType {
 
 struct SmallSocialButton: View {
     @EnvironmentObject var appState: AppState
-    
+
     @State private var presentAlert = false
     @State private var errorMessage: String? = nil
-    
+
     let socialType: SocialType
     let color: Color
     let imgName: String
 
     init(socialType: SocialType) {
         self.socialType = socialType
-        
+
         switch self.socialType {
         case .apple:
-            self.color = .black
-            self.imgName = "apple"
+            color = .black
+            imgName = "apple"
         case .facebook:
-            self.color = Color(red: 0.376, green: 0.537, blue: 0.839)
-            self.imgName = "facebook"
+            color = Color(red: 0.376, green: 0.537, blue: 0.839)
+            imgName = "facebook"
         case .google:
-            self.color = .white
-            self.imgName = "google"
+            color = .white
+            imgName = "google"
         }
     }
-    
+
     var body: some View {
         Button {
             // TODO: Add Links to Social Provider Views
-            switch self.socialType {
+            switch socialType {
             case .apple:
                 print("Apple sign in pressed")
             case .facebook:
                 print("Facebook sign in pressed")
-                self.appState.facebookLogIn { error in
-                    self.errorMessage = error.localizedDescription
-                    self.presentAlert = true
+                appState.facebookLogIn { error in
+                    errorMessage = error.localizedDescription
+                    presentAlert = true
                 }
             case .google:
                 print("Google sign in pressed")
-                self.appState.googleLogIn { error in
-                    self.errorMessage = error.localizedDescription
-                    self.presentAlert = true
+                appState.googleLogIn { error in
+                    errorMessage = error.localizedDescription
+                    presentAlert = true
                 }
             }
         } label: {
             Circle()
-                .fill(self.color)
+                .fill(color)
                 .strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1)
                 .frame(width: 55, height: 55)
                 .overlay {
-                    Image(self.imgName)
+                    Image(imgName)
                 }
         }
         .alert(isPresented: $presentAlert) {
             Alert(
                 title: Text("Error"),
-                message: Text(self.errorMessage ?? "")
+                message: Text(errorMessage ?? "")
             )
         }
     }

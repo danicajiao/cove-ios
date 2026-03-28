@@ -9,12 +9,12 @@ import SwiftUI
 
 struct ProductDetailTabs: View {
     @ObservedObject var viewModel: ProductDetailViewModel
-    
+
     var body: some View {
-        if let musicProductDetails = self.viewModel.productDetails as? MusicProductDetails {
+        if let musicProductDetails = viewModel.productDetails as? MusicProductDetails {
             VStack {
                 HStack(spacing: 0) {
-                    if self.viewModel.detailSelection == .description {
+                    if viewModel.detailSelection == .description {
                         Text("Description")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -25,7 +25,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     } else {
@@ -35,12 +35,12 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .tracklist {
+
+                    if viewModel.detailSelection == .tracklist {
                         Text("Tracklist")
                             .font(Font.custom("Lato-Regular", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -51,7 +51,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .tracklist
+                                    viewModel.detailSelection = .tracklist
                                 }
                             }
                     } else {
@@ -61,24 +61,24 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 90, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .tracklist
+                                    viewModel.detailSelection = .tracklist
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .about {
+
+                    if viewModel.detailSelection == .about {
                         Text("About")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
 //                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     } else {
@@ -86,30 +86,29 @@ struct ProductDetailTabs: View {
                             .font(Font.custom("Poppins-Regular", size: 16))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if self.viewModel.detailSelection == .description {
+
+                if viewModel.detailSelection == .description {
                     Text(musicProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                else if self.viewModel.detailSelection == .tracklist {
+                } else if viewModel.detailSelection == .tracklist {
                     VStack {
                         ForEach(musicProductDetails.tracklist, id: \.self) { track in
                             HStack {
                                 Text(track.title)
                                     .font(Font.custom("Poppins-Regular", size: 16))
                                     .foregroundStyle(Color.Colors.Fills.tertiary)
-                                
+
                                 Text(String(track.durationSec))
                                     .font(Font.custom("Poppins-Regular", size: 16))
                                     .foregroundStyle(Color.Colors.Brand.accent)
@@ -117,20 +116,18 @@ struct ProductDetailTabs: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                }
-                else if self.viewModel.detailSelection == .about {
+                } else if viewModel.detailSelection == .about {
                     Text(musicProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                
             }
-            
-        } else if let coffeeProductDetails = self.viewModel.productDetails as? CoffeeProductDetails {
+
+        } else if let coffeeProductDetails = viewModel.productDetails as? CoffeeProductDetails {
             VStack {
                 HStack(spacing: 0) {
-                    if self.viewModel.detailSelection == .description {
+                    if viewModel.detailSelection == .description {
                         Text("Description")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -141,7 +138,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     } else {
@@ -151,12 +148,12 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .origin {
+
+                    if viewModel.detailSelection == .origin {
                         Text("Origin")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -167,7 +164,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .origin
+                                    viewModel.detailSelection = .origin
                                 }
                             }
                     } else {
@@ -177,24 +174,24 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 75, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .origin
+                                    viewModel.detailSelection = .origin
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .about {
+
+                    if viewModel.detailSelection == .about {
                         Text("About")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
 //                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     } else {
@@ -202,23 +199,22 @@ struct ProductDetailTabs: View {
                             .font(Font.custom("Poppins-Regular", size: 16))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if self.viewModel.detailSelection == .description {
+
+                if viewModel.detailSelection == .description {
                     Text(coffeeProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                else if self.viewModel.detailSelection == .origin {
+                } else if viewModel.detailSelection == .origin {
                     VStack {
                         ForEach(coffeeProductDetails.origin, id: \.self) { originDetail in
                             HStack {
@@ -232,19 +228,18 @@ struct ProductDetailTabs: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                }
-                else if self.viewModel.detailSelection == .about {
+                } else if viewModel.detailSelection == .about {
                     Text(coffeeProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            
-        } else if let apparelProductDetails = self.viewModel.productDetails as? ApparelProductDetails {
+
+        } else if let apparelProductDetails = viewModel.productDetails as? ApparelProductDetails {
             VStack {
                 HStack(spacing: 0) {
-                    if self.viewModel.detailSelection == .description {
+                    if viewModel.detailSelection == .description {
                         Text("Description")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -255,7 +250,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     } else {
@@ -265,12 +260,12 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 120, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .description
+                                    viewModel.detailSelection = .description
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .specifications {
+
+                    if viewModel.detailSelection == .specifications {
                         Text("Specifics")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
@@ -281,7 +276,7 @@ struct ProductDetailTabs: View {
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .specifications
+                                    viewModel.detailSelection = .specifications
                                 }
                             }
                     } else {
@@ -291,24 +286,24 @@ struct ProductDetailTabs: View {
                             .frame(minWidth: 100, minHeight: 40)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .specifications
+                                    viewModel.detailSelection = .specifications
                                 }
                             }
                     }
-                    
-                    if self.viewModel.detailSelection == .about {
+
+                    if viewModel.detailSelection == .about {
                         Text("About")
                             .font(Font.custom("Poppins-SemiBold", size: 16))
                             .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .background {
                                 RoundedRectangle(cornerRadius: 10)
 //                                    .fill(Color.backdrop)
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     } else {
@@ -316,23 +311,22 @@ struct ProductDetailTabs: View {
                             .font(Font.custom("Poppins-Regular", size: 16))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                             .frame(minWidth: 75, minHeight: 40)
-                        //                                    .padding(10)
+                            //                                    .padding(10)
                             .onTapGesture {
                                 withAnimation {
-                                    self.viewModel.detailSelection = .about
+                                    viewModel.detailSelection = .about
                                 }
                             }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if self.viewModel.detailSelection == .description {
+
+                if viewModel.detailSelection == .description {
                     Text(apparelProductDetails.description)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                else if self.viewModel.detailSelection == .specifications {
+                } else if viewModel.detailSelection == .specifications {
                     VStack(spacing: 20) {
                         ForEach(apparelProductDetails.specifications, id: \.self) { spec in
                             VStack(alignment: .leading) {
@@ -348,8 +342,7 @@ struct ProductDetailTabs: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                }
-                else if self.viewModel.detailSelection == .about {
+                } else if viewModel.detailSelection == .about {
                     Text(apparelProductDetails.about)
                         .font(Font.custom("Poppins-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.tertiary)

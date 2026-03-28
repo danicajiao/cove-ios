@@ -9,10 +9,10 @@ import SwiftUI
 
 struct BackButton: View {
     @EnvironmentObject private var appState: AppState
-    
+
     var body: some View {
         Button {
-            _ = self.appState.path.popLast()
+            _ = appState.path.popLast()
         } label: {
             Circle()
                 .fill(Color.Colors.Fills.secondary)

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct SecondaryButton: PrimitiveButtonStyle {
-    
     @State private var isPressed = false
     let width: CGFloat?
     let height: CGFloat?
@@ -17,13 +16,13 @@ struct SecondaryButton: PrimitiveButtonStyle {
         self.width = width
         self.height = height
     }
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.custom("Lato-Regular", size: 14))
             .padding()
             .foregroundStyle(Color.Colors.Fills.primary)
-            .frame(maxWidth: self.width, maxHeight: self.height)
+            .frame(maxWidth: width, maxHeight: height)
             .background {
                 Capsule()
                     .fill(Color.Colors.Fills.secondary)
@@ -39,10 +38,10 @@ struct SecondaryButton: PrimitiveButtonStyle {
                 withTransaction(t) {
                     isPressed = true
                 }
-            }.onEnded({ _ in
+            }.onEnded { _ in
                 isPressed = false
                 configuration.trigger()
-            }))
+            })
     }
 }
 

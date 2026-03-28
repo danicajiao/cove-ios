@@ -5,8 +5,8 @@
 //  Created by Daniel Cajiao on 2/24/25.
 //
 
-import SwiftUI
 import Network
+import SwiftUI
 
 class NetworkMonitor: ObservableObject {
     private var monitor: NWPathMonitor
@@ -15,17 +15,17 @@ class NetworkMonitor: ObservableObject {
     @Published var isConnected: Bool = false
 
     init() {
-        self.monitor = NWPathMonitor()
-        self.queue = DispatchQueue(label: "NetworkMonitor")
-        
-        self.monitor.pathUpdateHandler = { path in
+        monitor = NWPathMonitor()
+        queue = DispatchQueue(label: "NetworkMonitor")
+
+        monitor.pathUpdateHandler = { path in
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 print("Network status: \(path.status)")
                 self.isConnected = path.status == .satisfied
             }
         }
-        
-        self.monitor.start(queue: self.queue)
+
+        monitor.start(queue: queue)
     }
 
     deinit {

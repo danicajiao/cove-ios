@@ -5,13 +5,13 @@
 //  Created by Daniel Cajiao on 12/16/22.
 //
 
-import SwiftUI
-import FirebaseCore
-import FirebaseAuth
-import GoogleSignIn
 import FBSDKLoginKit
+import FirebaseAuth
+import FirebaseCore
+import GoogleSignIn
+import SwiftUI
 
-enum Path : Hashable {
+enum Path: Hashable {
     case welcome
     case login
     case signup
@@ -35,10 +35,10 @@ enum AuthMethod: String {
 class AppState: ObservableObject {
     @Published var path: [Path] = []
     @Published var authState: AuthState = .loggedOut
-    var authMethod: AuthMethod? = nil
-    
+    var authMethod: AuthMethod?
+
     func emailSignUp(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
-        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+        Auth.auth().createUser(withEmail: email, password: password) { _, error in
             if error != nil {
                 onFailure(error)
             } else {
@@ -51,9 +51,9 @@ class AppState: ObservableObject {
             }
         }
     }
-    
+
     func emailLogIn(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
-        Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] _, error in
             guard let strongSelf = self else { return }
             // ...
             if error != nil {
@@ -69,30 +69,29 @@ class AppState: ObservableObject {
             }
         }
     }
-    
+
     func facebookLogIn(onFailure: @escaping (Error) -> Void) {
         // 1
-        self.authMethod = .facebook
-        
+        authMethod = .facebook
+
         let loginManager = LoginManager()
-        
+
         if let _ = AccessToken.current {
             // Access token available -- user already logged in
             // Perform log out
-            
+
             // 2
             loginManager.logOut()
-            
+
         } else {
             // Access token not available -- user already logged out
             // Perform log in
-            
+
             // 3
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
             guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
-            
-            loginManager.logIn(permissions: ["email"], from: rootViewController) { (result, error) in
-                
+
+            loginManager.logIn(permissions: ["email"], from: rootViewController) { result, error in
                 // 4
                 // Check for error
                 guard error == nil else {
@@ -101,54 +100,51 @@ class AppState: ObservableObject {
                     print(error!.localizedDescription)
                     return
                 }
-                
+
                 // 5
                 // Check for cancel
-                guard let result = result, !result.isCancelled else {
+                guard let result, !result.isCancelled else {
                     self.authMethod = nil
                     print("User cancelled login")
                     return
                 }
-                
-                
-                              
+
                 // Successfully logged in
                 // 6
 //                self?.updateButton(isLoggedIn: true)
 //                let credential = FacebookAuthProvider.credential(withAccessToken: AccessToken.current!.tokenString)
-                
-                
+
                 // 7
 //                Profile.loadCurrentProfile { (profile, error) in
 //                    self?.updateMessage(with: Profile.current?.name)
 //                }
-                
+
                 var user: Profile?
                 var error: Error?
-                
+
                 Profile.loadCurrentProfile { profile, fbError in
                     user = profile
                     error = fbError
                 }
-                
+
                 self.authenticateUser(for: user, with: error) { error in
                     onFailure(error)
                 }
             }
         }
     }
-    
+
     func googleLogIn(onFailure: @escaping (Error) -> Void) {
         // 1
-        self.authMethod = .google
-        
+        authMethod = .google
+
         if GIDSignIn.sharedInstance.hasPreviousSignIn() {
             GIDSignIn.sharedInstance.restorePreviousSignIn { [unowned self] user, error in
                 // If restore fails, fall back to fresh sign-in
                 if error != nil {
                     print("⚠️ Failed to restore previous sign-in, attempting fresh sign-in...")
                     GIDSignIn.sharedInstance.signOut()
-                    self.performFreshGoogleSignIn(onFailure: onFailure)
+                    performFreshGoogleSignIn(onFailure: onFailure)
                 } else {
                     authenticateUser(for: user, with: error) { error in
                         onFailure(error)
@@ -159,16 +155,16 @@ class AppState: ObservableObject {
             performFreshGoogleSignIn(onFailure: onFailure)
         }
     }
-    
+
     private func performFreshGoogleSignIn(onFailure: @escaping (Error) -> Void) {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
         guard let rootViewController = windowScene.windows.first?.rootViewController else { return }
-        
+
         GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
             guard let result = signInResult else {
                 // Inspect error with detailed logging
                 self.authMethod = nil
-                if let error = error {
+                if let error {
                     print("❌ Google Sign In Error:")
                     print("Description: \(error.localizedDescription)")
                     let nsError = error as NSError
@@ -186,13 +182,13 @@ class AppState: ObservableObject {
             }
         }
     }
-    
+
     /// Authenticate Google user with Firebase
     private func authenticateUser(for user: GIDGoogleUser?, with error: Error?, onFailure: @escaping (Error) -> Void) {
         // 1
-        if let error = error {
-            self.authMethod = nil
-            
+        if let error {
+            authMethod = nil
+
             // Detailed error logging
             print("❌ Google Auth Error (before Firebase):")
             print("Description: \(error.localizedDescription)")
@@ -200,7 +196,7 @@ class AppState: ObservableObject {
             print("Domain: \(nsError.domain)")
             print("Code: \(nsError.code)")
             print("UserInfo: \(nsError.userInfo)")
-            
+
             return
         }
 
@@ -209,16 +205,16 @@ class AppState: ObservableObject {
             let accessToken = user?.accessToken.tokenString,
             let idToken = user?.idToken?.tokenString
         else { return }
-        
+
         let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
 
         // 3
-        Auth.auth().signIn(with: credential) { authResult, error in
-            if let error = error {
+        Auth.auth().signIn(with: credential) { _, error in
+            if let error {
                 GIDSignIn.sharedInstance.signOut()
-                
+
                 self.authMethod = nil
-                
+
                 // Detailed error logging
                 print("❌ Firebase Auth Error:")
                 print("Description: \(error.localizedDescription)")
@@ -226,11 +222,11 @@ class AppState: ObservableObject {
                 print("Domain: \(nsError.domain)")
                 print("Code: \(nsError.code)")
                 print("UserInfo: \(nsError.userInfo)")
-                
+
                 // Log token info for debugging (be careful with sensitive data in production)
                 print("Access Token exists: \(user?.accessToken.tokenString != nil)")
                 print("ID Token exists: \(user?.idToken?.tokenString != nil)")
-                
+
                 onFailure(error)
             } else {
                 DispatchQueue.main.async {
@@ -241,23 +237,23 @@ class AppState: ObservableObject {
             }
         }
     }
-    
+
     /// Authenticate Facebook user with Firebase
     private func authenticateUser(for user: Profile?, with error: Error?, onFailure: @escaping (Error) -> Void) {
         // 1
-        if let error = error {
-            self.authMethod = nil
+        if let error {
+            authMethod = nil
             print(error.localizedDescription)
             return
         }
-        
+
         let credential = FacebookAuthProvider.credential(withAccessToken: AccessToken.current!.tokenString)
 
         // 3
-        Auth.auth().signIn(with: credential) { authResult, error in
-            if let error = error {
+        Auth.auth().signIn(with: credential) { _, error in
+            if let error {
                 let loginManager = LoginManager()
-                
+
                 loginManager.logOut()
 
                 self.authMethod = nil
@@ -272,13 +268,13 @@ class AppState: ObservableObject {
             }
         }
     }
-    
+
     func logOut() {
         guard let providerId = Auth.auth().currentUser?.providerData.first?.providerID as String? else {
             print("No user is logged in")
             return
         }
-        
+
         switch providerId {
         case AuthMethod.apple.rawValue:
             print("Logging out apple user")

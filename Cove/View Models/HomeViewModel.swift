@@ -5,9 +5,9 @@
 //  Created by Daniel Cajiao on 12/6/22.
 //
 
+import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
-import FirebaseAuth
 
 @MainActor
 class HomeViewModel: ObservableObject {
@@ -17,25 +17,25 @@ class HomeViewModel: ObservableObject {
 
     let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
     let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
-    
+
     /// Fetches products from Firebase and populates the products array used in the HomeView
     func fetchProducts() async throws {
         // Check if products have already been fetched
         if !products.isEmpty {
             return
         }
-        
+
         // Get a reference to Firestore
         print("Fetching products...")
-        
+
         fetchedProductIds = [String]()
 
         let db = Firestore.firestore()
-        
+
         do {
             // Fetch 'product' documents from the 'products' collection
             var snapshot = try await db.collection("products").getDocuments()
-            
+
             // Map fetched documents to the `products` array
             var products: [any Product] = snapshot.documents.compactMap { d in
                 // Decode document's categoryId to determine what product type it is
@@ -45,11 +45,13 @@ class HomeViewModel: ObservableObject {
                         let coffeeProduct = try d.data(as: CoffeeProduct.self)
                         fetchedProductIds.append(d.documentID)
                         return coffeeProduct
-                    } else if categoryId == ProductTypes.music.rawValue {   // Decode as a MusicProduct if categoryId maps to music ProductType enum
+                    } else if categoryId == ProductTypes.music.rawValue { // Decode as a MusicProduct if categoryId maps to music ProductType enum
                         let musicProduct = try d.data(as: MusicProduct.self)
                         fetchedProductIds.append(d.documentID)
                         return musicProduct
-                    } else if categoryId == ProductTypes.apparel.rawValue { // Decode as a ApparelProduct if categoryId maps to apparel ProductType enum
+                    } else if categoryId == ProductTypes.apparel
+                        .rawValue
+                    { // Decode as a ApparelProduct if categoryId maps to apparel ProductType enum
                         let apparelProduct = try d.data(as: ApparelProduct.self)
                         fetchedProductIds.append(d.documentID)
                         return apparelProduct
@@ -60,22 +62,23 @@ class HomeViewModel: ObservableObject {
                 }
                 return nil
             }
-            
+
             // Check if no products were fetched from last request
             if products.isEmpty {
                 print("No products returned from request")
                 return
             }
-            
+
             // Check if a user is logged in
             guard let user = Auth.auth().currentUser else {
                 print("Failed to get signed in user to fetch favorites")
                 return
             }
-            
+
             // Fetch 'favorite' documents from the logged in user's 'favorites' collection that were already fetched in the last request
-            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds).getDocuments()
-            
+            snapshot = try await db.collection("users").document(user.uid).collection("favorites").whereField("productId", in: fetchedProductIds)
+                .getDocuments()
+
             for document in snapshot.documents {
                 do {
                     // Decode as a FavoriteProduct
@@ -95,28 +98,28 @@ class HomeViewModel: ObservableObject {
                     throw error
                 }
             }
-            
+
             self.products = products
         } catch {
             print(error)
             throw error
         }
     }
-    
+
     func fetchBrands() async throws {
         // Check if products have already been fetched
         if !brands.isEmpty {
             return
         }
-        
+
         // Get a reference to Firestore
         print("Fetching brands...")
         let db = Firestore.firestore()
-        
+
         do {
             // Fetch 'brand' documents from the 'brands' collection
             let snapshot = try await db.collection("brands").getDocuments()
-            
+
             // Map fetched documents to the `brands` array
             let brands: [Brand] = snapshot.documents.compactMap { d in
                 do {
@@ -126,13 +129,13 @@ class HomeViewModel: ObservableObject {
                     return nil
                 }
             }
-            
+
             // Check if no brands were fetched from last request
             if brands.isEmpty {
                 print("No brands returned from request")
                 return
             }
-            
+
             self.brands = brands
         } catch {
             print(error)
@@ -140,5 +143,3 @@ class HomeViewModel: ObservableObject {
         }
     }
 }
-
-

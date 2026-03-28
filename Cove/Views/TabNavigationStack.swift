@@ -9,14 +9,15 @@ import SwiftUI
 
 struct TabNavigationStack<Content: View>: View {
     @EnvironmentObject var bag: Bag
+    @EnvironmentObject var appState: AppState
     let content: Content
-    
+
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
-    
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $appState.path) {
             content
                 .navigationDestination(for: Path.self) { path in
                     switch path {

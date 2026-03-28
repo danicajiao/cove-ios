@@ -135,7 +135,7 @@ private struct ProductDetailContent: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
+            VStack(spacing: 20) {
                  if let uiImage = uiImage {
                      Image(uiImage: uiImage)
                          .resizable()
@@ -221,70 +221,59 @@ private struct ProductDetailContent: View {
              }
          }
          .overlay(alignment: .top) {
-             HStack {
-                 Button {
-                     _ = appState.path.popLast()
-                 } label: {
-                     RoundedRectangle(cornerRadius: 5)
-                         .frame(width: 30, height: 30)
-                         .foregroundStyle(.black)
-                         .opacity(0.2)
-                         .overlay {
-                             Image(systemName: "chevron.left")
-                                 .foregroundStyle(.white)
-                         }
-                 }
-                 Spacer()
-             }
-             .padding([.leading, .trailing], 20)
+            HStack {
+                BackButton()
+                    .environmentObject(appState)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
          }
          .safeAreaInset(edge: .bottom) {
              HStack {
-                     RoundedRectangle(cornerRadius: 10)
-                         .stroke(.gray, lineWidth: 1)
-                         .frame(width: 55, height: 55)
-                         .overlay {
-                             LikeButton(enabled: product.isFavorite ?? false)
-                         }
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(.gray, lineWidth: 1)
+                    .frame(width: 55, height: 55)
+                    .overlay {
+                        LikeButton(enabled: product.isFavorite ?? false)
+                    }
                  
-                 Button {
-                     
-                     if !bag.bagProducts.contains(where: { bagProduct in
-                         bagProduct.product.id == product.id
-                     }) {
-                         bag.bagProducts.append(BagProduct(product: product, quantity: count))
-                         bag.totalItems += count
-                     } else {
-                         // Get the index of the existing product that matches product being added
-                         let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
-                             bagProduct.product.id == product.id
-                         }
-                         // If the index was not found, return
-                         guard let i = indexOfExisting else {
-                             print("Failed to get local index of existing product")
-                             return
-                         }
-                         bag.bagProducts[i].quantity += count
-                         bag.totalItems += count
-                     }
-                     
-                     if !bag.categories.contains(where: { category in
-                         category == product.categoryId
-                     }) {
-                         bag.categories.append(product.categoryId)
-                     }
-                     
-                     print(bag.bagProducts)
-                 } label: {
-                     Text("Add to bag")
-                 }
-                 .buttonStyle(PrimaryButton(width: .infinity))
-             }
-             .padding([.top, .leading, .trailing])
-             .background {
-                 Color.white.ignoresSafeArea()
-             }
-             .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
-         }
+                Button {
+                    if !bag.bagProducts.contains(where: { bagProduct in
+                        bagProduct.product.id == product.id
+                    }) {
+                        bag.bagProducts.append(BagProduct(product: product, quantity: count))
+                        bag.totalItems += count
+                    } else {
+                        // Get the index of the existing product that matches product being added
+                        let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
+                            bagProduct.product.id == product.id
+                        }
+                        // If the index was not found, return
+                        guard let i = indexOfExisting else {
+                            print("Failed to get local index of existing product")
+                            return
+                        }
+                        bag.bagProducts[i].quantity += count
+                        bag.totalItems += count
+                    }
+                    
+                    if !bag.categories.contains(where: { category in
+                        category == product.categoryId
+                    }) {
+                        bag.categories.append(product.categoryId)
+                    }
+                    
+                    print(bag.bagProducts)
+                } label: {
+                    Text("Add to bag")
+                }
+                .buttonStyle(PrimaryButton(width: .infinity))
+            }
+            .padding([.top, .leading, .trailing])
+            .background {
+                Color.white.ignoresSafeArea()
+            }
+            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
+        }
     }
 }

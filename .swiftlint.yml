@@ -1,0 +1,29 @@
+included:
+  - Cove
+
+excluded:
+  - Pods
+  - Cove.xcodeproj
+
+opt_in_rules:
+  - empty_count
+  - force_unwrapping
+
+disabled_rules:
+  - trailing_whitespace
+
+line_length:
+  warning: 150
+  error: 200
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 500
+  error: 800
+
+function_body_length:
+  warning: 60
+  error: 100

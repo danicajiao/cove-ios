@@ -76,7 +76,7 @@ class AppState: ObservableObject {
 
         let loginManager = LoginManager()
 
-        if let _ = AccessToken.current {
+        if AccessToken.current != nil {
             // Access token available -- user already logged in
             // Perform log out
 
@@ -97,7 +97,7 @@ class AppState: ObservableObject {
                 guard error == nil else {
                     // Error occurred
                     self.authMethod = nil
-                    print(error!.localizedDescription)
+                    print(error?.localizedDescription ?? "Unknown error")
                     return
                 }
 
@@ -247,7 +247,8 @@ class AppState: ObservableObject {
             return
         }
 
-        let credential = FacebookAuthProvider.credential(withAccessToken: AccessToken.current!.tokenString)
+        guard let tokenString = AccessToken.current?.tokenString else { return }
+        let credential = FacebookAuthProvider.credential(withAccessToken: tokenString)
 
         // 3
         Auth.auth().signIn(with: credential) { _, error in

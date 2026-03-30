@@ -9,6 +9,13 @@ import FirebaseFirestore
 import FirebaseStorage
 import SwiftUI
 
+/// A preference key to store a view's rect
+struct ViewSizeKey: PreferenceKey {
+    typealias Value = CGSize
+    static var defaultValue = CGSize.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {}
+}
+
 struct ProductDetailView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject var bag: Bag
@@ -16,7 +23,7 @@ struct ProductDetailView: View {
 
     let productId: String
 
-    @State private var uiImage: UIImage? = nil
+    @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
 
     @State var count: Int = 1
@@ -27,7 +34,7 @@ struct ProductDetailView: View {
     }
 
     var rows: [GridItem] = [
-        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20),
+        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
     ]
 
     private func fetchImage() {
@@ -50,13 +57,6 @@ struct ProductDetailView: View {
                 }
             }
         }
-    }
-
-    /// A preference key to store a view's rect
-    struct ViewSizeKey: PreferenceKey {
-        typealias Value = CGSize
-        static var defaultValue = CGSize.zero
-        static func reduce(value: inout Value, nextValue: () -> Value) {}
     }
 
     var body: some View {
@@ -253,11 +253,11 @@ private struct ProductDetailContent: View {
                             let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
                                 bagProduct.product.id == product.id
                             }
-                            guard let i = indexOfExisting else {
+                            guard let index = indexOfExisting else {
                                 print("Failed to get local index of existing product")
                                 return
                             }
-                            bag.bagProducts[i].quantity += count
+                            bag.bagProducts[index].quantity += count
                             bag.totalItems += count
                         }
 

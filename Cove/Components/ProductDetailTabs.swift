@@ -105,8 +105,8 @@ struct ProductDetailTabs: View {
                                 Text(spec.title)
                                     .font(Font.custom("Lato-Bold", size: 16))
                                     .foregroundStyle(Color.Colors.Fills.primary)
-                                ForEach(spec.content, id: \.self) { el in
-                                    Text(el)
+                                ForEach(spec.content, id: \.self) { item in
+                                    Text(item)
                                         .font(Font.custom("Lato-Regular", size: 16))
                                         .foregroundStyle(Color.Colors.Fills.primary)
                                 }

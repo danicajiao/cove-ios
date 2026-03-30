@@ -22,7 +22,7 @@
 --maxwidth 150
 
 # Misc
---commas always
+--commas inline
 --semicolons never
 --stripunusedargs closure-only
 --self remove

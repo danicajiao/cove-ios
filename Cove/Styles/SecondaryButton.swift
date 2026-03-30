@@ -33,9 +33,9 @@ struct SecondaryButton: PrimitiveButtonStyle {
             .opacity(isPressed ? 0.2 : 1)
             .animation(.default, value: isPressed)
             .gesture(DragGesture(minimumDistance: 0).onChanged { _ in
-                var t = Transaction()
-                t.disablesAnimations = true
-                withTransaction(t) {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
                     isPressed = true
                 }
             }.onEnded { _ in

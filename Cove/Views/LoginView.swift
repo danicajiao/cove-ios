@@ -12,7 +12,7 @@ struct LoginView: View {
     @EnvironmentObject private var appState: AppState
 
     @State private var presentAlert = false
-    @State private var errorMessage: String? = nil
+    @State private var errorMessage: String?
 
     @State var email: String = ""
     @State var password: String = ""
@@ -120,7 +120,7 @@ struct LoginView: View {
                         .padding(.leading)
                 }
 
-                // TODO: Add Links to Social Provider Views
+                // TODO: Add Links to Social Provider Views // swiftlint:disable:this todo
                 HStack(spacing: 30) {
                     SmallSocialButton(socialType: .apple)
                     SmallSocialButton(socialType: .facebook)

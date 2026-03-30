@@ -25,7 +25,8 @@ struct TabNavigationStack<Content: View>: View {
                             .environmentObject(bag)
                     default:
                         #if DEBUG
-                            let _ = print("⚠️ Unhandled navigation path in TabNavigationStack: \(path)")
+                            let _ =
+                                print("⚠️ Unhandled navigation path in TabNavigationStack: \(path)") // swiftlint:disable:this redundant_discardable_let
                         #endif
                         EmptyView()
                     }

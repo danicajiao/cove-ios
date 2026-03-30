@@ -9,6 +9,13 @@ import FirebaseFirestore
 import FirebaseStorage
 import SwiftUI
 
+private struct RGBAComponents {
+    let red: CGFloat
+    let green: CGFloat
+    let blue: CGFloat
+    let alpha: CGFloat
+}
+
 struct ProductCardView: View {
     var product: any Product
     var titleStr: String = "Title"
@@ -16,7 +23,7 @@ struct ProductCardView: View {
     var price: Float = 9
 
     @State var favorited: Bool
-    @State private var uiImage: UIImage? = nil
+    @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
 
     init(product: any Product) {
@@ -165,7 +172,7 @@ extension UIImage {
         return UIColor(hue: hue, saturation: boostedSaturation, brightness: boostedBrightness, alpha: 1.0)
     }
 
-    private func averageColor(for inputImage: CIImage, in rect: CGRect) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
+    private func averageColor(for inputImage: CIImage, in rect: CGRect) -> RGBAComponents? {
         let extentVector = CIVector(x: rect.origin.x, y: rect.origin.y, z: rect.size.width, w: rect.size.height)
 
         guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]),
@@ -180,7 +187,7 @@ extension UIImage {
         let blue = CGFloat(bitmap[2]) / 255
         let alpha = CGFloat(bitmap[3]) / 255
 
-        return (red, green, blue, alpha)
+        return RGBAComponents(red: red, green: green, blue: blue, alpha: alpha)
     }
 }
 

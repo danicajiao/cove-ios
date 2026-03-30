@@ -60,7 +60,10 @@ struct WaterfallCollection: UIViewControllerRepresentable {
         }
 
         func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ProductCell", for: indexPath) as! ProductCollectionViewCell
+            let reusedCell = collectionView.dequeueReusableCell(withReuseIdentifier: "ProductCell", for: indexPath)
+            guard let cell = reusedCell as? ProductCollectionViewCell else {
+                return UICollectionViewCell()
+            }
             let product = parent.products[indexPath.item]
             cell.configure(with: product) // Configure cell with product data
             return cell
@@ -188,7 +191,7 @@ class ProductCollectionViewCell: UICollectionViewCell {
             priceLabel.topAnchor.constraint(equalTo: productImageView.bottomAnchor, constant: 8),
             priceLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
             priceLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
-            priceLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
+            priceLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8)
         ])
     }
 

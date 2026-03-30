@@ -11,8 +11,8 @@ struct CoffeeCategoryButton: View {
     let category: String
 
     var body: some View {
-        // TODO: Refactor category buttons to have less reused code
-        // TODO: Correct text alignment
+        // TODO: Refactor category buttons to have less reused code // swiftlint:disable:this todo
+        // TODO: Correct text alignment // swiftlint:disable:this todo
         switch category {
         case "Fruity":
             ZStack {

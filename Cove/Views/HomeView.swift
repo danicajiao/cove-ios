@@ -22,18 +22,18 @@ struct HomeView: View {
     private var columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 2)
 
     var body: some View {
-        let _ = Self._printChanges()
+        let _ = Self._printChanges() // swiftlint:disable:this redundant_discardable_let
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 HStack {
-                    // TODO: Implement time-based greeting message
+                    // TODO: Implement time-based greeting message // swiftlint:disable:this todo
                     Text("Good morning, Daniel")
                         .frame(maxWidth: 215, alignment: .leading)
                         .font(Font.custom("Gazpacho-Black", size: 25))
                         .lineSpacing(6) // SwiftUI lineSpacing = Figma line height - Font size
                         .foregroundStyle(Color.Colors.Fills.primary)
                     Spacer()
-                    // TODO: Add notifications button to the right of greeting Text
+                    // TODO: Add notifications button to the right of greeting Text // swiftlint:disable:this todo
                     Image(systemName: "bell.fill")
                         .resizable()
                         .frame(width: 25, height: 25)

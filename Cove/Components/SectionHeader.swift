@@ -16,7 +16,7 @@ struct SectionHeader: View {
                 .foregroundStyle(Color.Colors.Fills.primary)
             Spacer()
             Button {
-                // TODO: Navigate to Categories View
+                // TODO: Navigate to Categories View // swiftlint:disable:this todo
             } label: {
                 HStack {
                     Text("See all")

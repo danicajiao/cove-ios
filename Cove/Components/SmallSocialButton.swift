@@ -17,7 +17,7 @@ struct SmallSocialButton: View {
     @EnvironmentObject var appState: AppState
 
     @State private var presentAlert = false
-    @State private var errorMessage: String? = nil
+    @State private var errorMessage: String?
 
     let socialType: SocialType
     let color: Color
@@ -41,7 +41,7 @@ struct SmallSocialButton: View {
 
     var body: some View {
         Button {
-            // TODO: Add Links to Social Provider Views
+            // TODO: Add Links to Social Provider Views // swiftlint:disable:this todo
             switch socialType {
             case .apple:
                 print("Apple sign in pressed")

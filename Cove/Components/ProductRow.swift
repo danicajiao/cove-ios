@@ -41,7 +41,7 @@ struct ProductRow: View {
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -57,7 +57,7 @@ struct ProductRow: View {
 
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")
@@ -112,7 +112,7 @@ struct ProductRow: View {
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -128,7 +128,7 @@ struct ProductRow: View {
 
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")
@@ -183,7 +183,7 @@ struct ProductRow: View {
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -199,7 +199,7 @@ struct ProductRow: View {
 
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")

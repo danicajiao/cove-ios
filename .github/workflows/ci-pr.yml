@@ -17,8 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Install SwiftLint and SwiftFormat
-        run: brew install swiftlint swiftformat
+      - name: Install SwiftFormat
+        run: brew install swiftformat
 
       - name: Run SwiftFormat (lint only)
         run: swiftformat --lint .

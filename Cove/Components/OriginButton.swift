@@ -9,7 +9,7 @@ import SwiftUI
 
 struct OriginButton: View {
     let origin: String
-    
+
     var body: some View {
         switch origin {
         case "Colombia":

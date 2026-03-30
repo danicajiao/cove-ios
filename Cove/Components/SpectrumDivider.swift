@@ -24,7 +24,7 @@ struct SpectrumDivider: View {
         .Colors.Brand.Palette.blue,
         .Colors.Brand.Palette.violet
     ]
-    
+
     var body: some View {
         Capsule()
             .fill(

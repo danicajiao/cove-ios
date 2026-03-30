@@ -20,13 +20,13 @@ struct ProfileView: View {
                 StatsRowView(orders: 0, followers: 0, following: 0)
 
                 VStack(spacing: 0) {
-                    Button { } label: {
+                    Button {} label: {
                         ProfileRowView(systemImage: "person", label: "Profile")
                     }
-                    Button { } label: {
+                    Button {} label: {
                         ProfileRowView(systemImage: "doc.text", label: "Privacy Policy")
                     }
-                    Button { } label: {
+                    Button {} label: {
                         ProfileRowView(systemImage: "lock", label: "Security and Logins")
                     }
                     Button {
@@ -46,10 +46,10 @@ struct ProfileView: View {
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .confirmationDialog("Confirm Log Out", isPresented: $presentAlert) {
             Button("Log out", role: .destructive) {
-                self.appState.logOut()
-                self.appState.path.removeAll()
+                appState.logOut()
+                appState.path.removeAll()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to log out?")
         }

@@ -5,34 +5,34 @@
 //  Created by Daniel Cajiao on 12/16/22.
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject private var appState: AppState
-    
+
     @State private var presentAlert = false
-    @State private var errorMessage: String? = nil
-        
+    @State private var errorMessage: String?
+
     @State var email: String = ""
     @State var password: String = ""
     @State var loading: Bool = false
-    
+
     var body: some View {
-        GeometryReader { proxy in
+        GeometryReader { _ in
             VStack(spacing: 20) {
                 Text("Cove.")
                     .font(.custom("Gazpacho-Heavy", size: 40))
                     .foregroundStyle(Color.Colors.Fills.primary)
-                
+
                 SpectrumDivider()
-                
+
                 Group {
                     Text("Log in to your account")
                         .font(.custom("Lato-Bold", size: 28))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
+
                     VStack(spacing: 4) {
                         CustomTextField(
                             placeholder: "email@provider.com",
@@ -75,18 +75,22 @@ struct LoginView: View {
                         .padding(.horizontal, 10)
                     }
                 }
-                
+
                 Button {
                     loading = true
-                    self.appState.emailLogIn(email: self.email, password: self.password,
-                                             onFailure: { error in
-                        self.presentAlert = true
-                        self.errorMessage = error?.localizedDescription
-                        loading = false
-                    }, onSuccess: {
-                        // onSuccess work here
-                        loading = false
-                    })
+                    appState.emailLogIn(
+                        email: email,
+                        password: password,
+                        onFailure: { error in
+                            presentAlert = true
+                            errorMessage = error?.localizedDescription
+                            loading = false
+                        },
+                        onSuccess: {
+                            // onSuccess work here
+                            loading = false
+                        }
+                    )
                 } label: {
                     if !loading {
                         Text("Log In")
@@ -97,9 +101,9 @@ struct LoginView: View {
                 }
                 .buttonStyle(PrimaryButton())
                 .alert(isPresented: $presentAlert) {
-                    Alert(title: Text("Login Failed"), message: Text(self.errorMessage ?? "Missing error message"), dismissButton: .default(Text("OK")))
+                    Alert(title: Text("Login Failed"), message: Text(errorMessage ?? "Missing error message"), dismissButton: .default(Text("OK")))
                 }
-                
+
                 HStack {
                     Capsule()
                         .fill(Color.Colors.Fills.quaternary)
@@ -115,27 +119,27 @@ struct LoginView: View {
                         .padding(.trailing, 60)
                         .padding(.leading)
                 }
-                
-                // TODO: Add Links to Social Provider Views
+
+                // TODO: Add Links to Social Provider Views // swiftlint:disable:this todo
                 HStack(spacing: 30) {
                     SmallSocialButton(socialType: .apple)
                     SmallSocialButton(socialType: .facebook)
                     SmallSocialButton(socialType: .google)
                 }
-                
+
                 HStack(spacing: 0) {
                     Text("Don't have an account? ")
                         .font(.custom("Lato-Regular", size: 14))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                     Button {
-                        self.appState.path.append(.signup)
+                        appState.path.append(.signup)
                     } label: {
                         Text("Sign up")
                             .font(.custom("Lato-Regular", size: 14))
                             .foregroundStyle(Color.Colors.Fills.primary)
                     }
                 }
-                
+
                 Spacer()
             }
             .padding(20)
@@ -146,11 +150,11 @@ struct LoginView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                print(self.appState.path)
+                print(appState.path)
             }
             .onDisappear {
-                self.email = ""
-                self.password = ""
+                email = ""
+                password = ""
             }
             .contentShape(Rectangle()) // Makes the entire view tappable
             .onTapGesture {

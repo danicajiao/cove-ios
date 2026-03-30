@@ -17,21 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Check for SwiftLint
-        id: swiftlint-check
-        run: |
-          if [ -f ".swiftlint.yml" ]; then
-            echo "has_swiftlint=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_swiftlint=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Install SwiftLint
-        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
         run: brew install swiftlint
 
+      - name: Run SwiftFormat (lint only)
+        run: swiftformat --lint .
+
       - name: Run SwiftLint
-        if: steps.swiftlint-check.outputs.has_swiftlint == 'true'
         run: swiftlint lint --strict
 
       - name: Check for merge conflict markers

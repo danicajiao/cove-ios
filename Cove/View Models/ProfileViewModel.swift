@@ -9,7 +9,9 @@ import FirebaseAuth
 
 @MainActor
 class ProfileViewModel: ObservableObject {
-    private var currentUser: User? { Auth.auth().currentUser }
+    private var currentUser: User? {
+        Auth.auth().currentUser
+    }
 
     var displayName: String {
         if let name = currentUser?.displayName, !name.isEmpty {
@@ -25,7 +27,7 @@ class ProfileViewModel: ObservableObject {
 
     var initials: String {
         let words = displayName.split(separator: " ")
-        let letters = words.prefix(2).compactMap { $0.first }
+        let letters = words.prefix(2).compactMap(\.first)
         return String(letters).uppercased()
     }
 

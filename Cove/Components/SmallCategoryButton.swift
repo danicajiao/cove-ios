@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SmallCategoryButton: View {
     let category: String
-    
+
     var body: some View {
         switch category {
         case "Music":
@@ -67,7 +67,7 @@ struct SmallCategoryButton: View {
         case "Bevs":
             Rectangle()
                 .overlay {
-                    Color(UIColor(red: 255/255, green: 252/255, blue: 247/255, alpha: 1))
+                    Color(UIColor(red: 255 / 255, green: 252 / 255, blue: 247 / 255, alpha: 1))
                     Image("58533a99308279.5ef03e3c0da5a")
                         .resizable()
                         .aspectRatio(contentMode: .fill)

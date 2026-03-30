@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-protocol ProductDetails : Codable {
+protocol ProductDetails: Codable {
     var id: String? { get }
     var categoryId: String { get }
     var createdAt: Timestamp? { get }

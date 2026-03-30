@@ -20,7 +20,7 @@ struct CustomShadowModifier: ViewModifier {
 
 extension View {
     func customShadow() -> some View {
-        self.modifier(CustomShadowModifier())
+        modifier(CustomShadowModifier())
     }
 }
 

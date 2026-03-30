@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct BackButton: View {
-    @EnvironmentObject private var appState: AppState
-    
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         Button {
-            _ = self.appState.path.popLast()
+            dismiss()
         } label: {
             Circle()
                 .fill(Color.Colors.Fills.secondary)

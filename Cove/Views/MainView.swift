@@ -11,8 +11,8 @@ struct MainView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var bag: Bag
     @StateObject private var tabState = TabState()
-    @State private var opacity: Double = 0
-    
+    // @State private var opacity: Double = 0
+
     var body: some View {
         TabView(selection: $tabState.currentTab) {
             TabNavigationStack {
@@ -26,7 +26,7 @@ struct MainView: View {
                     .environment(\.symbolVariants, .none)
             }
             .tag("home")
-            
+
             TabNavigationStack {
                 Text("Browse View")
             }
@@ -38,7 +38,7 @@ struct MainView: View {
                     .environment(\.symbolVariants, .none)
             }
             .tag("browse")
-            
+
             TabNavigationStack {
                 BagView()
             }
@@ -51,7 +51,7 @@ struct MainView: View {
             }
             .badge(bag.totalItems)
             .tag("bag")
-            
+
             TabNavigationStack {
                 Text("Favorites View")
             }
@@ -63,7 +63,7 @@ struct MainView: View {
                     .environment(\.symbolVariants, .none)
             }
             .tag("favorites")
-            
+
             TabNavigationStack {
                 ProfileView()
             }
@@ -77,13 +77,13 @@ struct MainView: View {
             .tag("profile")
         }
         .environmentObject(tabState)
-        .opacity(opacity)
+        // .opacity(opacity)
         .background(Color.Colors.Backgrounds.primary)
         .onAppear {
-            print(self.appState.path)
-            withAnimation(.easeIn(duration: 1)) {
-                opacity = 1
-            }
+            print(appState.path)
+            // withAnimation(.easeIn(duration: 1)) {
+            //     opacity = 1
+            // }
         }
     }
 }

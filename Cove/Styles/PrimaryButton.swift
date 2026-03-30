@@ -16,13 +16,13 @@ struct PrimaryButton: PrimitiveButtonStyle {
         self.width = width
         self.height = height
     }
-    
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.custom("Lato-Bold", size: 14))
             .padding()
-            .frame(maxWidth: self.width)
-            .frame(height: self.height)
+            .frame(maxWidth: width)
+            .frame(height: height)
             .foregroundStyle(Color.Colors.Fills.secondary)
             .background {
                 Capsule()
@@ -34,9 +34,9 @@ struct PrimaryButton: PrimitiveButtonStyle {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
-                        var t = Transaction()
-                        t.disablesAnimations = true
-                        withTransaction(t) {
+                        var transaction = Transaction()
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
                             isPressed = true
                         }
                     }.onEnded { _ in

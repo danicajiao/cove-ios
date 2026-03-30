@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct CoffeeProduct : Product {
+struct CoffeeProduct: Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String
@@ -26,25 +26,25 @@ struct CoffeeProduct : Product {
 //        case info
 //        case sku
 //    }
-    
-    struct CoffeeInfo : Codable {
+
+    struct CoffeeInfo: Codable {
         var name: String
         var roastery: String
-        
+
 //        enum InfoCodingKeys : String, CodingKey {
 //            case name
 //            case roastery
 //        }
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     static func == (lhs: CoffeeProduct, rhs: CoffeeProduct) -> Bool {
-        return lhs.id == rhs.id
+        lhs.id == rhs.id
     }
-    
+
 //    init(from decoder: Decoder) throws {
 //        let container = try decoder.container(keyedBy: CodingKeys.self)
 //
@@ -62,7 +62,7 @@ struct CoffeeProduct : Product {
 //
 //        sku = try container.decode(String.self, forKey: .sku)
 //    }
-    
+
 //    init(defaultPrice: Float, defaultImgPath: String, createdAt: Timestamp, sku: String, categoryId: DocumentReference, info: Info) {
 //        self.sku = sku
 //        self.categoryId = categoryId

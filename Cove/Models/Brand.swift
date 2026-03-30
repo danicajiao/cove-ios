@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct Brand : Codable, Identifiable {
+struct Brand: Codable, Identifiable {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var name: String

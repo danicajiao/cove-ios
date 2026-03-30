@@ -98,6 +98,8 @@
 				D02B2FB027BD7E61004732CB /* Resources */,
 				F30B487BD79AD29C6F1960A7 /* [CP] Embed Pods Frameworks */,
 				F3C0030514A32F87894C6AAE /* [CP] Copy Pods Resources */,
+				B4D6F8A0C2E4F6A8B0D2E4F6 /* SwiftFormat */,
+				A2C4E6F8B0D2E4F6A8C0E2F4 /* SwiftLint */,
 			);
 			buildRules = (
 			);
@@ -217,6 +219,44 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Cove/Pods-Cove-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		B4D6F8A0C2E4F6A8B0D2E4F6 /* SwiftFormat */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftFormat;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ -f /opt/homebrew/bin/swiftformat ]; then\n  /opt/homebrew/bin/swiftformat .\nelif which swiftformat > /dev/null; then\n  swiftformat .\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		A2C4E6F8B0D2E4F6A8C0E2F4 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint > /dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

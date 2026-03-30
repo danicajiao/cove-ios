@@ -1,0 +1,28 @@
+--swiftversion 5.9
+
+--exclude Pods,Cove.xcodeproj
+
+# Indentation
+--indent 4
+--indentcase false
+--tabwidth 4
+--smarttabs enabled
+
+# Spacing
+--trimwhitespace always
+
+# Imports
+--importgrouping testable-last
+
+# Braces & wrapping
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--maxwidth 150
+
+# Misc
+--commas inline
+--semicolons never
+--stripunusedargs closure-only
+--self remove

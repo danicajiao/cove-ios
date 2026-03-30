@@ -25,9 +25,9 @@ struct ProductRow: View {
                     ProgressView()
                 }
                 .frame(width: 80, height: 80)
-                
+
 //                Spacer()
-                
+
                 VStack(alignment: .leading) {
                     Text(coffeeProduct.info.name)
                         .font(Font.custom("Poppins-Regular", size: 12))
@@ -35,13 +35,13 @@ struct ProductRow: View {
                     Text(coffeeProduct.info.roastery)
                         .font(Font.custom("Poppins-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
-                    
+
                     Spacer()
-                    
+
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -57,7 +57,7 @@ struct ProductRow: View {
 
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")
@@ -68,9 +68,9 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing) {
 //                    Image(systemName: "x.circle")
 //                        .resizable()
@@ -96,9 +96,9 @@ struct ProductRow: View {
                     ProgressView()
                 }
                 .frame(width: 80, height: 80)
-                
+
 //                Spacer()
-                
+
                 VStack(alignment: .leading) {
                     Text(musicProduct.info.album)
                         .font(Font.custom("Poppins-Regular", size: 12))
@@ -106,13 +106,13 @@ struct ProductRow: View {
                     Text(musicProduct.info.artist)
                         .font(Font.custom("Poppins-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
-                    
+
                     Spacer()
-                    
+
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -128,7 +128,7 @@ struct ProductRow: View {
 
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")
@@ -139,9 +139,9 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing) {
 //                    Image(systemName: "x.circle")
 //                        .resizable()
@@ -167,9 +167,9 @@ struct ProductRow: View {
                     ProgressView()
                 }
                 .frame(width: 80, height: 80)
-                
+
                 //                Spacer()
-                
+
                 VStack(alignment: .leading) {
                     Text(apparelProduct.info.name)
                         .font(Font.custom("Poppins-Regular", size: 12))
@@ -177,13 +177,13 @@ struct ProductRow: View {
                     Text(apparelProduct.info.brand)
                         .font(Font.custom("Poppins-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
-                    
+
                     Spacer()
-                    
+
                     HStack {
                         Button {
                             if bagProduct.quantity > 1 {
-                                bagProduct.quantity = bagProduct.quantity - 1
+                                bagProduct.quantity -= 1
                             }
                         } label: {
                             Image(systemName: "minus.square")
@@ -192,14 +192,14 @@ struct ProductRow: View {
                         }
                         .foregroundStyle(Color.Colors.Brand.accent)
                         .disabled(bagProduct.quantity == 1 ? true : false)
-                        
+
                         Text(String(bagProduct.quantity))
                             .font(Font.custom("Poppins-Regular", size: 14))
                             .frame(width: 30, height: 20)
-                        
+
                         Button {
                             if bagProduct.quantity < 15 {
-                                bagProduct.quantity = bagProduct.quantity + 1
+                                bagProduct.quantity += 1
                             }
                         } label: {
                             Image(systemName: "plus.square")
@@ -210,9 +210,9 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 15 ? true : false)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing) {
 //                    Image(systemName: "x.circle")
 //                        .resizable()

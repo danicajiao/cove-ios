@@ -5,45 +5,52 @@
 //  Created by Daniel Cajiao on 3/6/22.
 //
 
-import SwiftUI
-import FirebaseStorage
 import FirebaseFirestore
+import FirebaseStorage
+import SwiftUI
+
+private struct RGBAComponents {
+    let red: CGFloat
+    let green: CGFloat
+    let blue: CGFloat
+    let alpha: CGFloat
+}
 
 struct ProductCardView: View {
     var product: any Product
-    var headerStr: String = "Header"
-    var bodyStr: String = "Body"
+    var titleStr: String = "Title"
+    var subtitleStr: String = "Subtitle"
     var price: Float = 9
-    
+
     @State var favorited: Bool
-    @State private var uiImage: UIImage? = nil
+    @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
 
     init(product: any Product) {
         self.product = product
 
 //        print("ProductCardView init: \(String(describing: product.id)) favorite: \(String(describing: product.isFavorite))")
- 
-        self._favorited = State(initialValue: product.isFavorite ?? false)
+
+        _favorited = State(initialValue: product.isFavorite ?? false)
 
         if let coffeeProduct = product as? CoffeeProduct {
             // product is a CoffeeProduct
-            self.headerStr = coffeeProduct.info.name
-            self.bodyStr = coffeeProduct.info.roastery
-            self.price = coffeeProduct.defaultPrice
+            titleStr = coffeeProduct.info.name
+            subtitleStr = coffeeProduct.info.roastery
+            price = coffeeProduct.defaultPrice
         } else if let musicProduct = product as? MusicProduct {
             // product is a MusicProduct
-            self.headerStr = musicProduct.info.album
-            self.bodyStr = musicProduct.info.artist
-            self.price = musicProduct.defaultPrice
+            titleStr = musicProduct.info.album
+            subtitleStr = musicProduct.info.artist
+            price = musicProduct.defaultPrice
         } else if let apparelProduct = product as? ApparelProduct {
             // product is a ApparelProduct
-            self.headerStr = apparelProduct.info.name
-            self.bodyStr = apparelProduct.info.brand
-            self.price = apparelProduct.defaultPrice
+            titleStr = apparelProduct.info.name
+            subtitleStr = apparelProduct.info.brand
+            price = apparelProduct.defaultPrice
         }
     }
-    
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
             if let productId = product.id {
@@ -55,16 +62,16 @@ struct ProductCardView: View {
                 // If no product ID, show card without navigation
                 cardContent
             }
-            
-            LikeButton(enabled: self.favorited)
+
+            LikeButton(enabled: favorited)
                 // .shadow(color: .dropShadow, radius: 20)
                 .padding(10)
         }
     }
-    
+
     private var cardContent: some View {
         VStack(spacing: 0) {
-            if let uiImage = uiImage {
+            if let uiImage {
                 Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit) // Maintain aspect ratio
@@ -76,25 +83,25 @@ struct ProductCardView: View {
                         fetchImage()
                     }
             }
-            
-            VStack (spacing: 6) {
-                VStack (spacing: 0) {
-                    Text(headerStr)
+
+            VStack(spacing: 6) {
+                VStack(spacing: 0) {
+                    Text(titleStr)
                         .font(Font.custom("Gazpacho-Black", size: 12))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(bodyStr)
+
+                    Text(subtitleStr)
                         .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                
-                Text("$\(Int(self.price))")
+
+                Text("$\(Int(price))")
                     .font(Font.custom("Lato-Bold", size: 14))
                     .foregroundStyle(Color.Colors.Fills.primary)
                     .lineLimit(1)
@@ -105,7 +112,8 @@ struct ProductCardView: View {
             .background(.white)
         }
         .frame(maxWidth: .infinity) // Take up the full width of the column
-        .frame(height: 235)
+        .frame(minWidth: 171)
+        .frame(height: 239)
         .background(averageColor)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .customShadow()
@@ -116,17 +124,17 @@ struct ProductCardView: View {
         let storageRef = Storage.storage().reference(forURL: imageURL.absoluteString)
 
         storageRef.getData(maxSize: 10 * 1024 * 1024) { data, error in
-            if let error = error {
+            if let error {
                 print("Error fetching image: \(error.localizedDescription)")
                 return
             }
 
-            if let data = data, let image = UIImage(data: data) {
+            if let data, let image = UIImage(data: data) {
                 DispatchQueue.main.async {
-                    self.uiImage = image
+                    uiImage = image
                     if let uiColor = image.averageColor {
                         print("✅ Got average color: \(uiColor)")
-                        self.averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
+                        averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
                     } else {
                         print("❌ averageColor returned nil")
                     }
@@ -142,51 +150,51 @@ extension UIImage {
             print("❌ Failed to create CIImage")
             return nil
         }
-        
+
         // Calculate average color for the entire image
         guard let color = averageColor(for: inputImage, in: inputImage.extent) else {
             return nil
         }
-        
+
         // Convert RGB to HSB to boost vibrancy
         let averageUIColor = UIColor(red: color.red, green: color.green, blue: color.blue, alpha: 1.0)
         var hue: CGFloat = 0
         var saturation: CGFloat = 0
         var brightness: CGFloat = 0
         var alpha: CGFloat = 0
-        
+
         averageUIColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-        
+
         // Boost saturation and brightness for vibrant pastels
         let boostedSaturation: CGFloat = 0.1 // Fixed moderate saturation for vibrancy
         let boostedBrightness: CGFloat = 0.98 // Very light brightness for pastel look
-        
+
         return UIColor(hue: hue, saturation: boostedSaturation, brightness: boostedBrightness, alpha: 1.0)
     }
-    
-    private func averageColor(for inputImage: CIImage, in rect: CGRect) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
+
+    private func averageColor(for inputImage: CIImage, in rect: CGRect) -> RGBAComponents? {
         let extentVector = CIVector(x: rect.origin.x, y: rect.origin.y, z: rect.size.width, w: rect.size.height)
-        
+
         guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]),
               let outputImage = filter.outputImage else { return nil }
-        
+
         var bitmap = [UInt8](repeating: 0, count: 4)
         let context = CIContext(options: [.workingColorSpace: NSNull()])
         context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
-        
+
         let red = CGFloat(bitmap[0]) / 255
         let green = CGFloat(bitmap[1]) / 255
         let blue = CGFloat(bitmap[2]) / 255
         let alpha = CGFloat(bitmap[3]) / 255
-        
-        return (red, green, blue, alpha)
+
+        return RGBAComponents(red: red, green: green, blue: blue, alpha: alpha)
     }
 }
 
 struct ProductCardView_Previews: PreviewProvider {
     static let product = ApparelProduct(
         id: "12345aaa",
-        createdAt: Timestamp.init(),
+        createdAt: Timestamp(),
         categoryId: "apparel category id",
         defaultPrice: 23,
         defaultImageURL: "some url",

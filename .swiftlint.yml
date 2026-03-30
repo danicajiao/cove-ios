@@ -11,6 +11,7 @@ opt_in_rules:
 
 disabled_rules:
   - trailing_whitespace
+  - redundant_discardable_let
 
 line_length:
   warning: 200

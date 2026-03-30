@@ -22,7 +22,7 @@ struct HomeView: View {
     private var columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 2)
 
     var body: some View {
-        let _ = Self._printChanges() // swiftlint:disable:this redundant_discardable_let
+        let _ = Self._printChanges()
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 HStack {

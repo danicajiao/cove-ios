@@ -12,105 +12,29 @@ struct ProductDetailTabs: View {
 
     var body: some View {
         if let musicProductDetails = viewModel.productDetails as? MusicProductDetails {
-            VStack {
-                HStack(spacing: 0) {
-                    if viewModel.detailSelection == .description {
-                        Text("Description")
-                            .font(Font.custom("Lato-Bold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.Colors.)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    } else {
-                        Text("Description")
-                            .font(Font.custom("Lato-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .tracklist {
-                        Text("Tracklist")
-                            .font(Font.custom("Lato-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 90, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .tracklist
-                                }
-                            }
-                    } else {
-                        Text("Tracklist")
-                            .font(Font.custom("Lato-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 90, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .tracklist
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .about {
-                        Text("About")
-                            .font(Font.custom("Lato-Bold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    } else {
-                        Text("About")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    }
+            VStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    tabPill("Description", selection: .description)
+                    tabPill("Tracklist", selection: .tracklist)
+                    tabPill("About", selection: .about)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
                     Text(musicProductDetails.description)
-                        .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .tracklist {
                     VStack {
                         ForEach(musicProductDetails.tracklist, id: \.self) { track in
                             HStack {
                                 Text(track.title)
-                                    .font(Font.custom("Poppins-Regular", size: 16))
-                                    .foregroundStyle(Color.Colors.Fills.tertiary)
+                                    .font(Font.custom("Lato-Regular", size: 16))
+                                    .foregroundStyle(Color.Colors.Fills.primary)
 
                                 Text(String(track.durationSec))
-                                    .font(Font.custom("Poppins-Regular", size: 16))
+                                    .font(Font.custom("Lato-Regular", size: 16))
                                     .foregroundStyle(Color.Colors.Brand.accent)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,111 +42,35 @@ struct ProductDetailTabs: View {
                     }
                 } else if viewModel.detailSelection == .about {
                     Text(musicProductDetails.about)
-                        .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
         } else if let coffeeProductDetails = viewModel.productDetails as? CoffeeProductDetails {
-            VStack {
-                HStack(spacing: 0) {
-                    if viewModel.detailSelection == .description {
-                        Text("Description")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    } else {
-                        Text("Description")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .origin {
-                        Text("Origin")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .origin
-                                }
-                            }
-                    } else {
-                        Text("Origin")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .origin
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .about {
-                        Text("About")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    } else {
-                        Text("About")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    }
+            VStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    tabPill("Description", selection: .description)
+                    tabPill("Origin", selection: .origin)
+                    tabPill("About", selection: .about)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
                     Text(coffeeProductDetails.description)
-                        .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .origin {
                     VStack {
                         ForEach(coffeeProductDetails.origin, id: \.self) { originDetail in
                             HStack {
                                 Text(originDetail.title)
-                                    .font(Font.custom("Poppins-SemiBold", size: 16))
-                                    .foregroundStyle(Color.Colors.Fills.tertiary)
+                                    .font(Font.custom("Lato-Bold", size: 16))
+                                    .foregroundStyle(Color.Colors.Fills.primary)
                                 Text(originDetail.content)
-                                    .font(Font.custom("Poppins-Regular", size: 16))
+                                    .font(Font.custom("Lato-Regular", size: 16))
                                     .foregroundStyle(Color.Colors.Brand.accent)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -230,100 +78,24 @@ struct ProductDetailTabs: View {
                     }
                 } else if viewModel.detailSelection == .about {
                     Text(coffeeProductDetails.about)
-                        .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
         } else if let apparelProductDetails = viewModel.productDetails as? ApparelProductDetails {
-            VStack {
-                HStack(spacing: 0) {
-                    if viewModel.detailSelection == .description {
-                        Text("Description")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    } else {
-                        Text("Description")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 120, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .description
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .specifications {
-                        Text("Specifics")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 100, minHeight: 40)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .specifications
-                                }
-                            }
-                    } else {
-                        Text("Specifics")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 100, minHeight: 40)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .specifications
-                                }
-                            }
-                    }
-
-                    if viewModel.detailSelection == .about {
-                        Text("About")
-                            .font(Font.custom("Poppins-SemiBold", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.primary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .background {
-                                RoundedRectangle(cornerRadius: 10)
-//                                    .fill(Color.backdrop)
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    } else {
-                        Text("About")
-                            .font(Font.custom("Poppins-Regular", size: 16))
-                            .foregroundStyle(Color.Colors.Fills.tertiary)
-                            .frame(minWidth: 75, minHeight: 40)
-                            //                                    .padding(10)
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.detailSelection = .about
-                                }
-                            }
-                    }
+            VStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    tabPill("Description", selection: .description)
+                    tabPill("Specifics", selection: .specifications)
+                    tabPill("About", selection: .about)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
                     Text(apparelProductDetails.description)
-                        .font(Font.custom("Poppins-Regular", size: 16))
+                        .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .specifications {
@@ -331,12 +103,12 @@ struct ProductDetailTabs: View {
                         ForEach(apparelProductDetails.specifications, id: \.self) { spec in
                             VStack(alignment: .leading) {
                                 Text(spec.title)
-                                    .font(Font.custom("Poppins-SemiBold", size: 16))
-                                    .foregroundStyle(Color.Colors.Fills.tertiary)
+                                    .font(Font.custom("Lato-Bold", size: 16))
+                                    .foregroundStyle(Color.Colors.Fills.primary)
                                 ForEach(spec.content, id: \.self) { el in
                                     Text(el)
-                                        .font(Font.custom("Poppins-Regular", size: 16))
-                                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                                        .font(Font.custom("Lato-Regular", size: 16))
+                                        .foregroundStyle(Color.Colors.Fills.primary)
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -344,11 +116,42 @@ struct ProductDetailTabs: View {
                     }
                 } else if viewModel.detailSelection == .about {
                     Text(apparelProductDetails.about)
-                        .font(Font.custom("Poppins-Regular", size: 16))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Fills.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func tabPill(
+        _ label: String,
+        selection: ProductDetailViewModel.DetailSelection
+    ) -> some View {
+        let isSelected = viewModel.detailSelection == selection
+
+        // Bold version is always rendered (opacity 0) to reserve its wider width,
+        // preventing siblings from shifting when the font weight changes.
+        Text(label)
+            .font(Font.custom("Lato-Bold", size: 14))
+            .opacity(0)
+            .overlay(
+                Text(label)
+                    .font(Font.custom(isSelected ? "Lato-Bold" : "Lato-Regular", size: 14))
+                    .foregroundStyle(isSelected ? Color.Colors.Fills.primary : Color.Colors.Fills.tertiary)
+            )
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .overlay(
+                Capsule()
+                    .strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1)
+                    .opacity(isSelected ? 1 : 0)
+            )
+            .onTapGesture {
+                withAnimation {
+                    viewModel.detailSelection = selection
+                }
+            }
     }
 }

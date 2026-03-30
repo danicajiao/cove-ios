@@ -9,8 +9,14 @@ import SwiftUI
 
 struct LikeButton: View {
     @State var enabled: Bool
+    var size: CGFloat = 26
+    var outlined: Bool = false
     @State private var pressed = false
     @State private var scale = 1.0
+
+    private var iconSize: CGFloat {
+        size * (14.0 / 26.0)
+    }
 
     func haptic() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
@@ -20,10 +26,11 @@ struct LikeButton: View {
     var body: some View {
         ZStack {
             Circle()
-                .frame(width: 26, height: 26)
+                .frame(width: size, height: size)
                 .foregroundStyle(Color.Colors.Fills.secondary)
+                .overlay(Circle().strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1).opacity(outlined ? 1 : 0))
             Image(systemName: enabled ? "heart.fill" : "heart")
-                .font(.system(size: 14))
+                .font(.system(size: iconSize))
                 .foregroundStyle(enabled ? .pink : Color.Colors.Strokes.primary)
         }
         .scaleEffect(scale)

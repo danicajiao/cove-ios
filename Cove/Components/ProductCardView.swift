@@ -11,8 +11,8 @@ import SwiftUI
 
 struct ProductCardView: View {
     var product: any Product
-    var headerStr: String = "Header"
-    var bodyStr: String = "Body"
+    var titleStr: String = "Title"
+    var subtitleStr: String = "Subtitle"
     var price: Float = 9
 
     @State var favorited: Bool
@@ -28,18 +28,18 @@ struct ProductCardView: View {
 
         if let coffeeProduct = product as? CoffeeProduct {
             // product is a CoffeeProduct
-            headerStr = coffeeProduct.info.name
-            bodyStr = coffeeProduct.info.roastery
+            titleStr = coffeeProduct.info.name
+            subtitleStr = coffeeProduct.info.roastery
             price = coffeeProduct.defaultPrice
         } else if let musicProduct = product as? MusicProduct {
             // product is a MusicProduct
-            headerStr = musicProduct.info.album
-            bodyStr = musicProduct.info.artist
+            titleStr = musicProduct.info.album
+            subtitleStr = musicProduct.info.artist
             price = musicProduct.defaultPrice
         } else if let apparelProduct = product as? ApparelProduct {
             // product is a ApparelProduct
-            headerStr = apparelProduct.info.name
-            bodyStr = apparelProduct.info.brand
+            titleStr = apparelProduct.info.name
+            subtitleStr = apparelProduct.info.brand
             price = apparelProduct.defaultPrice
         }
     }
@@ -79,14 +79,14 @@ struct ProductCardView: View {
 
             VStack(spacing: 6) {
                 VStack(spacing: 0) {
-                    Text(headerStr)
+                    Text(titleStr)
                         .font(Font.custom("Gazpacho-Black", size: 12))
                         .foregroundStyle(Color.Colors.Fills.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text(bodyStr)
+                    Text(subtitleStr)
                         .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                         .lineLimit(1)
@@ -105,7 +105,8 @@ struct ProductCardView: View {
             .background(.white)
         }
         .frame(maxWidth: .infinity) // Take up the full width of the column
-        .frame(height: 235)
+        .frame(minWidth: 171)
+        .frame(height: 239)
         .background(averageColor)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .customShadow()

@@ -11,7 +11,7 @@ struct MainView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var bag: Bag
     @StateObject private var tabState = TabState()
-    @State private var opacity: Double = 0
+    // @State private var opacity: Double = 0
 
     var body: some View {
         TabView(selection: $tabState.currentTab) {
@@ -77,13 +77,13 @@ struct MainView: View {
             .tag("profile")
         }
         .environmentObject(tabState)
-        .opacity(opacity)
+        // .opacity(opacity)
         .background(Color.Colors.Backgrounds.primary)
         .onAppear {
             print(appState.path)
-            withAnimation(.easeIn(duration: 1)) {
-                opacity = 1
-            }
+            // withAnimation(.easeIn(duration: 1)) {
+            //     opacity = 1
+            // }
         }
     }
 }

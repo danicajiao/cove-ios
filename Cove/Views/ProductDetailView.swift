@@ -106,18 +106,7 @@ private struct ProductDetailContent: View {
     @EnvironmentObject var bag: Bag
 
     /// Computed properties for product-specific info
-    var headerStr: String {
-        if let coffeeProduct = product as? CoffeeProduct {
-            return coffeeProduct.info.roastery
-        } else if let musicProduct = product as? MusicProduct {
-            return musicProduct.info.artist
-        } else if let apparelProduct = product as? ApparelProduct {
-            return apparelProduct.info.brand
-        }
-        return "Header"
-    }
-
-    var bodyStr: String {
+    var titleStr: String {
         if let coffeeProduct = product as? CoffeeProduct {
             return coffeeProduct.info.name
         } else if let musicProduct = product as? MusicProduct {
@@ -125,7 +114,18 @@ private struct ProductDetailContent: View {
         } else if let apparelProduct = product as? ApparelProduct {
             return apparelProduct.info.name
         }
-        return "Body"
+        return "Title"
+    }
+
+    var subtitleStr: String {
+        if let coffeeProduct = product as? CoffeeProduct {
+            return coffeeProduct.info.roastery
+        } else if let musicProduct = product as? MusicProduct {
+            return musicProduct.info.artist
+        } else if let apparelProduct = product as? ApparelProduct {
+            return apparelProduct.info.brand
+        }
+        return "Subtitle"
     }
 
     var price: Float {
@@ -134,141 +134,151 @@ private struct ProductDetailContent: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
                 if let uiImage {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fit) // Maintain aspect ratio
-                        .frame(height: 300)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 300)
+                        .background(
+                            Color.Colors.Brand.Palette.blue
+                                .padding(.top, -1000)
+                        )
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                         .onAppear {
                             fetchImage()
                         }
+                        .background(
+                            Color.Colors.Brand.Palette.blue
+                                .padding(.top, -1000)
+                        )
                 }
 
-                Group {
-                    VStack(spacing: 20) {
-                        VStack(spacing: 8) {
-                            Text(headerStr)
-                                .font(Font.custom("Gazpacho-Black", size: 22))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            HStack {
-                                Text("$\(Int(price))")
-                                    .font(Font.custom("Lato-Bold", size: 22))
-                                    .foregroundStyle(Color.Colors.Fills.primary)
-
-                                Spacer()
-                            }
-                        }
-
-                        NavigationLink(destination: Text("Item Reviews!")) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    HStack {
-                                        RatingView(rating: 4)
-                                        Text("4.3")
-                                            .font(Font.custom("Lato-Regular", size: 14))
-                                    }
-                                    Text("22 Reviews \(Image(systemName: "chevron.right"))")
-                                        .font(Font.custom("Lato-Regular", size: 14))
-                                        .foregroundStyle(Color.Colors.Fills.tertiary)
-                                }
-
-                                Spacer()
-
-                                Circle()
-                                    .frame(width: 35, height: 35)
-                                    .foregroundStyle(.white)
-                                    .overlay {
-                                        Circle()
-                                            .frame(width: 30, height: 30)
-                                    }
-                            }
+                VStack(spacing: 16) {
+                    VStack(spacing: 0) {
+                        Text(titleStr)
+                            .font(Font.custom("Gazpacho-Black", size: 20))
+                            .foregroundStyle(Color.Colors.Fills.primary)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(10)
-                            .background(.white)
-                            .cornerRadius(8)
-                            .customShadow()
-                        }
-                        .buttonStyle(PlainButtonStyle())
 
-                        ProductDetailTabs(viewModel: viewModel)
+                        Text(subtitleStr)
+                            .font(Font.custom("Lato-Regular", size: 20))
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
 
-                        SectionHeader(title: "Similar to this")
-
-                        ScrollView(.horizontal) {
-                            HStack(spacing: 20) {
-                                ForEach(viewModel.similarProducts, id: \.id) { product in
-                                    ProductCardView(product: product)
+                    NavigationLink(destination: Text("Item Reviews!")) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    RatingView(rating: 4)
+                                    Text("4.3")
+                                        .font(Font.custom("Lato-Regular", size: 14))
                                 }
+                                Text("22 Reviews \(Image(systemName: "chevron.right"))")
+                                    .font(Font.custom("Lato-Regular", size: 14))
+                                    .foregroundStyle(Color.Colors.Fills.tertiary)
+                            }
+
+                            Spacer()
+
+                            Circle()
+                                .frame(width: 35, height: 35)
+                                .foregroundStyle(.white)
+                                .overlay {
+                                    Circle()
+                                        .frame(width: 30, height: 30)
+                                }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .background(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.Colors.Strokes.primary, lineWidth: 1))
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    ProductDetailTabs(viewModel: viewModel)
+
+                    SectionHeader(title: "Similar to this")
+
+                    ScrollView(.horizontal) {
+                        HStack(spacing: 20) {
+                            ForEach(viewModel.similarProducts, id: \.id) { product in
+                                ProductCardView(product: product)
                             }
                         }
                     }
-                    .padding(20)
+                    .scrollClipDisabled()
                 }
-                .background {
+                .padding(.top, 30)
+                .padding([.horizontal, .bottom], 20)
+                .background(
                     Color.white
-                }
-                .cornerRadius(20)
+                        .padding(.bottom, -1000)
+                )
             }
         }
         .overlay(alignment: .top) {
             HStack {
                 BackButton()
-                    .environmentObject(appState)
                 Spacer()
             }
             .padding(.horizontal, 20)
         }
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(.gray, lineWidth: 1)
-                    .frame(width: 55, height: 55)
-                    .overlay {
-                        LikeButton(enabled: product.isFavorite ?? false)
-                    }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(Color.Colors.Fills.quinary)
+                HStack(spacing: 14) {
+                    // RoundedRectangle(cornerRadius: 10)
+                    //     .stroke(.gray, lineWidth: 1)
+                    //     .frame(width: 55, height: 55)
+                    //     .overlay {
+                    //         LikeButton(enabled: product.isFavorite ?? false)
+                    //     }
 
-                Button {
-                    if !bag.bagProducts.contains(where: { bagProduct in
-                        bagProduct.product.id == product.id
-                    }) {
-                        bag.bagProducts.append(BagProduct(product: product, quantity: count))
-                        bag.totalItems += count
-                    } else {
-                        // Get the index of the existing product that matches product being added
-                        let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
+                    LikeButton(enabled: product.isFavorite ?? false, size: 40, outlined: true)
+
+                    Button {
+                        if !bag.bagProducts.contains(where: { bagProduct in
                             bagProduct.product.id == product.id
+                        }) {
+                            bag.bagProducts.append(BagProduct(product: product, quantity: count))
+                            bag.totalItems += count
+                        } else {
+                            let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
+                                bagProduct.product.id == product.id
+                            }
+                            guard let i = indexOfExisting else {
+                                print("Failed to get local index of existing product")
+                                return
+                            }
+                            bag.bagProducts[i].quantity += count
+                            bag.totalItems += count
                         }
-                        // If the index was not found, return
-                        guard let i = indexOfExisting else {
-                            print("Failed to get local index of existing product")
-                            return
+
+                        if !bag.categories.contains(where: { category in
+                            category == product.categoryId
+                        }) {
+                            bag.categories.append(product.categoryId)
                         }
-                        bag.bagProducts[i].quantity += count
-                        bag.totalItems += count
-                    }
 
-                    if !bag.categories.contains(where: { category in
-                        category == product.categoryId
-                    }) {
-                        bag.categories.append(product.categoryId)
+                        print(bag.bagProducts)
+                    } label: {
+                        Text("Add to bag")
                     }
-
-                    print(bag.bagProducts)
-                } label: {
-                    Text("Add to bag")
+                    .buttonStyle(PrimaryButton(width: .infinity, height: 55))
                 }
-                .buttonStyle(PrimaryButton(width: .infinity))
+                .padding(.vertical, 16)
+                .padding(.horizontal, 20)
+                .background {
+                    Color.white.ignoresSafeArea()
+                }
             }
-            .padding([.top, .leading, .trailing])
-            .background {
-                Color.white.ignoresSafeArea()
-            }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
         }
     }
 }

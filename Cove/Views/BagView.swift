@@ -106,27 +106,32 @@ struct BagView: View {
             }
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Total")
-                        .font(Font.custom("Poppins-Regular", size: 14))
-                        .foregroundStyle(Color.Colors.Fills.tertiary)
-                    Text("$\(bag.total)")
-                        .font(Font.custom("Poppins-SemiBold", size: 20))
-                        .foregroundStyle(Color.Colors.Brand.accent)
-                }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(Color.Colors.Fills.quinary)
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Total")
+                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .foregroundStyle(Color.Colors.Fills.tertiary)
+                        Text("$\(bag.total)")
+                            .font(Font.custom("Poppins-SemiBold", size: 20))
+                            .foregroundStyle(Color.Colors.Brand.accent)
+                    }
 
-                Button {} label: {
-                    Text("Proceed to checkout")
+                    Button {} label: {
+                        Text("Proceed to checkout")
+                    }
+                    .buttonStyle(PrimaryButton(width: .infinity))
                 }
-                .buttonStyle(PrimaryButton(width: .infinity))
+                .padding(.vertical, 16)
+                .padding(.horizontal, 20)
+                .background {
+                    Color.white.ignoresSafeArea()
+                }
             }
-            .padding()
-            .background {
-                Color.white.ignoresSafeArea()
-            }
-            .overlay(Rectangle().frame(height: 1).padding(.top, -1).foregroundStyle(Color.Colors.Fills.quinary), alignment: .top)
         }
         .onAppear {
             bag.total = 0

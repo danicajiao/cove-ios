@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  lint:
-    name: Lint
+  ci:
+    name: CI
     runs-on: macos-26
 
     steps:

@@ -4,29 +4,43 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'Cove/**'
-      - '.github/workflows/ci-pr.yml'
 
 jobs:
-  lint:
-    name: Lint
+  lint-and-validate:
+    name: Lint & Validate
     runs-on: macos-26
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check for Swift file changes
+        id: swift-changes
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.swift$' || true)
+          if [ -z "$CHANGED" ]; then
+            echo "No Swift files changed — skipping lint."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install SwiftLint
+        if: steps.swift-changes.outputs.skip != 'true'
         run: brew install swiftlint
 
       - name: Run SwiftFormat (lint only)
+        if: steps.swift-changes.outputs.skip != 'true'
         run: swiftformat --lint .
 
       - name: Run SwiftLint
+        if: steps.swift-changes.outputs.skip != 'true'
         run: swiftlint lint --strict
 
       - name: Check for merge conflict markers
+        if: steps.swift-changes.outputs.skip != 'true'
         run: |
           if grep -r "^<<<<<<< \|^=======$\|^>>>>>>> " Cove/ --include="*.swift"; then
             echo "❌ Merge conflict markers found!"

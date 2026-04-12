@@ -30,6 +30,14 @@ Parse the Figma URL to extract `fileKey` and `nodeId`:
 - URL format: `figma.com/design/:fileKey/:name?node-id=:int1-:int2`
 - Convert `node-id` dashes to colons: `3361-1941` → `3361:1941`
 
+**Immediately after reading the issue**, rename the branch to follow naming convention:
+
+```bash
+git branch -m feature/<issue-number>-<short-description>
+```
+
+Do this before any file writes. The branch name is how the dependency gate hook identifies which issue is active — if the branch isn't renamed first, the hook can't check dependencies.
+
 ### 2. Get the Design from Figma
 
 Call `mcp__plugin_figma_figma__get_design_context` with the extracted `fileKey` and `nodeId`. This is the primary source of truth for the implementation. Also call `mcp__plugin_figma_figma__get_screenshot` to have a visual reference for the PR.
@@ -136,7 +144,9 @@ Use `mcp__plugin_github_github__issue_write` with `method: "update"` to write th
 
 ### 6. Create a Branch and PR
 
-1. Create a feature branch: `git checkout -b feature/<issue-number>-<short-description>`
+This agent runs in an isolated git worktree — a branch has already been created by the harness. Do not run `git checkout -b`.
+
+1. Rename the current branch to follow naming convention: `git branch -m feature/<issue-number>-<short-description>`
 2. Stage and commit the new/modified files
 3. Push the branch
 4. Create a PR using `mcp__plugin_github_github__create_pull_request` with:

@@ -49,7 +49,6 @@ jobs:
           echo "✓ No merge conflict markers"
 
       - name: Validate Info.plist
-        if: steps.swift-changes.outputs.skip != 'true'
         run: |
           plutil -lint "Cove/Supporting Files/Info.plist"
           echo "✓ Info.plist is valid"

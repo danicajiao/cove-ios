@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  ci:
-    name: CI
+  lint-and-validate:
+    name: Lint & Validate
     runs-on: macos-26
 
     steps:

@@ -144,3 +144,6 @@ ExportOptions.plist
 
 ### Claude hooks ###
 .claude/.dep-cleared-*
+
+### Claude worktrees ###
+.claude/worktrees/

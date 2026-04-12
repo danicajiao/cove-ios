@@ -167,6 +167,28 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 
 ---
 
+## Agent Pipeline
+
+The issues you create are the top of a multi-agent pipeline. Once an issue is created, an agent (or human) picks it up and works on it in an isolated git worktree — a separate branch and directory spun up by the harness.
+
+**How sub-issues flow downstream:**
+
+- `ui/ux + figma` sub-issues → picked up by the `figma-ui-implementer` agent, which reads the issue body as its spec, implements the view in a worktree, and creates a PR that closes the issue
+- The branch the agent works on is named after the issue: `feature/<issue-id>-<short-description>`
+- The PR description contains `Closes #<issue-id>`, which auto-closes the issue on merge
+
+**What this means for issue quality:**
+
+The issue body is the agent's only spec inside the worktree. Write it accordingly:
+
+- **Acceptance Criteria** must be complete and checkable — the agent ticks these off before creating the PR
+- **Technical Notes** must include the Figma frame URL (for `ui/ux + figma` issues), relevant file paths, and patterns to follow
+- **Dependencies** must name the blocking issue number — the agent uses this to know whether to stub data or wait
+
+Vague issues produce vague implementations. The more precise the issue, the better the agent's output.
+
+---
+
 ## Project Context
 
 Swift/SwiftUI iOS app with Firebase backend:

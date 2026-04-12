@@ -141,3 +141,6 @@ ExportOptions.plist
 # Gemfile.lock for Bundler (not needed in repo)
 # Uncomment if you want to track Gemfile.lock
 # Gemfile.lock
+
+### Claude hooks ###
+.claude/.dep-cleared-*

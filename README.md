@@ -62,6 +62,12 @@ In order to make best use of GitHubs auto-referencing feature, pull request titl
 
 This will then auto-link the PR to the issue(s) and will close them once the PR is merged.
 
+### AI Agents
+
+This project uses Claude Code agents to automate development tasks — implementing Figma designs as SwiftUI views, planning GitHub issues, and maintaining documentation. Each agent runs in an isolated git worktree, so multiple agents can work on the codebase simultaneously without interfering with each other. Every agent task produces a PR that goes through the same review and CI process as human contributions.
+
+Agents are defined in `.claude/agents/`. See the individual agent files for their workflows and responsibilities.
+
 ### CI/CD
 This project uses automated CI/CD workflows for iOS app deployment:
 - **PR Checks**: Linting runs automatically on every pull request

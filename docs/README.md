@@ -29,7 +29,8 @@ Welcome to the documentation for the Cove iOS app.
   - GitHub Personal Access Token
 
 ### Architecture (Planned)
-- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned hybrid SQL, NoSQL & GraphQL backend
+- **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - Planned infrastructure: K3s, GCP API Gateway, Cloudflare Tunnel, migration phases
+- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: hybrid SQL, NoSQL & GraphQL backend
 - **[Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md)** - Planned category hierarchy and filtering system
 
 ### Feature Planning
@@ -55,7 +56,10 @@ Welcome to the documentation for the Cove iOS app.
 ### Something in CI/CD isn't working
 → See Troubleshooting section in [CI/CD Workflows](CI_CD_WORKFLOWS.md)
 
-### I want to understand the planned backend
+### I want to understand the planned backend infrastructure
+→ Read [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)
+
+### I want to understand the planned data layer
 → Read [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)
 
 ---

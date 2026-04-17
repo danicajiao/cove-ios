@@ -12,15 +12,16 @@ Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through
 
 ```
 Cove/
-├── Supporting Files/     # App entry point, Info.plist, GoogleService-Info.plist
+├── Supporting Files/     # App entry point (CoveApp.swift), Info.plist
 ├── Models/               # Data models and global state (AppState, Bag, Product types)
+│                         #   Also defines Path, AuthState, AuthMethod enums (in AppState.swift)
 ├── View Models/          # Business logic and Firestore access
 ├── Views/                # SwiftUI views organized by feature
 │   ├── Profile/          # ProfileHeaderView, StatsRowView, ProfileRowView
 │   └── ...               # HomeView, BagView, ProductDetailView, auth views
 ├── Components/           # Reusable UI components (ProductCardView, LikeButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
-├── Enums/                # ProductTypes, AuthMethod, AuthState, Path
+├── Enums/                # ProductTypes
 └── Resources/            # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
 
@@ -58,6 +59,8 @@ enum Path: Hashable {
     case welcome
     case login
     case signup
+    case main
+    case home
     case product(id: String)   // Product detail navigation within tabs
 }
 ```

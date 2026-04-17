@@ -11,6 +11,7 @@ struct LikeButton: View {
     @State var enabled: Bool
     var size: CGFloat = 26
     var outlined: Bool = false
+    var onToggle: (() -> Void)? = nil
     @State private var pressed = false
     @State private var scale = 1.0
 
@@ -47,6 +48,7 @@ struct LikeButton: View {
                     scale = 1.0
                 }
                 enabled.toggle()
+                onToggle?()
             }
         }, perform: {})
     }

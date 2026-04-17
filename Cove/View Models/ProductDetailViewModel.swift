@@ -47,42 +47,71 @@ class ProductDetailViewModel: ObservableObject {
         let firestore = Firestore.firestore()
 
         do {
-            // Fetch the product document from Firestore
             let snapshot = try await firestore.collection("products").document(id).getDocument()
 
-            // Check if document exists
             guard snapshot.exists else {
                 print("Product with id \(id) does not exist")
                 return
             }
 
-            // Get the categoryId to determine the product type
             guard let categoryId = snapshot["categoryId"] as? String else {
                 print("Product document missing categoryId field")
                 return
             }
 
-            // Decode based on product type
             if categoryId == ProductTypes.coffee.rawValue {
                 let coffeeProduct = try snapshot.data(as: CoffeeProduct.self)
-                await MainActor.run {
-                    self.product = coffeeProduct
-                }
+                await MainActor.run { self.product = coffeeProduct }
             } else if categoryId == ProductTypes.music.rawValue {
                 let musicProduct = try snapshot.data(as: MusicProduct.self)
-                await MainActor.run {
-                    self.product = musicProduct
-                }
+                await MainActor.run { self.product = musicProduct }
             } else if categoryId == ProductTypes.apparel.rawValue {
                 let apparelProduct = try snapshot.data(as: ApparelProduct.self)
-                await MainActor.run {
-                    self.product = apparelProduct
-                }
+                await MainActor.run { self.product = apparelProduct }
             } else {
                 print("Unknown product category: \(categoryId)")
             }
+
+            await fetchFavoriteStatus(for: id)
         } catch {
             print("Error fetching product: \(error)")
+        }
+    }
+
+    private func fetchFavoriteStatus(for productId: String) async {
+        guard let user = Auth.auth().currentUser else { return }
+        let firestore = Firestore.firestore()
+        do {
+            let snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
+                .whereField("productId", isEqualTo: productId)
+                .getDocuments()
+            let isFavorite = !snapshot.documents.isEmpty
+            await MainActor.run { self.product?.isFavorite = isFavorite }
+        } catch {
+            print("Error fetching favorite status: \(error)")
+        }
+    }
+
+    func toggleFavorite() async {
+        guard let productId = product?.id else { return }
+        guard let user = Auth.auth().currentUser else { return }
+
+        let isCurrentlyFavorited = product?.isFavorite == true
+        let firestore = Firestore.firestore()
+        let favoritesRef = firestore.collection("users").document(user.uid).collection("favorites")
+
+        do {
+            if isCurrentlyFavorited {
+                let snapshot = try await favoritesRef.whereField("productId", isEqualTo: productId).getDocuments()
+                for document in snapshot.documents {
+                    try await document.reference.delete()
+                }
+            } else {
+                try await favoritesRef.addDocument(from: FavoriteProduct(productId: productId))
+            }
+            await MainActor.run { self.product?.isFavorite = !isCurrentlyFavorited }
+        } catch {
+            print("Error toggling favorite: \(error)")
         }
     }
 

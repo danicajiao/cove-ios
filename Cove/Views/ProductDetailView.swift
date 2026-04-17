@@ -241,7 +241,9 @@ private struct ProductDetailContent: View {
                     //         LikeButton(enabled: product.isFavorite ?? false)
                     //     }
 
-                    LikeButton(enabled: product.isFavorite ?? false, size: 40, outlined: true)
+                    LikeButton(enabled: product.isFavorite ?? false, size: 40, outlined: true, onToggle: {
+                        Task { await viewModel.toggleFavorite() }
+                    })
 
                     Button {
                         if !bag.bagProducts.contains(where: { bagProduct in

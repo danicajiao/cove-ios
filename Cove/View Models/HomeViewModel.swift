@@ -13,7 +13,12 @@ import FirebaseStorage
 class HomeViewModel: ObservableObject {
     @Published var products = [any Product]()
     @Published var brands = [Brand]()
+    @Published var hasMoreProducts = true
+    @Published var isLoadingMore = false
     var fetchedProductIds = [String]()
+
+    private let pageSize = 20
+    private var lastDocument: DocumentSnapshot?
 
     let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
     let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
@@ -50,40 +55,70 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    /// Fetches products from Firebase and populates the products array used in the HomeView
+    /// Fetches the first page of products from Firebase. No-ops if products are already loaded.
     func fetchProducts() async throws {
-        if !products.isEmpty { return }
+        guard products.isEmpty else { return }
 
-        print("Fetching products...")
-        fetchedProductIds = [String]()
+        fetchedProductIds = []
+        lastDocument = nil
+        hasMoreProducts = true
+
+        try await loadPage()
+    }
+
+    /// Fetches the next page of products and appends them to the products array.
+    func fetchMoreProducts() async throws {
+        guard hasMoreProducts, !isLoadingMore else { return }
+
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+
+        try await loadPage()
+    }
+
+    private func loadPage() async throws {
+        print("Fetching products (page \(products.count / pageSize + 1))...")
         let firestore = Firestore.firestore()
 
         do {
-            var snapshot = try await firestore.collection("products").getDocuments()
+            var query = firestore.collection("products")
+                .order(by: "createdAt", descending: true)
+                .limit(to: pageSize)
 
-            var products: [any Product] = snapshot.documents.compactMap { document in
+            if let lastDocument {
+                query = query.start(afterDocument: lastDocument)
+            }
+
+            let snapshot = try await query.getDocuments()
+
+            var newProducts: [any Product] = snapshot.documents.compactMap { document in
                 guard let product = decodeProduct(from: document) else { return nil }
                 fetchedProductIds.append(document.documentID)
                 return product
             }
 
-            if products.isEmpty {
-                print("No products returned from request")
+            if newProducts.isEmpty {
+                hasMoreProducts = false
                 return
             }
+
+            hasMoreProducts = snapshot.documents.count == pageSize
+            lastDocument = snapshot.documents.last
 
             guard let user = Auth.auth().currentUser else {
                 print("Failed to get signed in user to fetch favorites")
+                self.products.append(contentsOf: newProducts)
                 return
             }
 
-            snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
-                .whereField("productId", in: fetchedProductIds)
+            let newIds = newProducts.compactMap { $0.id }
+            let favSnapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
+                .whereField("productId", in: newIds)
                 .getDocuments()
 
-            try applyFavorites(to: &products, snapshot: snapshot)
+            try applyFavorites(to: &newProducts, snapshot: favSnapshot)
 
-            self.products = products
+            self.products.append(contentsOf: newProducts)
         } catch {
             print(error)
             throw error

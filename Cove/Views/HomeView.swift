@@ -86,7 +86,17 @@ struct HomeView: View {
                         ) {
                             ForEach(viewModel.products, id: \.id) { product in
                                 ProductCardView(product: product)
+                                    .onAppear {
+                                        if product.id == viewModel.products.last?.id {
+                                            Task { try? await viewModel.fetchMoreProducts() }
+                                        }
+                                    }
                             }
+                        }
+
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .padding(.top, 8)
                         }
                     }
 

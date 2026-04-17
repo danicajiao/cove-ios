@@ -139,11 +139,16 @@ struct HomeView: View {
         }
 //        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
+        .refreshable {
+            try? await viewModel.fetchProducts(forceRefresh: true)
+            try? await viewModel.fetchBrands()
+        }
         .onAppear {
             print("homeView appeared")
             Task {
                 try await viewModel.fetchProducts()
                 try await viewModel.fetchBrands()
+                try await viewModel.refreshFavorites()
             }
         }
     }

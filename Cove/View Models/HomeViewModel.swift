@@ -18,6 +18,9 @@ class HomeViewModel: ObservableObject {
     let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
     let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
 
+    private var lastFetchTime: Date?
+    private let cacheTimeout: TimeInterval = 300
+
     private func decodeProduct(from document: QueryDocumentSnapshot) -> (any Product)? {
         let categoryId = document["categoryId"] as? String
         do {
@@ -49,12 +52,28 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    func refreshFavorites() async throws {
+        guard !fetchedProductIds.isEmpty else { return }
+        guard let user = Auth.auth().currentUser else { return }
+
+        let firestore = Firestore.firestore()
+        let snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
+            .whereField("productId", in: fetchedProductIds)
+            .getDocuments()
+
+        for i in products.indices {
+            products[i].isFavorite = false
+        }
+        applyFavorites(to: &products, snapshot: snapshot)
+    }
+
     /// Fetches products from Firebase and populates the products array used in the HomeView
-    func fetchProducts() async throws {
-        if !products.isEmpty { return }
+    func fetchProducts(forceRefresh: Bool = false) async throws {
+        let cacheExpired = lastFetchTime.map { Date().timeIntervalSince($0) > cacheTimeout } ?? true
+        guard products.isEmpty || forceRefresh || cacheExpired else { return }
 
         print("Fetching products...")
-        fetchedProductIds = [String]()
+        fetchedProductIds = []
         let firestore = Firestore.firestore()
 
         do {
@@ -83,6 +102,7 @@ class HomeViewModel: ObservableObject {
             applyFavorites(to: &products, snapshot: snapshot)
 
             self.products = products
+            lastFetchTime = Date()
         } catch {
             print(error)
             throw error

@@ -34,18 +34,17 @@ class HomeViewModel: ObservableObject {
         return nil
     }
 
-    private func applyFavorites(to products: inout [any Product], snapshot: QuerySnapshot) throws {
+    private func applyFavorites(to products: inout [any Product], snapshot: QuerySnapshot) {
         for document in snapshot.documents {
             do {
                 let favoriteProduct = try document.data(as: FavoriteProduct.self)
                 guard let index = products.firstIndex(where: { $0.id == favoriteProduct.productId }) else {
-                    print("Failed to get local index of favorite product")
-                    return
+                    print("Failed to get local index of favorite product: \(favoriteProduct.productId)")
+                    continue
                 }
                 products[index].isFavorite = true
             } catch {
-                print(error)
-                throw error
+                print("Failed to decode favorite: \(error)")
             }
         }
     }
@@ -81,7 +80,7 @@ class HomeViewModel: ObservableObject {
                 .whereField("productId", in: fetchedProductIds)
                 .getDocuments()
 
-            try applyFavorites(to: &products, snapshot: snapshot)
+            applyFavorites(to: &products, snapshot: snapshot)
 
             self.products = products
         } catch {

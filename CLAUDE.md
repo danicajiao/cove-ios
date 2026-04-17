@@ -49,7 +49,7 @@ Add ProfileViewModel with Firebase Auth user data
 - **Views** (`Views/`, `Components/`): SwiftUI only, no business logic
 - **ViewModels** (`View Models/`): `ObservableObject`, marked `@MainActor`, one per major view
 - **Models** (`Models/`): Data structures and global state (e.g. `AppState`, `Bag`)
-- **Enums** (`Enums/`): Shared enum types (`ProductTypes`, `AuthState`, `Path`)
+- **Enums** (`Enums/`): Shared enum types (`ProductTypes`); note that `AuthState`, `AuthMethod`, and `Path` are currently defined in `Models/AppState.swift`
 - **Styles** (`Styles/`): Custom `PrimitiveButtonStyle` implementations
 
 ### Naming

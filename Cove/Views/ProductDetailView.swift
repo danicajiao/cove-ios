@@ -242,7 +242,7 @@ private struct ProductDetailContent: View {
                     //     }
 
                     if let productId = product.id {
-                        LikeButton(productId: productId, size: 40, outlined: true)
+                        LikeButton(productId: productId, categoryId: product.categoryId, size: 40, outlined: true)
                     }
 
                     Button {

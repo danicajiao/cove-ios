@@ -54,7 +54,7 @@ struct ProductCardView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
 
-                LikeButton(productId: productId)
+                LikeButton(productId: productId, categoryId: product.categoryId)
                     .padding(10)
             } else {
                 cardContent

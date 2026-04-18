@@ -11,6 +11,7 @@ import FirebaseFirestore
 @MainActor
 class FavoritesStore: ObservableObject {
     @Published private(set) var favoriteIds: Set<String> = []
+    @Published private(set) var isTogglingFavorite: Bool = false
 
     private var authListener: AuthStateDidChangeListenerHandle?
 
@@ -48,8 +49,16 @@ class FavoritesStore: ObservableObject {
         }
     }
 
-    func toggle(_ productId: String) async {
-        guard let user = Auth.auth().currentUser else { return }
+    func toggle(_ productId: String, categoryId: String) async {
+        guard let user = Auth.auth().currentUser else {
+            print("FavoritesStore.toggle: no authenticated user, skipping")
+            return
+        }
+
+        guard !isTogglingFavorite else { return }
+        isTogglingFavorite = true
+        defer { isTogglingFavorite = false }
+
         let wasFavorite = favoriteIds.contains(productId)
 
         if wasFavorite {
@@ -68,7 +77,7 @@ class FavoritesStore: ObservableObject {
                     try await document.reference.delete()
                 }
             } else {
-                try await favoritesRef.addDocument(from: FavoriteProduct(productId: productId))
+                try await favoritesRef.addDocument(from: FavoriteProduct(productId: productId, categoryId: categoryId))
             }
         } catch {
             print("Error toggling favorite: \(error)")

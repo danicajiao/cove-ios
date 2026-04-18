@@ -66,6 +66,9 @@ struct ProductCardView: View {
             LikeButton(enabled: favorited)
                 // .shadow(color: .dropShadow, radius: 20)
                 .padding(10)
+                .onChange(of: product.isFavorite) { _, newValue in
+                    favorited = newValue ?? false
+                }
         }
     }
 

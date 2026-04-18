@@ -5,7 +5,6 @@
 //  Created by Daniel Cajiao on 4/9/23.
 //
 
-import FirebaseAuth
 import FirebaseFirestore
 
 class ProductDetailViewModel: ObservableObject {
@@ -13,7 +12,6 @@ class ProductDetailViewModel: ObservableObject {
     @Published var productDetails: ProductDetails?
     @Published var detailSelection: DetailSelection
     @Published var similarProducts: [any Product]
-    var fetchedProductIds = [String]()
 
     enum DetailSelection {
         case description
@@ -47,37 +45,27 @@ class ProductDetailViewModel: ObservableObject {
         let firestore = Firestore.firestore()
 
         do {
-            // Fetch the product document from Firestore
             let snapshot = try await firestore.collection("products").document(id).getDocument()
 
-            // Check if document exists
             guard snapshot.exists else {
                 print("Product with id \(id) does not exist")
                 return
             }
 
-            // Get the categoryId to determine the product type
             guard let categoryId = snapshot["categoryId"] as? String else {
                 print("Product document missing categoryId field")
                 return
             }
 
-            // Decode based on product type
             if categoryId == ProductTypes.coffee.rawValue {
                 let coffeeProduct = try snapshot.data(as: CoffeeProduct.self)
-                await MainActor.run {
-                    self.product = coffeeProduct
-                }
+                await MainActor.run { self.product = coffeeProduct }
             } else if categoryId == ProductTypes.music.rawValue {
                 let musicProduct = try snapshot.data(as: MusicProduct.self)
-                await MainActor.run {
-                    self.product = musicProduct
-                }
+                await MainActor.run { self.product = musicProduct }
             } else if categoryId == ProductTypes.apparel.rawValue {
                 let apparelProduct = try snapshot.data(as: ApparelProduct.self)
-                await MainActor.run {
-                    self.product = apparelProduct
-                }
+                await MainActor.run { self.product = apparelProduct }
             } else {
                 print("Unknown product category: \(categoryId)")
             }
@@ -141,61 +129,27 @@ class ProductDetailViewModel: ObservableObject {
         return nil
     }
 
-    private func applyFavorites(to products: inout [any Product], snapshot: QuerySnapshot) throws {
-        for document in snapshot.documents {
-            do {
-                let favoriteProduct = try document.data(as: FavoriteProduct.self)
-                guard let index = products.firstIndex(where: { $0.id == favoriteProduct.productId }) else {
-                    print("Failed to get local index of favorite product")
-                    return
-                }
-                products[index].isFavorite = true
-            } catch {
-                print(error)
-                throw error
-            }
-        }
-    }
-
-    /// Fetches products from Firebase and populates the products array used in the HomeView
     func fetchSimilarProducts() async throws {
         if !similarProducts.isEmpty { return }
         guard let product else { return }
 
         print("Fetching similar products...")
-        fetchedProductIds = [String]()
         let firestore = Firestore.firestore()
 
         do {
-            var snapshot = try await firestore.collection("products")
+            let snapshot = try await firestore.collection("products")
                 .whereField("categoryId", isEqualTo: product.categoryId)
                 .limit(to: 5)
                 .getDocuments()
 
-            var products: [any Product] = snapshot.documents.compactMap { document in
-                guard let decoded = decodeProduct(from: document) else { return nil }
-                fetchedProductIds.append(document.documentID)
-                return decoded
-            }
+            let products: [any Product] = snapshot.documents.compactMap { decodeProduct(from: $0) }
 
             if products.isEmpty {
                 print("No products returned from request")
                 return
             }
 
-            guard let user = Auth.auth().currentUser else {
-                print("Failed to get signed in user to fetch favorites")
-                return
-            }
-
-            snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
-                .whereField("productId", in: fetchedProductIds)
-                .getDocuments()
-
-            try applyFavorites(to: &products, snapshot: snapshot)
-
-            let sendableProducts = products
-            await MainActor.run(body: { self.similarProducts = sendableProducts })
+            await MainActor.run { self.similarProducts = products }
         } catch {
             print(error)
             throw error

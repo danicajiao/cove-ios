@@ -44,6 +44,7 @@ struct CoveApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject var appState = AppState()
     @StateObject var bag = Bag()
+    @StateObject var favoritesStore = FavoritesStore()
     @StateObject private var networkMonitor = NetworkMonitor()
 
     @State var text: String = ""
@@ -88,6 +89,7 @@ struct CoveApp: App {
                 }
             }
             .environmentObject(appState)
+            .environmentObject(favoritesStore)
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
             }

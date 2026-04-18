@@ -148,7 +148,6 @@ struct HomeView: View {
             Task {
                 try await viewModel.fetchProducts()
                 try await viewModel.fetchBrands()
-                try await viewModel.refreshFavorites()
             }
         }
     }

@@ -22,16 +22,11 @@ struct ProductCardView: View {
     var subtitleStr: String = "Subtitle"
     var price: Float = 9
 
-    @State var favorited: Bool
     @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
 
     init(product: any Product) {
         self.product = product
-
-//        print("ProductCardView init: \(String(describing: product.id)) favorite: \(String(describing: product.isFavorite))")
-
-        _favorited = State(initialValue: product.isFavorite ?? false)
 
         if let coffeeProduct = product as? CoffeeProduct {
             // product is a CoffeeProduct
@@ -58,17 +53,12 @@ struct ProductCardView: View {
                     cardContent
                 }
                 .buttonStyle(PlainButtonStyle())
+
+                LikeButton(productId: productId)
+                    .padding(10)
             } else {
-                // If no product ID, show card without navigation
                 cardContent
             }
-
-            LikeButton(enabled: favorited)
-                // .shadow(color: .dropShadow, radius: 20)
-                .padding(10)
-                .onChange(of: product.isFavorite) { _, newValue in
-                    favorited = newValue ?? false
-                }
         }
     }
 

@@ -5,7 +5,6 @@
 //  Created by Daniel Cajiao on 4/9/23.
 //
 
-import FirebaseAuth
 import FirebaseFirestore
 
 class ProductDetailViewModel: ObservableObject {
@@ -13,7 +12,6 @@ class ProductDetailViewModel: ObservableObject {
     @Published var productDetails: ProductDetails?
     @Published var detailSelection: DetailSelection
     @Published var similarProducts: [any Product]
-    var fetchedProductIds = [String]()
 
     enum DetailSelection {
         case description
@@ -71,47 +69,8 @@ class ProductDetailViewModel: ObservableObject {
             } else {
                 print("Unknown product category: \(categoryId)")
             }
-
-            await fetchFavoriteStatus(for: id)
         } catch {
             print("Error fetching product: \(error)")
-        }
-    }
-
-    private func fetchFavoriteStatus(for productId: String) async {
-        guard let user = Auth.auth().currentUser else { return }
-        let firestore = Firestore.firestore()
-        do {
-            let snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
-                .whereField("productId", isEqualTo: productId)
-                .getDocuments()
-            let isFavorite = !snapshot.documents.isEmpty
-            await MainActor.run { self.product?.isFavorite = isFavorite }
-        } catch {
-            print("Error fetching favorite status: \(error)")
-        }
-    }
-
-    func toggleFavorite() async {
-        guard let productId = product?.id else { return }
-        guard let user = Auth.auth().currentUser else { return }
-
-        let isCurrentlyFavorited = product?.isFavorite == true
-        let firestore = Firestore.firestore()
-        let favoritesRef = firestore.collection("users").document(user.uid).collection("favorites")
-
-        do {
-            if isCurrentlyFavorited {
-                let snapshot = try await favoritesRef.whereField("productId", isEqualTo: productId).getDocuments()
-                for document in snapshot.documents {
-                    try await document.reference.delete()
-                }
-            } else {
-                try await favoritesRef.addDocument(from: FavoriteProduct(productId: productId))
-            }
-            await MainActor.run { self.product?.isFavorite = !isCurrentlyFavorited }
-        } catch {
-            print("Error toggling favorite: \(error)")
         }
     }
 
@@ -170,61 +129,27 @@ class ProductDetailViewModel: ObservableObject {
         return nil
     }
 
-    private func applyFavorites(to products: inout [any Product], snapshot: QuerySnapshot) throws {
-        for document in snapshot.documents {
-            do {
-                let favoriteProduct = try document.data(as: FavoriteProduct.self)
-                guard let index = products.firstIndex(where: { $0.id == favoriteProduct.productId }) else {
-                    print("Failed to get local index of favorite product")
-                    return
-                }
-                products[index].isFavorite = true
-            } catch {
-                print(error)
-                throw error
-            }
-        }
-    }
-
-    /// Fetches products from Firebase and populates the products array used in the HomeView
     func fetchSimilarProducts() async throws {
         if !similarProducts.isEmpty { return }
         guard let product else { return }
 
         print("Fetching similar products...")
-        fetchedProductIds = [String]()
         let firestore = Firestore.firestore()
 
         do {
-            var snapshot = try await firestore.collection("products")
+            let snapshot = try await firestore.collection("products")
                 .whereField("categoryId", isEqualTo: product.categoryId)
                 .limit(to: 5)
                 .getDocuments()
 
-            var products: [any Product] = snapshot.documents.compactMap { document in
-                guard let decoded = decodeProduct(from: document) else { return nil }
-                fetchedProductIds.append(document.documentID)
-                return decoded
-            }
+            let products: [any Product] = snapshot.documents.compactMap { decodeProduct(from: $0) }
 
             if products.isEmpty {
                 print("No products returned from request")
                 return
             }
 
-            guard let user = Auth.auth().currentUser else {
-                print("Failed to get signed in user to fetch favorites")
-                return
-            }
-
-            snapshot = try await firestore.collection("users").document(user.uid).collection("favorites")
-                .whereField("productId", in: fetchedProductIds)
-                .getDocuments()
-
-            try applyFavorites(to: &products, snapshot: snapshot)
-
-            let sendableProducts = products
-            await MainActor.run(body: { self.similarProducts = sendableProducts })
+            await MainActor.run { self.similarProducts = products }
         } catch {
             print(error)
             throw error

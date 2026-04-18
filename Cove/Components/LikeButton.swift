@@ -8,15 +8,20 @@
 import SwiftUI
 
 struct LikeButton: View {
-    @State var enabled: Bool
+    let productId: String
     var size: CGFloat = 26
     var outlined: Bool = false
-    var onToggle: (() -> Void)? = nil
+
+    @EnvironmentObject private var favoritesStore: FavoritesStore
     @State private var pressed = false
     @State private var scale = 1.0
 
     private var iconSize: CGFloat {
         size * (14.0 / 26.0)
+    }
+
+    private var enabled: Bool {
+        favoritesStore.isFavorite(productId)
     }
 
     func haptic() {
@@ -47,30 +52,8 @@ struct LikeButton: View {
                 withAnimation(.easeOut(duration: 0.3)) {
                     scale = 1.0
                 }
-                enabled.toggle()
-                onToggle?()
+                Task { await favoritesStore.toggle(productId) }
             }
         }, perform: {})
     }
 }
-
-// struct StatefulPreviewWrapper<Value, Content: View>: View {
-//    @State var value: Value
-//    var content: (Binding<Value>) -> Content
-//
-//    var body: some View {
-//        content($value)
-//    }
-//
-//    init(_ value: Value, content: @escaping (Binding<Value>) -> Content) {
-//        self._value = State(wrappedValue: value)
-//        self.content = content
-//    }
-// }
-//
-// struct LikeButton_Previews: PreviewProvider {
-//    static var previews: some View {
-//        StatefulPreviewWrapper(false) { LikeButton(enabled: $0) }
-//        .previewLayout(.sizeThatFits)
-//    }
-// }

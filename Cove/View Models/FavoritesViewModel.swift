@@ -57,8 +57,8 @@ class FavoritesViewModel: ObservableObject {
             }
 
             guard !productIds.isEmpty else {
-                self.favorites = []
-                self.favoriteCount = 0
+                favorites = []
+                favoriteCount = 0
                 return
             }
 
@@ -66,7 +66,7 @@ class FavoritesViewModel: ObservableObject {
 
             for batchStart in stride(from: 0, to: productIds.count, by: 30) {
                 let batchEnd = min(batchStart + 30, productIds.count)
-                let batch = Array(productIds[batchStart..<batchEnd])
+                let batch = Array(productIds[batchStart ..< batchEnd])
 
                 let productsSnapshot = try await firestore
                     .collection("products")
@@ -77,8 +77,8 @@ class FavoritesViewModel: ObservableObject {
                 fetchedProducts.append(contentsOf: batchProducts)
             }
 
-            self.favorites = fetchedProducts
-            self.favoriteCount = fetchedProducts.count
+            favorites = fetchedProducts
+            favoriteCount = fetchedProducts.count
         } catch {
             print(error)
             throw error

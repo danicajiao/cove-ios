@@ -104,7 +104,8 @@ Font.custom("Lato-Regular", size: 14)      // body
 - Indentation: 4 spaces
 - Max line width: 150 characters (SwiftFormat), 200 warning / 250 error (SwiftLint)
 - No semicolons
-- Run SwiftFormat before committing (config in `.swiftformat`)
+- Run `swiftformat .` before committing (config in `.swiftformat`)
+- Run `swiftlint` before committing and resolve any errors
 
 ---
 
@@ -135,22 +136,34 @@ Claude agents run in isolated git worktrees — each agent gets its own director
 ```
 github-project-planner
   └── creates epic + sub-issues on GitHub
-        └── sub-issue (e.g. ui/ux + figma) is picked up by an agent
-              └── harness spins up a worktree: branch claude/<name>, isolated directory
-                    └── agent renames branch: feature/<issue-id>-<desc>
-                          └── agent implements, commits, pushes
-                                └── PR created with "Closes #<issue-id>"
-                                      └── PR merged → issue auto-closed
+        └── creates integration branch: feature/<epic-id>-<description>
+              └── sub-issue is picked up by an agent
+                    └── harness spins up a worktree: branch claude/<name>, isolated directory
+                          └── agent renames branch: feature/<issue-id>-<desc>
+                                └── agent implements, runs swiftformat + swiftlint, commits, pushes
+                                      └── PR created targeting integration branch with "Closes #<issue-id>"
+                                            └── PRs merged into integration branch → tested in main repo
+                                                  └── integration branch PR merged to main → epic closed
 ```
 
 Multiple sub-issues can be in-flight simultaneously, each in its own worktree, each on its own branch. They never touch each other's files.
+
+### Integration branches
+
+Every epic gets an integration branch created by `github-project-planner` at planning time. Sub-issue PRs target this branch instead of `main`, so all changes can be built and tested together before touching `main`.
+
+- Integration branch name follows the same convention: `feature/<epic-id>-<description>`
+- The integration branch is created from `main` at the time the epic is planned
+- A PR from the integration branch to `main` is opened once all sub-issues are merged and tested
 
 ### When you are running as an agent in a worktree
 
 - You are already on an isolated branch (initially named `claude/<worktree-name>`) — do not run `git checkout -b`
 - Rename the branch to follow the naming convention before pushing: `git branch -m <label>/<issue-id>-<description>`
+- Before committing, run `swiftformat .` then `swiftlint` and resolve any errors
 - Commit and push your changes to that branch
-- Open a PR targeting `main` with `Closes #<issue-id>` in the description
+- Open a PR targeting the epic's integration branch (provided in your task prompt) or `main` if there is no epic
+- Include `Closes #<issue-id>` in the PR description
 
 ### Issue-to-agent routing
 

@@ -63,8 +63,26 @@ Present the final plan — including which UI sub-issues have Figma links — an
 
 ### 5. Execute
 1. Create the epic with `mcp__plugin_github_github__issue_write` → capture its `number` and `id`
-2. Create each sub-issue → capture each `id`
-3. Link each sub-issue to the epic with `mcp__plugin_github_github__sub_issue_write` — one at a time, sequentially
+2. Create the integration branch from `main` using the Bash tool:
+   ```bash
+   gh api repos/danicajiao/cove-ios/git/refs \
+     -X POST \
+     -f ref="refs/heads/feature/<epic-number>-<short-description>" \
+     -f sha="$(gh api repos/danicajiao/cove-ios/git/ref/heads/main --jq '.object.sha')"
+   ```
+   The branch name follows the standard convention: `feature/<epic-number>-<short-description>`.
+3. Create each sub-issue → capture each `id`. Include the integration branch name in each sub-issue's **Technical Notes** section so the implementing agent knows where to target its PR.
+4. Link each sub-issue to the epic with `mcp__plugin_github_github__sub_issue_write` — one at a time, sequentially
+5. Open a draft PR from the integration branch to `main` so it's visible and ready for when sub-issues are merged:
+   ```bash
+   gh pr create \
+     --repo danicajiao/cove-ios \
+     --title "<Epic Title>" \
+     --body "Integration branch for epic #<epic-number>. Merge after all sub-issues are merged and tested.\n\nCloses #<epic-number>" \
+     --base main \
+     --head feature/<epic-number>-<short-description> \
+     --draft
+   ```
 
 ---
 
@@ -175,7 +193,9 @@ The issues you create are the top of a multi-agent pipeline. Once an issue is cr
 
 - `ui/ux + figma` sub-issues → picked up by the `figma-ui-implementer` agent, which reads the issue body as its spec, implements the view in a worktree, and creates a PR that closes the issue
 - The branch the agent works on is named after the issue: `feature/<issue-id>-<short-description>`
+- Sub-issue PRs target the **integration branch** (`feature/<epic-id>-<description>`), not `main` — include the integration branch name in each sub-issue's Technical Notes so agents know where to target
 - The PR description contains `Closes #<issue-id>`, which auto-closes the issue on merge
+- Once all sub-issues are merged into the integration branch, the draft PR from the integration branch to `main` is reviewed, tested, and merged to close the epic
 
 **What this means for issue quality:**
 

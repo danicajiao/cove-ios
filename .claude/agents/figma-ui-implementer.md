@@ -106,7 +106,7 @@ struct <ScreenName>View: View {
 //
 
 import FirebaseFirestore
-import FirebaseAuth
+import FirebaseAuth  // only if Auth.auth() is used directly in this ViewModel
 
 @MainActor
 class <ScreenName>ViewModel: ObservableObject {
@@ -176,11 +176,10 @@ Use `mcp__plugin_github_github__issue_write` with `method: "update"` to write th
 
 ### 8. Create a Branch and PR
 
-This agent runs in an isolated git worktree — a branch has already been created by the harness. Do not run `git checkout -b`.
+This agent runs in an isolated git worktree — the branch was already renamed in Step 1. Do not run `git branch -m` again here.
 
-1. Rename the current branch to follow naming convention: `git branch -m feature/<issue-number>-<short-description>`
-2. Stage and commit the new/modified files
-3. Push the branch
+1. Stage and commit the new/modified files
+2. Push the branch
 4. Create a PR using `mcp__plugin_github_github__create_pull_request` with:
    - Title referencing the issue: `[#<number>] Implement <Screen Name> UI`
    - Body that includes:

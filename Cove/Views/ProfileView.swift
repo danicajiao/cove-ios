@@ -47,7 +47,6 @@ struct ProfileView: View {
         .confirmationDialog("Confirm Log Out", isPresented: $presentAlert) {
             Button("Log out", role: .destructive) {
                 appState.logOut()
-                appState.path.removeAll()
             }
             Button("Cancel", role: .cancel) {}
         } message: {

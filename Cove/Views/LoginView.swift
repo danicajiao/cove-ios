@@ -11,6 +11,8 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject private var appState: AppState
 
+    var onNavigateToSignup: () -> Void
+
     @State private var presentAlert = false
     @State private var errorMessage: String?
 
@@ -132,7 +134,7 @@ struct LoginView: View {
                         .font(.custom("Lato-Regular", size: 14))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
                     Button {
-                        appState.path.append(.signup)
+                        onNavigateToSignup()
                     } label: {
                         Text("Sign up")
                             .font(.custom("Lato-Regular", size: 14))
@@ -149,9 +151,6 @@ struct LoginView: View {
                     .padding(20)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .onAppear {
-                print(appState.path)
-            }
             .onDisappear {
                 email = ""
                 password = ""
@@ -169,7 +168,7 @@ struct LoginView: View {
 struct LoginView_Previews: PreviewProvider {
     static let appState = AppState()
     static var previews: some View {
-        LoginView()
+        LoginView(onNavigateToSignup: {})
             .environmentObject(appState)
     }
 }

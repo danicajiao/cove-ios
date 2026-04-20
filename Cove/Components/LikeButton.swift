@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LikeButton: View {
     let productId: String
+    let categoryId: String
     var size: CGFloat = 26
     var outlined: Bool = false
 
@@ -20,7 +21,7 @@ struct LikeButton: View {
         size * (14.0 / 26.0)
     }
 
-    private var enabled: Bool {
+    private var isFavorited: Bool {
         favoritesStore.isFavorite(productId)
     }
 
@@ -35,11 +36,12 @@ struct LikeButton: View {
                 .frame(width: size, height: size)
                 .foregroundStyle(Color.Colors.Fills.secondary)
                 .overlay(Circle().strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1).opacity(outlined ? 1 : 0))
-            Image(systemName: enabled ? "heart.fill" : "heart")
+            Image(systemName: isFavorited ? "heart.fill" : "heart")
                 .font(.system(size: iconSize))
-                .foregroundStyle(enabled ? .pink : Color.Colors.Strokes.primary)
+                .foregroundStyle(isFavorited ? .pink : Color.Colors.Strokes.primary)
         }
         .scaleEffect(scale)
+        .allowsHitTesting(!favoritesStore.isTogglingFavorite)
         .onLongPressGesture(minimumDuration: 2.5, maximumDistance: .infinity, pressing: { pressing in
             pressed = pressing
             if pressing {
@@ -52,7 +54,7 @@ struct LikeButton: View {
                 withAnimation(.easeOut(duration: 0.3)) {
                     scale = 1.0
                 }
-                Task { await favoritesStore.toggle(productId) }
+                Task { await favoritesStore.toggle(productId, categoryId: categoryId) }
             }
         }, perform: {})
     }

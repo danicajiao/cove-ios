@@ -5,6 +5,7 @@
 //  Created by Daniel Cajiao on 4/18/26.
 //
 
+import FirebaseAuth
 import FirebaseFirestore
 
 @MainActor

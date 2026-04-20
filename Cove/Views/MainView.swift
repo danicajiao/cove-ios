@@ -53,7 +53,7 @@ struct MainView: View {
             .tag("bag")
 
             TabNavigationStack {
-                Text("Favorites View")
+                FavoritesView()
             }
             .onTapGesture {
                 tabState.currentTab = "favorites"

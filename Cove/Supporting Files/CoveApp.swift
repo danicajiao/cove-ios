@@ -73,14 +73,10 @@ struct CoveApp: App {
                         .animation(.default, value: networkMonitor.isConnected)
                         .navigationDestination(for: Path.self) { path in
                             switch path {
-                            case .welcome:
-                                WelcomeView()
                             case .login:
                                 LoginView()
                             case .signup:
                                 SignupView()
-                            case .home:
-                                HomeView()
                             default:
                                 EmptyView()
                             }

@@ -20,7 +20,7 @@ You sync Claude agent definitions to their GitHub Copilot equivalents. Claude ag
 | Claude agent | Copilot agent |
 |---|---|
 | `.claude/agents/github-project-planner.md` | `.github/agents/implementation-planner.agent.md` |
-| `.claude/agents/documentation-validator.md` | `.github/agents/documentation-validator.agent.md` |
+| `.claude/agents/documentation-maintainer.md` | `.github/agents/documentation-validator.agent.md` |
 
 When a Claude agent has no Copilot counterpart, ask the user if one should be created.
 

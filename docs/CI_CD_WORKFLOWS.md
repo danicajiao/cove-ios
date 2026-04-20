@@ -43,9 +43,12 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 **Purpose:** Ensure code quality before merging
 
 **Steps:**
-- ✅ Run SwiftLint (if `.swiftlint.yml` exists)
-- ✅ Check for merge conflict markers
-- ✅ Validate Info.plist format
+- ✅ Detect whether any Swift files changed (skips remaining steps if none changed)
+- ✅ Install SwiftLint (when Swift files changed)
+- ✅ Run SwiftFormat in lint-only mode (when Swift files changed)
+- ✅ Run SwiftLint with `--strict` (when Swift files changed)
+- ✅ Check for merge conflict markers (when Swift files changed)
+- ✅ Validate `Info.plist` format (always runs)
 
 **Configuration:**
 - Runs on macOS-26

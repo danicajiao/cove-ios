@@ -76,7 +76,7 @@ enum Path: Hashable {
 | Home | `HomeView` | Implemented |
 | Browse | Placeholder | Not implemented |
 | Bag | `BagView` | Implemented |
-| Favorites | Placeholder | Not implemented |
+| Favorites | `FavoritesView` | Implemented |
 | Profile | `ProfileView` | Implemented |
 
 ---
@@ -91,6 +91,9 @@ Serves `ProductDetailView`. Initialized with a `productId`, it runs three async 
 
 ### BagViewModel
 Serves `BagView`. Fetches similar product recommendations based on the categories of items currently in the bag. Caches the last queried category list to avoid redundant Firestore calls.
+
+### FavoritesViewModel
+Serves `FavoritesView`. Fetches the current user's favorited products from Firestore in batches of 30 (Firestore `in` query limit). Reads the `users/{uid}/favorites` subcollection to get product IDs, then fetches the corresponding product documents and decodes them by `categoryId` into the correct concrete type. Publishes `favorites: [any Product]` and `isLoading`.
 
 ### ProfileViewModel
 Serves `ProfileView`. Lightweight — all data is derived from `Auth.auth().currentUser` (display name, initials, photo URL, member since date). No Firestore reads, no local state mutations.
@@ -110,6 +113,14 @@ Injected into `MainView` and its children via `.environmentObject`. Owns:
 - `bagProducts: [BagProduct]` — items in the cart with quantities
 - `total: Int` — running total price
 - `categories: [String]` — categoryIds of items in the bag, used to fetch recommendations
+
+### FavoritesStore
+Injected at the root (`CoveApp`) via `.environmentObject` and available throughout the entire app. Owns:
+- `favoriteIds: Set<String>` — the set of favorited product IDs for the current user
+- `isTogglingFavorite: Bool` — prevents concurrent toggle operations
+- Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
+- `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
+- Used by `LikeButton` to read and mutate favorite state across all views
 
 ---
 
@@ -241,7 +252,6 @@ Product images are stored in Firebase Storage. `ProductCardView` fetches them as
 | Feature | Location |
 |---------|----------|
 | Browse tab | Placeholder `Text` in MainView |
-| Favorites tab | Placeholder `Text` in MainView |
 | Search | TextField in HomeView is present but not connected |
 | Checkout | "Proceed to checkout" button in BagView has no action |
 | Reviews | NavigationLink exists in ProductDetailView but no destination |

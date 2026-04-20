@@ -5,76 +5,137 @@
 
 ## About
 
-Cove is my passion project — a curated marketplace of conscious businesses and quality producers. I work on this project to explore native iOS development, UX/UI design, mobile CI/CD, the Google Cloud Platform with Firebase, and AI-assisted development workflows.
+Cove is a curated marketplace of conscious businesses and quality producers — a passion project for exploring native iOS development, UX/UI design, mobile CI/CD, Firebase, and AI-assisted development workflows.
 
-The project also serves as a testbed for agentic development — using AI agents to automate parts of the development process, such as implementing Figma designs directly into SwiftUI and orchestrating multi-step coding tasks from GitHub issues.
+The project also serves as a testbed for agentic development: using AI agents to automate parts of the development process, such as implementing Figma designs directly into SwiftUI and orchestrating multi-step coding tasks from GitHub issues.
 
 ## Tech Stack
 
-- **Platform:** iOS 18+
-- **Language:** Swift / SwiftUI
-- **Backend:** Firebase (Auth, Firestore, Cloud Storage)
-- **CI/CD:** GitHub Actions + Fastlane
+| Layer | Technology |
+|---|---|
+| Platform | iOS 18+ |
+| Language | Swift / SwiftUI |
+| Architecture | MVVM |
+| Backend | Firebase (Auth, Firestore, Cloud Storage) |
+| Dependencies | CocoaPods |
+| CI/CD | GitHub Actions + Fastlane |
 
 ## Getting Started
 
-See [Quick Start Guide](docs/QUICK_START.md) to get the project building locally.
+### Prerequisites
 
-## Design Goals
+- **Xcode 16+** (required for iOS 18 SDK)
+- **CocoaPods** — `sudo gem install cocoapods`
 
-- [x] Log in with popular social providers (Ex. Google, Facebook, etc).
-- [x] Secure account creation with Firebase Authentication.
-- [x] Support for wide range of varying products.
+### Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/danicajiao/cove-ios.git
+cd cove-ios
+
+# 2. Install CocoaPods dependencies
+pod install
+
+# 3. Open the workspace (not the .xcodeproj)
+open Cove.xcworkspace
+```
+
+### Firebase Configuration
+
+The app requires a `GoogleService-Info.plist` to connect to Firebase. This file is not committed to the repository. Request access by opening an issue or contacting the project owner, then place it at:
+
+```
+Cove/Supporting Files/GoogleService-Info.plist
+```
+
+### Build and Run
+
+Select a simulator or connected device in Xcode and press **⌘R**.
+
+For CI/CD setup, see [CI/CD Workflows Documentation](docs/CI_CD_WORKFLOWS.md).
+
+## Project Structure
+
+```
+Cove/
+├── Supporting Files/   # App entry point (CoveApp.swift), Info.plist
+├── Models/             # Data models and global state (AppState, Bag, FavoritesStore)
+├── View Models/        # Business logic and Firestore access
+├── Views/              # SwiftUI views organized by feature
+├── Components/         # Reusable UI components (ProductCardView, LikeButton, etc.)
+├── Styles/             # Custom button styles and view modifiers
+├── Enums/              # Shared enum types (ProductTypes)
+└── Resources/          # Assets, fonts (Gazpacho, Lato), Rive animations
+```
+
+See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how data flows through the app.
+
+## Feature Status
+
+- [x] Sign in with Google, Facebook, or email/password
+- [x] Persistent login state via Firebase Auth
+- [x] Product listings fetched in real-time from Firestore
   - [x] Coffee
   - [x] Music
   - [x] Apparel
-  - [ ] Home
-  - [ ] Beverages
-  - [ ] Tea
-- [x] Persistent login state.
-- [x] Fetch data in real-time from Google Cloud Platform.
-- [x] Ability to favorite products.
-- [ ] Search products and available filters.
-- [ ] Pages for individual stores/businesses/artists.
-- [ ] Stock checking and shipping calculation.
-- [ ] Product and producer promotions.
-- [ ] Product reviews and ratings.
-- [ ] Friend system for seeing what they've reviewed and favorited.
-- [ ] Personalized product recommendations (Based on favorites, and purchase history).
+  - [ ] Home, Beverages, Tea (planned)
+- [x] Product detail view with type-specific tabs (Origin, Tracklist, Specifications)
+- [x] Shopping bag with quantity management and similar product recommendations
+- [x] Favorites — save products and view them in the Favorites tab
+- [ ] Browse tab
+- [ ] Search with filters
+- [ ] Store/brand pages
+- [ ] Checkout and stock checking
+- [ ] Reviews and ratings
+- [ ] Friend system
+- [ ] Personalized recommendations
+
+## Documentation
+
+| Doc | Description |
+|---|---|
+| [Quick Start Guide](docs/QUICK_START.md) | Prerequisites, setup, and troubleshooting |
+| [App Architecture](docs/APP_ARCHITECTURE.md) | MVVM structure, data flows, Firebase model |
+| [CI/CD Workflows](docs/CI_CD_WORKFLOWS.md) | GitHub Actions workflows, Fastlane lanes, versioning |
+| [Secrets Setup](docs/SECRETS_SETUP.md) | Configuring GitHub secrets for CI/CD |
+| [All Docs](docs/README.md) | Full documentation index |
 
 ## Contributing
 
 ### Branching
-This project follows trunk-based development where each branch is tied to an Issue. This projects Issues can be found [here](https://github.com/danicajiao/cove-ios/issues).
 
-For example, to start working on an Issue with id `#14` and label `feature` the convention is to name the branch `feature/14-issue-desc`. That is, all lowercase, starting
-with the label, followed by a forward-slash, then a short description starting with the Issue id in kebab case.
+This project uses trunk-based development. Every branch is tied to a GitHub issue.
 
-Here are some more examples:
-- `feature/21-another-desc`
-- `bug/3-bug-desc`
-- `docs/10-doc-impl`
+Format: `<label>/<issue-id>-<description-in-kebab-case>`
+
+| Label | Use |
+|---|---|
+| `feature/` | New screens or user-facing functionality |
+| `enhancement/` | Improvements to existing features |
+| `bug/` | Bug fixes |
+| `docs/` | Documentation-only changes |
+| `chore/` | Maintenance, config, tooling |
+
+Examples: `feature/21-favorites-view`, `bug/3-fix-login-crash`, `docs/update-readme`
 
 ### Pull Requests
-In order to make best use of GitHubs auto-referencing feature, pull request titles or descriptions should contain keywords like "closes" or "resolves" followed by the Issue number it relates to like follows:
-- `This PR closes #21`
-- `This PR resolves danicajiao/cove-ios#3`
 
-This will then auto-link the PR to the issue(s) and will close them once the PR is merged.
+PR titles or descriptions should include a closing keyword and the issue number so GitHub auto-closes the issue on merge:
+
+```
+Closes #21
+```
+
+### CI
+
+Every PR automatically runs SwiftFormat and SwiftLint checks. Main branch runs a full build and test suite via Fastlane.
 
 ### AI Agents
 
-This project uses Claude Code agents to automate development tasks — implementing Figma designs as SwiftUI views, planning GitHub issues, and maintaining documentation. Each agent runs in an isolated git worktree, so multiple agents can work on the codebase simultaneously without interfering with each other. Every agent task produces a PR that goes through the same review and CI process as human contributions.
+This project uses Claude Code agents to automate development tasks — implementing Figma designs as SwiftUI views, planning GitHub issues, and maintaining documentation. Each agent runs in an isolated git worktree so multiple agents can work simultaneously without conflicts. Every agent task produces a PR that goes through the same review and CI process as human contributions.
 
 Agents are defined in `.claude/agents/`. See the individual agent files for their workflows and responsibilities.
-
-### CI/CD
-This project uses automated CI/CD workflows for iOS app deployment:
-- **PR Checks**: Linting runs automatically on every pull request
-- **TestFlight Deployment**: Manual deployment via workflow dispatch
-- **App Store Submission**: Manual deployment via workflow dispatch
-
-See [CI/CD Workflows Documentation](docs/CI_CD_WORKFLOWS.md) for complete setup and usage instructions.
 
 ## Roadmap
 

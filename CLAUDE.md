@@ -78,7 +78,7 @@ private struct ProductDetailContent: View { ... }
 
 - Use `@StateObject` when the view owns and instantiates the ViewModel
 - Use `@ObservedObject` when passing a ViewModel down to a child component
-- Use `@EnvironmentObject` for global state (`AppState`, `Bag`)
+- Use `@EnvironmentObject` for global state (`AppState`, `Bag`, `FavoritesStore`)
 - Extract large `body` blocks into private structs or computed properties
 - Include `#Preview` at the bottom of every view file
 - Wrap async Firebase calls in `Task { try await viewModel.fetch...() }` inside `.onAppear`

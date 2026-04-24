@@ -23,7 +23,7 @@ struct BagView: View {
             VStack(spacing: 20) {
                 HStack {
                     Text("My Shopping Bag")
-                        .font(Font.custom("Poppins-SemiBold", size: 26))
+                        .font(Font.custom("Lato-Bold", size: 26))
                         .padding(.top, 28)
                     Spacer()
                 }
@@ -35,7 +35,7 @@ struct BagView: View {
                         .overlay {
                             Text("Products you add to your bag can be found here!")
                                 .multilineTextAlignment(.center)
-                                .font(Font.custom("Poppins-Regular", size: 16))
+                                .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Fills.primary)
                                 .padding(50)
                         }
@@ -62,7 +62,7 @@ struct BagView: View {
 
                     HStack {
                         TextField("Insert your coupon code", text: /*@START_MENU_TOKEN@*//*@PLACEHOLDER=Value@*/ .constant("")/*@END_MENU_TOKEN@*/)
-                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .padding([.leading, .trailing])
                             .frame(maxHeight: .infinity)
                             .overlay {
@@ -86,7 +86,7 @@ struct BagView: View {
 
                 if !bag.bagProducts.isEmpty {
                     Text("Other products you might like")
-                        .font(Font.custom("Poppins-SemiBold", size: 18))
+                        .font(Font.custom("Lato-Bold", size: 18))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.leading, .trailing], 20)
 
@@ -114,10 +114,10 @@ struct BagView: View {
                 HStack {
                     VStack(alignment: .leading) {
                         Text("Total")
-                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                         Text("$\(bag.total)")
-                            .font(Font.custom("Poppins-SemiBold", size: 20))
+                            .font(Font.custom("Lato-Bold", size: 20))
                             .foregroundStyle(Color.Colors.Brand.accent)
                     }
 

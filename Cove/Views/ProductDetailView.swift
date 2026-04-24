@@ -24,7 +24,7 @@ struct ProductDetailView: View {
     let productId: String
 
     @State private var uiImage: UIImage?
-    @State private var averageColor: Color = .white // Default background color
+    @State private var averageColor: Color = .Colors.Backgrounds.primary
 
     @State var count: Int = 1
 
@@ -186,7 +186,7 @@ private struct ProductDetailContent: View {
 
                             Circle()
                                 .frame(width: 35, height: 35)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.Colors.Fills.secondary)
                                 .overlay {
                                     Circle()
                                         .frame(width: 30, height: 30)
@@ -194,7 +194,7 @@ private struct ProductDetailContent: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
-                        .background(.white)
+                        .background(Color.Colors.Fills.secondary)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.Colors.Strokes.primary, lineWidth: 1))
                     }
@@ -216,7 +216,7 @@ private struct ProductDetailContent: View {
                 .padding(.top, 30)
                 .padding([.horizontal, .bottom], 20)
                 .background(
-                    Color.white
+                    Color.Colors.Fills.secondary
                         .padding(.bottom, -1000)
                 )
             }
@@ -278,7 +278,7 @@ private struct ProductDetailContent: View {
                 .padding(.vertical, 16)
                 .padding(.horizontal, 20)
                 .background {
-                    Color.white.ignoresSafeArea()
+                    Color.Colors.Fills.secondary.ignoresSafeArea()
                 }
             }
         }

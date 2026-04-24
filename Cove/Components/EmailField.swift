@@ -16,15 +16,15 @@ struct EmailField: View {
             Text("Email")
                 .font(.custom("Lato-Bold", size: 12))
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .foregroundStyle(.black.opacity(0.5))
+                .foregroundStyle(Color.Colors.Text.textTertiary)
             TextField(String("email@example.com"), text: $text)
                 .font(.custom("Lato-Regular", size: 14))
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: 50)
-                .background(Color.white)
+                .background(Color.Colors.Fills.secondary)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.black, lineWidth: 1)
+                        .strokeBorder(Color.Colors.Strokes.primary, lineWidth: 1)
                 )
                 .focused($focus, equals: Field.email)
                 .onTapGesture {

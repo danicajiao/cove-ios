@@ -129,7 +129,7 @@ struct BagView: View {
                 .padding(.vertical, 16)
                 .padding(.horizontal, 20)
                 .background {
-                    Color.white.ignoresSafeArea()
+                    Color.Colors.Fills.secondary.ignoresSafeArea()
                 }
             }
         }

@@ -178,57 +178,44 @@ Font files live in `Cove/Resources/`. Always use `Font.custom()` — never use s
 
 ## Spacing
 
-Based on a **4pt grid**. Spacing tokens are defined in the `Spacing` Figma variable collection but **named Swift constants do not exist yet** — the codebase currently uses raw `CGFloat` values throughout.
+Based on a **4pt grid**. Defined in `Cove/Constants/Spacing.swift` — use the named constants instead of raw values.
 
-> **Pending parity work:** A `Spacing` enum or extension should be added to the Swift codebase so that hardcoded values like `16`, `24`, `32` can be replaced with named constants that match the Figma token names. Until then, annotate raw values with the token name in a comment so the intent is clear and the future refactor is easy to grep for.
-
-| Figma token | Value | Primary use |
-|---|---|---|
-| `spacing/xs` | 4pt | Icon/label gap, tight component internals |
-| `spacing/sm` | 8pt | Label → input gap, icon margins, badge padding |
-| `spacing/md` | 12pt | Between components in a group, cell padding |
-| `spacing/lg` | 16pt | Screen edge inset, row vertical padding, card internals |
-| `spacing/xl` | 20pt | Between form fields, button vertical padding |
-| `spacing/2xl` | 24pt | Card-to-card gap, section breathing room |
-| `spacing/3xl` | 32pt | Major section separators, modal padding |
-| `spacing/4xl` | 48pt | Hero spacing, top-of-screen clearance |
+| Figma token | Swift constant | Value | Primary use |
+|---|---|---|---|
+| `spacing/xs` | `Spacing.xs` | 4pt | Icon/label gap, tight component internals |
+| `spacing/sm` | `Spacing.sm` | 8pt | Label → input gap, icon margins, badge padding |
+| `spacing/md` | `Spacing.md` | 12pt | Between components in a group, cell padding |
+| `spacing/lg` | `Spacing.lg` | 16pt | Screen edge inset, row vertical padding, card internals |
+| `spacing/xl` | `Spacing.xl` | 20pt | Between form fields, button vertical padding |
+| `spacing/2xl` | `Spacing.xxl` | 24pt | Card-to-card gap, section breathing room |
+| `spacing/3xl` | `Spacing.xxxl` | 32pt | Major section separators, modal padding |
+| `spacing/4xl` | `Spacing.xxxxl` | 48pt | Hero spacing, top-of-screen clearance |
 
 ```swift
-// Current practice — annotate raw values with the token name:
-.padding(.horizontal, 16) // spacing/lg
-.padding(.bottom, 24)     // spacing/2xl
-
-// Target state once Swift constants are added:
-// .padding(.horizontal, Spacing.lg)
-// .padding(.bottom, Spacing.x2l)
+.padding(.horizontal, Spacing.lg)
+.padding(.bottom, Spacing.xxl)
+VStack(spacing: Spacing.md) { ... }
 ```
 
 ---
 
 ## Corner Radius
 
-Based on a **2pt step** at smaller sizes. Radius tokens are defined in the `Radius` Figma variable collection but **named Swift constants do not exist yet** — the codebase currently uses raw `CGFloat` values.
+Based on a **2pt step** at smaller sizes. Defined in `Cove/Constants/Radius.swift` — use the named constants instead of raw values.
 
-> **Pending parity work:** A `Radius` enum or extension should be added to match the Figma token names. Until then, annotate raw values with the token name in a comment.
-
-| Figma token | Value | Primary use |
-|---|---|---|
-| `radius/none` | 0pt | Dividers, full-width elements |
-| `radius/xs` | 2pt | Tags, badges, small chips |
-| `radius/sm` | 4pt | Input fields, tooltips |
-| `radius/md` | 8pt | Buttons, list rows, image thumbnails |
-| `radius/lg` | 10pt | Cards, sheets, action menus |
-| `radius/xl` | 16pt | Large cards, modals, featured banners |
-| `radius/full` | 9999pt | Pills, avatar chips, toggle tracks |
+| Figma token | Swift constant | Value | Primary use |
+|---|---|---|---|
+| `radius/none` | `Radius.none` | 0pt | Dividers, full-width elements |
+| `radius/xs` | `Radius.xs` | 2pt | Tags, badges, small chips |
+| `radius/sm` | `Radius.sm` | 4pt | Input fields, tooltips |
+| `radius/md` | `Radius.md` | 8pt | Buttons, list rows, image thumbnails |
+| `radius/lg` | `Radius.lg` | 10pt | Cards, sheets, action menus |
+| `radius/xl` | `Radius.xl` | 16pt | Large cards, modals, featured banners |
+| `radius/full` | `Radius.full` | 9999pt | Pills, avatar chips, toggle tracks |
 
 ```swift
-// Current practice — annotate raw values with the token name:
-.cornerRadius(8)  // radius/md — buttons, rows
-.cornerRadius(10) // radius/lg — cards, sheets
-
-// Target state once Swift constants are added:
-// .cornerRadius(Radius.md)
-// .cornerRadius(Radius.lg)
+.cornerRadius(Radius.md)  // buttons, list rows
+.cornerRadius(Radius.lg)  // cards, sheets
 ```
 
 ---
@@ -307,8 +294,8 @@ Outstanding work to achieve full parity between Figma and Swift:
 
 | Area | Status | Action needed |
 |---|---|---|
-| Spacing constants | ⏳ Pending | Add a `Spacing` enum/extension with named values matching `spacing/*` tokens |
-| Radius constants | ⏳ Pending | Add a `Radius` enum/extension with named values matching `radius/*` tokens |
+| Spacing constants | ✅ Done | `Cove/Constants/Spacing.swift` |
+| Radius constants | ✅ Done | `Cove/Constants/Radius.swift` |
 | Support colors | ⏳ Pending | Add `Colors/Support/` colorsets to the asset catalog for all 9 `support/*` tokens |
 | Color naming drift | ⏳ Pending | Rename Swift colorsets to match updated Figma variable names (`secondary` → `inverse`, `textSecondary` → `textInverse`, brand palette names) |
 | Codebase realignment | ⏳ Pending | Full pass through all Views and Components to replace hardcoded colors, fonts, spacing, and radius values with design system tokens |

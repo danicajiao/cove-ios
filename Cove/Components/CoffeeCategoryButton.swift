@@ -31,7 +31,7 @@ struct CoffeeCategoryButton: View {
                         )
                     )
                 Text(category)
-                    .font(Font.custom("Poppins-Regular", size: 16))
+                    .font(Font.custom("Lato-Regular", size: 16))
                     .offset(x: -32, y: 0)
             }
             .frame(width: 140, height: 65)
@@ -56,7 +56,7 @@ struct CoffeeCategoryButton: View {
                         )
                     )
                 Text(category)
-                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .font(Font.custom("Lato-Regular", size: 14))
                     .offset(x: -32, y: 0)
             }
             .frame(width: 140, height: 65)
@@ -81,7 +81,7 @@ struct CoffeeCategoryButton: View {
                         )
                     )
                 Text(category)
-                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .font(Font.custom("Lato-Regular", size: 14))
                     .offset(x: -32, y: 0)
             }
             .frame(width: 140, height: 65)
@@ -106,7 +106,7 @@ struct CoffeeCategoryButton: View {
                         )
                     )
                 Text(category)
-                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .font(Font.custom("Lato-Regular", size: 14))
                     .offset(x: -32, y: 0)
             }
             .frame(width: 140, height: 65)
@@ -131,7 +131,7 @@ struct CoffeeCategoryButton: View {
                         )
                     )
                 Text(category)
-                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .font(Font.custom("Lato-Regular", size: 14))
                     .offset(x: -32, y: 0)
             }
             .frame(width: 140, height: 65)

@@ -15,6 +15,7 @@ disabled_rules:
 
 identifier_name:
   excluded:
+    - id
     - xs
     - sm
     - md

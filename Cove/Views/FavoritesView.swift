@@ -17,7 +17,7 @@ struct FavoritesView: View {
             VStack(spacing: 20) {
                 HStack {
                     Text("My Favorites")
-                        .font(Font.custom("Poppins-SemiBold", size: 26))
+                        .font(Font.custom("Lato-Bold", size: 26))
                         .padding(.top, 28)
                     Spacer()
                 }
@@ -33,7 +33,7 @@ struct FavoritesView: View {
                         .overlay {
                             Text("Products you save will appear here")
                                 .multilineTextAlignment(.center)
-                                .font(Font.custom("Poppins-Regular", size: 16))
+                                .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Fills.primary)
                                 .padding(50)
                         }

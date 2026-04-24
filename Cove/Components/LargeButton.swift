@@ -22,7 +22,7 @@ struct LargeButton: View {
                 }
                 .overlay(alignment: .topLeading) {
                     Text(category)
-                        .font(Font.custom("Poppins-Regular", size: 14))
+                        .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
                 .frame(width: 140, height: 200)
@@ -38,7 +38,7 @@ struct LargeButton: View {
                 }
                 .overlay(alignment: .topLeading) {
                     Text(category)
-                        .font(Font.custom("Poppins-Regular", size: 14))
+                        .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
                 .frame(width: 140, height: 200)
@@ -55,7 +55,7 @@ struct LargeButton: View {
                 }
                 .overlay(alignment: .topLeading) {
                     Text(category)
-                        .font(Font.custom("Poppins-Regular", size: 14))
+                        .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
                 .frame(width: 140, height: 200)
@@ -73,7 +73,7 @@ struct LargeButton: View {
                 }
                 .overlay(alignment: .topLeading) {
                     Text(category)
-                        .font(Font.custom("Poppins-Regular", size: 14))
+                        .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
                 .background(Color.Colors.Backgrounds.primary)
@@ -91,7 +91,7 @@ struct LargeButton: View {
                 }
                 .overlay(alignment: .topLeading) {
                     Text(category)
-                        .font(Font.custom("Poppins-Regular", size: 14))
+                        .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
                 .background(Color.Colors.Backgrounds.primary)

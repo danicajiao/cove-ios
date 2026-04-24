@@ -17,7 +17,7 @@ import CoreFoundation
 /// Usage:
 /// ```swift
 /// .padding(.horizontal, Spacing.lg)
-/// .padding(.bottom, Spacing.x2l)
+/// .padding(.bottom, Spacing.xxl)
 /// VStack(spacing: Spacing.md) { ... }
 /// ```
 enum Spacing {
@@ -32,9 +32,9 @@ enum Spacing {
     /// 20pt — between form fields, button vertical padding
     static let xl: CGFloat = 20
     /// 24pt — card-to-card gap, section breathing room
-    static let x2l: CGFloat = 24
+    static let xxl: CGFloat = 24
     /// 32pt — major section separators, modal padding
-    static let x3l: CGFloat = 32
+    static let xxxl: CGFloat = 32
     /// 48pt — hero spacing, top-of-screen clearance
-    static let x4l: CGFloat = 48
+    static let xxxxl: CGFloat = 48
 }

@@ -187,13 +187,13 @@ Based on a **4pt grid**. Defined in `Cove/Constants/Spacing.swift` — use the n
 | `spacing/md` | `Spacing.md` | 12pt | Between components in a group, cell padding |
 | `spacing/lg` | `Spacing.lg` | 16pt | Screen edge inset, row vertical padding, card internals |
 | `spacing/xl` | `Spacing.xl` | 20pt | Between form fields, button vertical padding |
-| `spacing/2xl` | `Spacing.x2l` | 24pt | Card-to-card gap, section breathing room |
-| `spacing/3xl` | `Spacing.x3l` | 32pt | Major section separators, modal padding |
-| `spacing/4xl` | `Spacing.x4l` | 48pt | Hero spacing, top-of-screen clearance |
+| `spacing/2xl` | `Spacing.xxl` | 24pt | Card-to-card gap, section breathing room |
+| `spacing/3xl` | `Spacing.xxxl` | 32pt | Major section separators, modal padding |
+| `spacing/4xl` | `Spacing.xxxxl` | 48pt | Hero spacing, top-of-screen clearance |
 
 ```swift
 .padding(.horizontal, Spacing.lg)
-.padding(.bottom, Spacing.x2l)
+.padding(.bottom, Spacing.xxl)
 VStack(spacing: Spacing.md) { ... }
 ```
 

@@ -20,9 +20,6 @@ identifier_name:
     - md
     - lg
     - xl
-    - x2l
-    - x3l
-    - x4l
 
 line_length:
   warning: 200

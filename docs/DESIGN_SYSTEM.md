@@ -124,23 +124,23 @@ Used to tint the coffee category tiles.
 |---|---|---|
 | `feedback/star` | `Color.Colors.Feedback.star` | `#FFC107` — star rating yellow |
 
-### Support *(Figma only — not yet in Swift asset catalog)*
+### Support
 
 Used for alerts, banners, and status indicators.
 
-| Figma variable | Swift (pending) | Value |
+> **Naming note:** The Figma variable is named `support/*/default` but Swift's `default` is a reserved keyword. The Swift colorset uses `fill` instead.
+
+| Figma variable | Swift | Value |
 |---|---|---|
-| `support/success/default` | `Color.Colors.Support.Success.default` | `#8BA96A` — sage |
+| `support/success/default` | `Color.Colors.Support.Success.fill` | `#8BA96A` — sage |
 | `support/success/fg` | `Color.Colors.Support.Success.fg` | `#4A6B35` — dark sage |
 | `support/success/surface` | `Color.Colors.Support.Success.surface` | `#EEF5E8` — light sage |
-| `support/warning/default` | `Color.Colors.Support.Warning.default` | `#FFB557` — amber |
+| `support/warning/default` | `Color.Colors.Support.Warning.fill` | `#FFB557` — amber |
 | `support/warning/fg` | `Color.Colors.Support.Warning.fg` | `#8C5E00` — dark amber |
 | `support/warning/surface` | `Color.Colors.Support.Warning.surface` | `#FFF4E0` — light amber |
-| `support/error/default` | `Color.Colors.Support.Error.default` | `#FF8181` — coral |
+| `support/error/default` | `Color.Colors.Support.Error.fill` | `#FF8181` — coral |
 | `support/error/fg` | `Color.Colors.Support.Error.fg` | `#B83232` — dark coral |
 | `support/error/surface` | `Color.Colors.Support.Error.surface` | `#FFF0F0` — light coral |
-
-When implementing alerts or status UI, add these colorsets to the asset catalog first, then use `Color.Colors.Support.*`.
 
 ### Shadow color
 
@@ -296,7 +296,7 @@ Outstanding work to achieve full parity between Figma and Swift:
 |---|---|---|
 | Spacing constants | ✅ Done | `Cove/Constants/Spacing.swift` |
 | Radius constants | ✅ Done | `Cove/Constants/Radius.swift` |
-| Support colors | ⏳ Pending | Add `Colors/Support/` colorsets to the asset catalog for all 9 `support/*` tokens |
+| Support colors | ✅ Done | `Cove/Resources/Assets.xcassets/Colors/Support/` |
 | Color naming drift | ⏳ Pending | Rename Swift colorsets to match updated Figma variable names (`secondary` → `inverse`, `textSecondary` → `textInverse`, brand palette names) |
 | Codebase realignment | ⏳ Pending | Full pass through all Views and Components to replace hardcoded colors, fonts, spacing, and radius values with design system tokens |
 

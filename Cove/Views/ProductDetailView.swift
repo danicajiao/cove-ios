@@ -142,7 +142,7 @@ private struct ProductDetailContent: View {
                         .frame(maxHeight: 300)
                         .background(
                             Color.Colors.Brand.Palette.blue
-                                .ignoresSafeArea(edges: .top)
+                                .padding(.top, -1000)
                         )
                 } else {
                     ProgressView()
@@ -152,7 +152,7 @@ private struct ProductDetailContent: View {
                         }
                         .background(
                             Color.Colors.Brand.Palette.blue
-                                .ignoresSafeArea(edges: .top)
+                                .padding(.top, -1000)
                         )
                 }
 
@@ -217,7 +217,7 @@ private struct ProductDetailContent: View {
                 .padding([.horizontal, .bottom], 20) // spacing/lg
                 .background(
                     Color.Colors.Fills.secondary
-                        .ignoresSafeArea(edges: .bottom)
+                        .padding(.bottom, -1000)
                 )
             }
         }

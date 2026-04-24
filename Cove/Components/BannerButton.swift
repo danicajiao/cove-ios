@@ -41,7 +41,7 @@ struct BannerButton: View {
                             }
                             .padding(14)
                             .frame(width: geometry.size.height - (11 * 2), height: geometry.size.height - (11 * 2))
-                            .background(.white)
+                            .background(Color.Colors.Fills.secondary)
                             .foregroundStyle(Color.Colors.Fills.primary)
                             .cornerRadius(8)
                         }

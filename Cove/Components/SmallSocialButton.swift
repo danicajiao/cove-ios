@@ -28,13 +28,13 @@ struct SmallSocialButton: View {
 
         switch self.socialType {
         case .apple:
-            color = .black
+            color = Color.Colors.Fills.primary
             imgName = "apple"
         case .facebook:
             color = Color(red: 0.376, green: 0.537, blue: 0.839)
             imgName = "facebook"
         case .google:
-            color = .white
+            color = Color.Colors.Fills.secondary
             imgName = "google"
         }
     }

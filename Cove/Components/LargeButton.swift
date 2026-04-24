@@ -76,7 +76,7 @@ struct LargeButton: View {
                         .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
-                .background(Color(red: 255 / 255, green: 252 / 255, blue: 246 / 255))
+                .background(Color.Colors.Backgrounds.primary)
                 .frame(width: 140, height: 200)
                 .cornerRadius(8)
         default:
@@ -94,7 +94,7 @@ struct LargeButton: View {
                         .font(Font.custom("Lato-Regular", size: 14))
                         .padding(10)
                 }
-                .background(Color(red: 255 / 255, green: 252 / 255, blue: 246 / 255))
+                .background(Color.Colors.Backgrounds.primary)
                 .frame(width: 140, height: 200)
                 .cornerRadius(8)
         }

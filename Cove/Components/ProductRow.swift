@@ -30,10 +30,10 @@ struct ProductRow: View {
 
                 VStack(alignment: .leading) {
                     Text(coffeeProduct.info.name)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.primary)
                     Text(coffeeProduct.info.roastery)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
 
                     Spacer()
@@ -52,7 +52,7 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
-                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .frame(width: 30, height: 20)
 
                         Button {
@@ -79,7 +79,7 @@ struct ProductRow: View {
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(coffeeProduct.defaultPrice)))")
-                        .font(Font.custom("Poppins-SemiBold", size: 16))
+                        .font(Font.custom("Lato-Bold", size: 16))
                         .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }
@@ -101,10 +101,10 @@ struct ProductRow: View {
 
                 VStack(alignment: .leading) {
                     Text(musicProduct.info.album)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.primary)
                     Text(musicProduct.info.artist)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
 
                     Spacer()
@@ -123,7 +123,7 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
-                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .frame(width: 30, height: 20)
 
                         Button {
@@ -150,7 +150,7 @@ struct ProductRow: View {
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(musicProduct.defaultPrice)))")
-                        .font(Font.custom("Poppins-SemiBold", size: 16))
+                        .font(Font.custom("Lato-Bold", size: 16))
                         .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }
@@ -172,10 +172,10 @@ struct ProductRow: View {
 
                 VStack(alignment: .leading) {
                     Text(apparelProduct.info.name)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.primary)
                     Text(apparelProduct.info.brand)
-                        .font(Font.custom("Poppins-Regular", size: 12))
+                        .font(Font.custom("Lato-Regular", size: 12))
                         .foregroundStyle(Color.Colors.Fills.tertiary)
 
                     Spacer()
@@ -194,7 +194,7 @@ struct ProductRow: View {
                         .disabled(bagProduct.quantity == 1 ? true : false)
 
                         Text(String(bagProduct.quantity))
-                            .font(Font.custom("Poppins-Regular", size: 14))
+                            .font(Font.custom("Lato-Regular", size: 14))
                             .frame(width: 30, height: 20)
 
                         Button {
@@ -221,7 +221,7 @@ struct ProductRow: View {
 //                        .frame(width: 20)
                     Spacer()
                     Text("$\(String(Int(apparelProduct.defaultPrice)))")
-                        .font(Font.custom("Poppins-SemiBold", size: 16))
+                        .font(Font.custom("Lato-Bold", size: 16))
                         .foregroundStyle(Color.Colors.Fills.primary)
                 }
             }

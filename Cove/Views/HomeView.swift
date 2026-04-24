@@ -57,7 +57,7 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
 
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 12) { // spacing/md
                             ForEach(viewModel.categories, id: \.self) { category in
                                 SmallCategoryButton(category: category)
                             }
@@ -105,9 +105,9 @@ struct HomeView: View {
                         .padding(.horizontal, 20)
 
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
+                        HStack(spacing: 8) { // spacing/sm
                             ForEach(viewModel.brands, id: \.id) { brand in
-                                VStack(spacing: 5) {
+                                VStack(spacing: 4) { // spacing/xs
                                     Circle()
                                         .fill(Color.Colors.Fills.secondary)
                                         .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
@@ -135,7 +135,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(.top, 30)
+            .padding(.top, 32) // spacing/xxxl
         }
 //        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))

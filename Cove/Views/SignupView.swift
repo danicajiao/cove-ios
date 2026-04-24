@@ -60,11 +60,11 @@ struct SignupView: View {
                                 .foregroundStyle(Color.Colors.Fills.tertiary)
                             Spacer()
                         }
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 8) // spacing/sm
                     }
                 }
 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) { // spacing/sm
                     Button {
                         loading = true
                         appState.emailLogIn(
@@ -102,14 +102,14 @@ struct SignupView: View {
                             .font(.custom("Lato-Regular", size: 14))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 8) // spacing/sm
                 }
 
                 HStack {
                     Capsule()
                         .fill(Color.Colors.Fills.quaternary)
                         .frame(height: 2)
-                        .padding(.leading, 60)
+                        .padding(.leading, 64)
                         .padding(.trailing)
                     Text("OR")
                         .font(.custom("Lato-Regular", size: 12))
@@ -117,12 +117,12 @@ struct SignupView: View {
                     Capsule()
                         .fill(Color.Colors.Fills.quaternary)
                         .frame(height: 2)
-                        .padding(.trailing, 60)
+                        .padding(.trailing, 64)
                         .padding(.leading)
                 }
 
                 // TODO: Add Links to Social Provider Views // swiftlint:disable:this todo
-                HStack(spacing: 30) {
+                HStack(spacing: 32) { // spacing/xxxl
                     SmallSocialButton(socialType: .apple)
                     SmallSocialButton(socialType: .facebook)
                     SmallSocialButton(socialType: .google)

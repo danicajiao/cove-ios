@@ -14,7 +14,7 @@ struct ProfileRowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 14) {
+            HStack(spacing: 16) { // spacing/lg
                 Image(systemName: systemImage)
                     .frame(width: 20)
                     .foregroundStyle(foregroundColor)

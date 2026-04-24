@@ -142,7 +142,7 @@ private struct ProductDetailContent: View {
                         .frame(maxHeight: 300)
                         .background(
                             Color.Colors.Brand.Palette.blue
-                                .padding(.top, -1000)
+                                .ignoresSafeArea(edges: .top)
                         )
                 } else {
                     ProgressView()
@@ -152,7 +152,7 @@ private struct ProductDetailContent: View {
                         }
                         .background(
                             Color.Colors.Brand.Palette.blue
-                                .padding(.top, -1000)
+                                .ignoresSafeArea(edges: .top)
                         )
                 }
 
@@ -171,7 +171,7 @@ private struct ProductDetailContent: View {
 
                     NavigationLink(destination: Text("Item Reviews!")) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 8) { // spacing/sm
                                 HStack {
                                     RatingView(rating: 4)
                                     Text("4.3")
@@ -213,11 +213,11 @@ private struct ProductDetailContent: View {
                     }
                     .scrollClipDisabled()
                 }
-                .padding(.top, 30)
-                .padding([.horizontal, .bottom], 20)
+                .padding(.top, 32) // spacing/xxxl
+                .padding([.horizontal, .bottom], 20) // spacing/lg
                 .background(
                     Color.Colors.Fills.secondary
-                        .padding(.bottom, -1000)
+                        .ignoresSafeArea(edges: .bottom)
                 )
             }
         }
@@ -233,7 +233,7 @@ private struct ProductDetailContent: View {
                 Rectangle()
                     .frame(height: 1)
                     .foregroundStyle(Color.Colors.Fills.quinary)
-                HStack(spacing: 14) {
+                HStack(spacing: 16) { // spacing/lg
                     // RoundedRectangle(cornerRadius: 10)
                     //     .stroke(.gray, lineWidth: 1)
                     //     .frame(width: 55, height: 55)

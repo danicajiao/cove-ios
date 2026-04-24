@@ -36,7 +36,7 @@ private struct StatBox: View {
                 .foregroundStyle(Color.Colors.Fills.tertiary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.vertical, 16) // spacing/lg
         .background(Color.Colors.Backgrounds.secondary)
         .overlay {
             RoundedRectangle(cornerRadius: 10)

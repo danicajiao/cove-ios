@@ -178,7 +178,9 @@ Font files live in `Cove/Resources/`. Always use `Font.custom()` — never use s
 
 ## Spacing
 
-Based on a **4pt grid**. No named Swift constants exist yet — use the raw values. Match to the token name in comments where helpful.
+Based on a **4pt grid**. Spacing tokens are defined in the `Spacing` Figma variable collection but **named Swift constants do not exist yet** — the codebase currently uses raw `CGFloat` values throughout.
+
+> **Pending parity work:** A `Spacing` enum or extension should be added to the Swift codebase so that hardcoded values like `16`, `24`, `32` can be replaced with named constants that match the Figma token names. Until then, annotate raw values with the token name in a comment so the intent is clear and the future refactor is easy to grep for.
 
 | Figma token | Value | Primary use |
 |---|---|---|
@@ -192,16 +194,22 @@ Based on a **4pt grid**. No named Swift constants exist yet — use the raw valu
 | `spacing/4xl` | 48pt | Hero spacing, top-of-screen clearance |
 
 ```swift
-// Until named constants exist, annotate with the token name:
+// Current practice — annotate raw values with the token name:
 .padding(.horizontal, 16) // spacing/lg
 .padding(.bottom, 24)     // spacing/2xl
+
+// Target state once Swift constants are added:
+// .padding(.horizontal, Spacing.lg)
+// .padding(.bottom, Spacing.x2l)
 ```
 
 ---
 
 ## Corner Radius
 
-Based on a **2pt step** at smaller sizes. No named Swift constants exist yet — use raw values.
+Based on a **2pt step** at smaller sizes. Radius tokens are defined in the `Radius` Figma variable collection but **named Swift constants do not exist yet** — the codebase currently uses raw `CGFloat` values.
+
+> **Pending parity work:** A `Radius` enum or extension should be added to match the Figma token names. Until then, annotate raw values with the token name in a comment.
 
 | Figma token | Value | Primary use |
 |---|---|---|
@@ -214,8 +222,13 @@ Based on a **2pt step** at smaller sizes. No named Swift constants exist yet —
 | `radius/full` | 9999pt | Pills, avatar chips, toggle tracks |
 
 ```swift
+// Current practice — annotate raw values with the token name:
 .cornerRadius(8)  // radius/md — buttons, rows
 .cornerRadius(10) // radius/lg — cards, sheets
+
+// Target state once Swift constants are added:
+// .cornerRadius(Radius.md)
+// .cornerRadius(Radius.lg)
 ```
 
 ---
@@ -285,3 +298,27 @@ All components are defined in the **Components page** of the Figma file. Views s
 - Use Poppins: `Font.custom("Poppins-Regular", ...)` ✗
 - Use pure black or white: `Color.black` / `Color.white` ✗ — use `fills/primary` and `fills/inverse`
 - Detach Figma component instances before implementing
+
+---
+
+## Roadmap & Known Gaps
+
+Outstanding work to achieve full parity between Figma and Swift:
+
+| Area | Status | Action needed |
+|---|---|---|
+| Spacing constants | ⏳ Pending | Add a `Spacing` enum/extension with named values matching `spacing/*` tokens |
+| Radius constants | ⏳ Pending | Add a `Radius` enum/extension with named values matching `radius/*` tokens |
+| Support colors | ⏳ Pending | Add `Colors/Support/` colorsets to the asset catalog for all 9 `support/*` tokens |
+| Color naming drift | ⏳ Pending | Rename Swift colorsets to match updated Figma variable names (`secondary` → `inverse`, `textSecondary` → `textInverse`, brand palette names) |
+| Codebase realignment | ⏳ Pending | Full pass through all Views and Components to replace hardcoded colors, fonts, spacing, and radius values with design system tokens |
+
+### Codebase realignment pass
+
+The next major design system milestone is a full sweep of the codebase to bring all existing UI code into alignment with these tokens. This includes:
+
+- Replace any remaining hardcoded colors with `Color.Colors.*`
+- Replace any remaining raw spacing values with annotated constants (and eventually named `Spacing.*` calls)
+- Replace any remaining raw corner radius values with annotated constants
+- Replace any remaining `Poppins` font references with `Lato`
+- Verify all views use component instances rather than inline reimplementations

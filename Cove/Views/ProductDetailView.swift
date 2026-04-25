@@ -171,7 +171,7 @@ private struct ProductDetailContent: View {
 
                     NavigationLink(destination: Text("Item Reviews!")) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 8) { // spacing/sm
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
                                 HStack {
                                     RatingView(rating: 4)
                                     Text("4.3")
@@ -213,8 +213,8 @@ private struct ProductDetailContent: View {
                     }
                     .scrollClipDisabled()
                 }
-                .padding(.top, 32) // spacing/xxxl
-                .padding([.horizontal, .bottom], 20) // spacing/lg
+                .padding(.top, Spacing.xxxl)
+                .padding([.horizontal, .bottom], Spacing.lg)
                 .background(
                     Color.Colors.Fills.secondary
                         .padding(.bottom, -1000)
@@ -233,7 +233,7 @@ private struct ProductDetailContent: View {
                 Rectangle()
                     .frame(height: 1)
                     .foregroundStyle(Color.Colors.Fills.quinary)
-                HStack(spacing: 16) { // spacing/lg
+                HStack(spacing: Spacing.lg) {
                     // RoundedRectangle(cornerRadius: 10)
                     //     .stroke(.gray, lineWidth: 1)
                     //     .frame(width: 55, height: 55)

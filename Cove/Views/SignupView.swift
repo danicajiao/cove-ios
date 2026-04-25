@@ -60,11 +60,11 @@ struct SignupView: View {
                                 .foregroundStyle(Color.Colors.Fills.tertiary)
                             Spacer()
                         }
-                        .padding(.horizontal, 8) // spacing/sm
+                        .padding(.horizontal, Spacing.sm)
                     }
                 }
 
-                VStack(spacing: 8) { // spacing/sm
+                VStack(spacing: Spacing.sm) {
                     Button {
                         loading = true
                         appState.emailLogIn(
@@ -102,7 +102,7 @@ struct SignupView: View {
                             .font(.custom("Lato-Regular", size: 14))
                             .foregroundStyle(Color.Colors.Fills.tertiary)
                     }
-                    .padding(.horizontal, 8) // spacing/sm
+                    .padding(.horizontal, Spacing.sm)
                 }
 
                 HStack {
@@ -122,7 +122,7 @@ struct SignupView: View {
                 }
 
                 // TODO: Add Links to Social Provider Views // swiftlint:disable:this todo
-                HStack(spacing: 32) { // spacing/xxxl
+                HStack(spacing: Spacing.xxxl) {
                     SmallSocialButton(socialType: .apple)
                     SmallSocialButton(socialType: .facebook)
                     SmallSocialButton(socialType: .google)

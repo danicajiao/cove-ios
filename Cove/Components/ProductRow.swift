@@ -20,7 +20,7 @@ struct ProductRow: View {
                         .background {
                             Color.Colors.Backgrounds.secondary
                         }
-                        .cornerRadius(10)
+                        .cornerRadius(Radius.lg)
                 } placeholder: {
                     ProgressView()
                 }
@@ -91,7 +91,7 @@ struct ProductRow: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .cornerRadius(10)
+                        .cornerRadius(Radius.lg)
                 } placeholder: {
                     ProgressView()
                 }
@@ -162,7 +162,7 @@ struct ProductRow: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .cornerRadius(10)
+                        .cornerRadius(Radius.lg)
                 } placeholder: {
                     ProgressView()
                 }

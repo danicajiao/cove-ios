@@ -39,9 +39,10 @@ struct ProfileView: View {
                         )
                     }
                 }
+                .padding(.horizontal, Spacing.xl)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 30)
+            .padding(.top, Spacing.xxxl)
+            .padding(.bottom, Spacing.xl)
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .confirmationDialog("Confirm Log Out", isPresented: $presentAlert) {

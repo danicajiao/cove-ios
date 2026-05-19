@@ -11,6 +11,10 @@ on:
     paths:
       - 'apps/cove-api/**'
       - '.github/workflows/services-ci.yml'
+  # Allows manually triggering a build+push from any branch.
+  # Useful for bootstrapping GAR before the integration branch merges to main,
+  # or for emergency re-deploys.
+  workflow_dispatch:
 
 jobs:
   # ── cove-api ──────────────────────────────────────────────────────────────
@@ -41,21 +45,21 @@ jobs:
         run: go vet ./...
 
       # Authenticate to GCP using Workload Identity Federation.
-      # Only runs on pushes to main (not PRs) since only main pushes
-      # need to push images to Artifact Registry.
+      # Runs on pushes to main and on manual workflow_dispatch triggers.
+      # Does not run on PRs — PRs only build the image to verify it compiles.
       - name: Authenticate to Google Cloud
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
 
       - name: Configure Docker for Artifact Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Build and push image (main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Build and push image (main / manual)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v6
         with:
           context: apps/cove-api

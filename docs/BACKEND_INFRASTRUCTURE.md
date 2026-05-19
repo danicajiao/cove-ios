@@ -177,7 +177,7 @@ GCP Workload Identity Federation
 Short-lived GCP access token (expires in 1 hour)
     │
     ▼
-Artifact Registry push (us-central1-docker.pkg.dev/cove/services/*)
+Artifact Registry push (us-central1-docker.pkg.dev/cove-6a685/services/*)
 ```
 
 ### One-time GCP setup
@@ -303,10 +303,10 @@ At that point Option C (internal JWT signed with a cluster secret) provides defe
 Images are stored in Google Artifact Registry under the `cove-6a685` project:
 
 ```
-us-central1-docker.pkg.dev/cove/services/cove-gateway:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-image:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-product:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-user:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-gateway:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-product:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-user:sha-abc1234
 ```
 
 Tags use the Git commit SHA (not `latest`) so every deployed version is traceable. The staging overlay pins the `sha-*` tag from the most recent CI build; the prod overlay promotes the same tag after staging validation.

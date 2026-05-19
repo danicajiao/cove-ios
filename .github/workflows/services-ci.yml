@@ -64,7 +64,7 @@ jobs:
         with:
           context: apps/cove-api
           push: true
-          tags: us-central1-docker.pkg.dev/cove/services/cove-api:sha-${{ github.sha }}
+          tags: us-central1-docker.pkg.dev/cove-6a685/services/cove-api:sha-${{ github.sha }}
           build-args: COMMIT_SHA=${{ github.sha }}
 
       # On PRs: build only (no push) to verify the Dockerfile and that the

@@ -31,7 +31,7 @@ final class FirebaseImageRepository: ImageRepository {
         guard snapshot.exists,
               let urlString = snapshot["defaultImageURL"] as? String
         else {
-            throw APIError.notFound
+            throw RepositoryError.notFound
         }
 
         let ref = storage.reference(forURL: urlString)

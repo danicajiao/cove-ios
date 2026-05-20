@@ -20,7 +20,7 @@ protocol ImageRepository {
     ///
     /// - Parameter productId: The unique product identifier whose image is needed.
     /// - Returns: A `URL` suitable for passing to `AsyncImage(url:)`.
-    /// - Throws: `APIError.notFound` when no image is registered for `productId`,
-    ///   or a transport/auth error if the URL must be fetched from a remote source.
+    /// - Throws: `RepositoryError.notFound` when no image is registered for `productId`,
+    ///   or a transport error if the URL must be fetched from a remote source.
     func imageURL(for productId: String) async throws -> URL
 }

@@ -1,3 +1,14 @@
+# iOS copy of the cove-api OpenAPI spec.
+#
+# Source of truth: apps/cove-api/api/openapi.yaml
+#
+# This file is NOT auto-synced. When the gateway spec changes, copy it over
+# manually and update CoveAPIClient.swift to match any new or changed types:
+#
+#   cp apps/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
+#
+# The build plugin regenerates Types.swift and Client.swift from this file
+# every time it changes. Generated files land in DerivedData — never here.
 openapi: "3.1.0"
 
 info:

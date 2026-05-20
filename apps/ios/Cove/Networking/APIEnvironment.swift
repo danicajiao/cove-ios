@@ -21,10 +21,6 @@ import Foundation
 /// a recompile, replace `current` with an Info.plist lookup and add a
 /// `API_BASE_URL` key to each scheme's Run configuration.
 ///
-/// ## Staging URL
-///
-/// The staging URL below is a placeholder — confirm the actual hostname when the
-/// staging Cloudflare Tunnel is provisioned in Phase 1.
 enum APIEnvironment {
     case staging
     case production
@@ -34,10 +30,8 @@ enum APIEnvironment {
     var baseURL: URL {
         switch self {
         case .staging:
-            // Placeholder — confirm hostname when Phase 1 staging Cloudflare Tunnel is provisioned.
-            // Candidate: https://staging.api.coveapp.dev
             // swiftlint:disable:next force_unwrapping
-            URL(string: "https://staging.api.coveapp.dev")!
+            URL(string: "https://api.staging.coveapp.dev")!
         case .production:
             // swiftlint:disable:next force_unwrapping
             URL(string: "https://api.coveapp.dev")!

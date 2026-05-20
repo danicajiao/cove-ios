@@ -190,6 +190,17 @@ GitHub's `Closes #<issue-id>` keyword in the PR body is the standard linking mec
 
 The REST API `issue` parameter (`gh api ... -F issue=<id>`) converts an issue into a PR (same number, title/body carry over), but GitHub blocks this for any issue that has a parent/sub-issue relationship — which is every issue in this repo. The GraphQL API has no mutation for setting Development links either. Manual UI linking or `Closes #X` against main are the only two mechanisms that work.
 
+### Cross-repo references
+
+This project spans two repos: `danicajiao/cove` (app + services) and `danicajiao/homelab` (infrastructure). A bare `#number` in any PR or issue body always resolves within the repo it lives in. **Always use the fully qualified `owner/repo#number` format when referencing across repos.**
+
+| Situation | Correct | Wrong |
+|---|---|---|
+| Referencing a homelab PR from a cove PR | `danicajiao/homelab#28` | `#28` |
+| Referencing a cove issue from a homelab PR | `danicajiao/cove#234` | `#234` |
+
+Note: `Closes owner/repo#N` does **not** auto-close cross-repo — GitHub only auto-closes issues in the same repo. Cross-repo references are documentation only.
+
 ### Issue dependency linking
 
 Use the GitHub issue dependencies API to formally mark which issues block which. This shows a "Blocked by #X" indicator in the issue sidebar — more visible than a line in the body, and machine-readable.

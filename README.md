@@ -139,6 +139,15 @@ PR titles or descriptions should include a closing keyword and the issue number 
 Closes #21
 ```
 
+This project spans two repos (`danicajiao/cove` and `danicajiao/homelab`). When referencing an issue or PR in the other repo, always use the fully qualified format so GitHub links it correctly:
+
+```
+danicajiao/homelab#28   ← referencing a homelab PR from cove
+danicajiao/cove#234     ← referencing a cove issue from homelab
+```
+
+Note: `Closes owner/repo#N` does not auto-close cross-repo — GitHub only auto-closes within the same repo.
+
 ### CI
 
 Every PR automatically runs SwiftFormat and SwiftLint checks. Main branch runs a full build and test suite via Fastlane.

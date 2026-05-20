@@ -31,7 +31,7 @@ enum APIEnvironment {
         switch self {
         case .staging:
             // swiftlint:disable:next force_unwrapping
-            URL(string: "https://api.staging.coveapp.dev")!
+            URL(string: "https://staging-api.coveapp.dev")!
         case .production:
             // swiftlint:disable:next force_unwrapping
             URL(string: "https://api.coveapp.dev")!

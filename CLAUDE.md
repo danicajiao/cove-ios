@@ -24,6 +24,29 @@ See `docs/` for architecture details: `APP_ARCHITECTURE.md`, `QUICK_START.md`, `
 
 ---
 
+## Git Workflow
+
+### Switching branches
+
+Always `git pull` immediately after switching to an existing branch — integration branches, `main`, and long-lived feature branches all receive commits from other contributors and agents. Starting work on a stale branch causes unnecessary conflicts.
+
+```bash
+git checkout feature/228-phase-1-gateway
+git pull  # always — before touching anything
+```
+
+### Creating branches
+
+Always set the remote upstream when pushing a new branch for the first time (`-u`). This lets subsequent `git pull` and `git push` calls work without specifying the remote explicitly.
+
+```bash
+git checkout -b feature/123-my-feature
+# ... commit changes ...
+git push -u origin feature/123-my-feature  # -u on first push, always
+```
+
+---
+
 ## Branch Naming
 
 Format: `<label>/<issue-id>-<description-in-kebab-case>`
@@ -189,6 +212,17 @@ This rule applies to every agent **and** to the main session. If the MCP propaga
 GitHub's `Closes #<issue-id>` keyword in the PR body is the standard linking mechanism. When the PR targets `main` it auto-closes the issue and populates the Development sidebar automatically. When targeting an integration branch, the keyword is documentation only — the formal Development sidebar link requires a manual step in the GitHub UI (gear icon in the Development section of the PR).
 
 The REST API `issue` parameter (`gh api ... -F issue=<id>`) converts an issue into a PR (same number, title/body carry over), but GitHub blocks this for any issue that has a parent/sub-issue relationship — which is every issue in this repo. The GraphQL API has no mutation for setting Development links either. Manual UI linking or `Closes #X` against main are the only two mechanisms that work.
+
+### Cross-repo references
+
+This project spans two repos: `danicajiao/cove` (app + services) and `danicajiao/homelab` (infrastructure). A bare `#number` in any PR or issue body always resolves within the repo it lives in. **Always use the fully qualified `owner/repo#number` format when referencing across repos.**
+
+| Situation | Correct | Wrong |
+|---|---|---|
+| Referencing a homelab PR from a cove PR | `danicajiao/homelab#28` | `#28` |
+| Referencing a cove issue from a homelab PR | `danicajiao/cove#234` | `#234` |
+
+Note: `Closes owner/repo#N` does **not** auto-close cross-repo — GitHub only auto-closes issues in the same repo. Cross-repo references are documentation only.
 
 ### Issue dependency linking
 

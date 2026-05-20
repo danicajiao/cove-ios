@@ -40,9 +40,9 @@ git pull  # always — before touching anything
 Always set the remote upstream when pushing a new branch for the first time (`-u`). This lets subsequent `git pull` and `git push` calls work without specifying the remote explicitly.
 
 ```bash
-git checkout -b feature/123-my-feature
+git checkout -b feature/COVE-123-my-feature
 # ... commit changes ...
-git push -u origin feature/123-my-feature  # -u on first push, always
+git push -u origin feature/COVE-123-my-feature  # -u on first push, always
 ```
 
 ---
@@ -181,7 +181,7 @@ github-project-planner
         └── (optional) creates integration branch: feature/<epic-id>-<description>
               └── sub-issue is picked up by an agent
                     └── harness spins up a worktree: branch claude/<name>, isolated directory
-                          └── agent renames branch: feature/<issue-id>-<desc>
+                          └── agent renames branch: feature/COVE-<issue-id>-<desc>
                                 └── agent implements, runs swiftformat + swiftlint from the affected app dir, commits, pushes
                                       └── PR created targeting integration branch (or main) with "Closes #<issue-id>"
                                             └── PRs merged into integration branch → tested
@@ -209,7 +209,7 @@ This rule applies to every agent **and** to the main session. If the MCP propaga
 ### When you are running as an agent in a worktree
 
 - You are already on an isolated branch (initially named `claude/<worktree-name>`) — do not run `git checkout -b`
-- Rename the branch to follow the naming convention before pushing: `git branch -m <label>/<issue-id>-<description>`
+- Rename the branch to follow the naming convention before pushing: `git branch -m <label>/COVE-<issue-id>-<description>`
 - For iOS work: `cd apps/ios` before running `swiftformat .` and `swiftlint`
 - Commit and push your changes to that branch
 - Open a PR targeting the epic's integration branch (provided in your task prompt) or `main` if there is no epic

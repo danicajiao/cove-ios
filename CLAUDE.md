@@ -40,16 +40,21 @@ git pull  # always — before touching anything
 Always set the remote upstream when pushing a new branch for the first time (`-u`). This lets subsequent `git pull` and `git push` calls work without specifying the remote explicitly.
 
 ```bash
-git checkout -b feature/123-my-feature
+git checkout -b feature/COVE-123-my-feature
 # ... commit changes ...
-git push -u origin feature/123-my-feature  # -u on first push, always
+git push -u origin feature/COVE-123-my-feature  # -u on first push, always
 ```
 
 ---
 
 ## Branch Naming
 
-Format: `<label>/<issue-id>-<description-in-kebab-case>`
+Format: `<label>/<REPO>-<issue-number>-<short-description-in-kebab-case>`
+
+When no GitHub issue exists for the change, omit the `<REPO>-<issue-number>` segment:
+`<label>/<short-description-in-kebab-case>`
+
+The `<REPO>` prefix is always ALL CAPS and identifies which repo's issue tracker the number comes from. For this repo all issues live in `COVE` (`danicajiao/cove`). If a branch is opened in `danicajiao/homelab` for a cove issue, the prefix is still `COVE`.
 
 | Label | Use |
 |---|---|
@@ -59,11 +64,14 @@ Format: `<label>/<issue-id>-<description-in-kebab-case>`
 | `docs/` | Documentation-only changes |
 | `chore/` | Maintenance, config, tooling |
 
-Examples:
-- `feature/137-profile-view-model`
-- `enhancement/66-improve-tab-navigation`
-- `bug/3-fix-login-crash`
+Examples — with issue:
+- `feature/COVE-137-profile-view-model`
+- `enhancement/COVE-66-improve-tab-navigation`
+- `bug/COVE-3-fix-login-crash`
+
+Examples — no issue (off-cycle fixes):
 - `docs/update-readme`
+- `chore/bump-cloudflared-2026-6`
 
 ---
 
@@ -173,7 +181,7 @@ github-project-planner
         └── (optional) creates integration branch: feature/<epic-id>-<description>
               └── sub-issue is picked up by an agent
                     └── harness spins up a worktree: branch claude/<name>, isolated directory
-                          └── agent renames branch: feature/<issue-id>-<desc>
+                          └── agent renames branch: feature/COVE-<issue-id>-<desc>
                                 └── agent implements, runs swiftformat + swiftlint from the affected app dir, commits, pushes
                                       └── PR created targeting integration branch (or main) with "Closes #<issue-id>"
                                             └── PRs merged into integration branch → tested
@@ -201,7 +209,7 @@ This rule applies to every agent **and** to the main session. If the MCP propaga
 ### When you are running as an agent in a worktree
 
 - You are already on an isolated branch (initially named `claude/<worktree-name>`) — do not run `git checkout -b`
-- Rename the branch to follow the naming convention before pushing: `git branch -m <label>/<issue-id>-<description>`
+- Rename the branch to follow the naming convention before pushing: `git branch -m <label>/COVE-<issue-id>-<description>`
 - For iOS work: `cd apps/ios` before running `swiftformat .` and `swiftlint`
 - Commit and push your changes to that branch
 - Open a PR targeting the epic's integration branch (provided in your task prompt) or `main` if there is no epic

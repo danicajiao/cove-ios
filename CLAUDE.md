@@ -24,6 +24,29 @@ See `docs/` for architecture details: `APP_ARCHITECTURE.md`, `QUICK_START.md`, `
 
 ---
 
+## Git Workflow
+
+### Switching branches
+
+Always `git pull` immediately after switching to an existing branch — integration branches, `main`, and long-lived feature branches all receive commits from other contributors and agents. Starting work on a stale branch causes unnecessary conflicts.
+
+```bash
+git checkout feature/228-phase-1-gateway
+git pull  # always — before touching anything
+```
+
+### Creating branches
+
+Always set the remote upstream when pushing a new branch for the first time (`-u`). This lets subsequent `git pull` and `git push` calls work without specifying the remote explicitly.
+
+```bash
+git checkout -b feature/123-my-feature
+# ... commit changes ...
+git push -u origin feature/123-my-feature  # -u on first push, always
+```
+
+---
+
 ## Branch Naming
 
 Format: `<label>/<issue-id>-<description-in-kebab-case>`

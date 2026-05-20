@@ -49,7 +49,12 @@ git push -u origin feature/123-my-feature  # -u on first push, always
 
 ## Branch Naming
 
-Format: `<label>/<issue-id>-<description-in-kebab-case>`
+Format: `<label>/<REPO>-<issue-number>-<short-description-in-kebab-case>`
+
+When no GitHub issue exists for the change, omit the `<REPO>-<issue-number>` segment:
+`<label>/<short-description-in-kebab-case>`
+
+The `<REPO>` prefix is always ALL CAPS and identifies which repo's issue tracker the number comes from. For this repo all issues live in `COVE` (`danicajiao/cove`). If a branch is opened in `danicajiao/homelab` for a cove issue, the prefix is still `COVE`.
 
 | Label | Use |
 |---|---|
@@ -59,11 +64,14 @@ Format: `<label>/<issue-id>-<description-in-kebab-case>`
 | `docs/` | Documentation-only changes |
 | `chore/` | Maintenance, config, tooling |
 
-Examples:
-- `feature/137-profile-view-model`
-- `enhancement/66-improve-tab-navigation`
-- `bug/3-fix-login-crash`
+Examples — with issue:
+- `feature/COVE-137-profile-view-model`
+- `enhancement/COVE-66-improve-tab-navigation`
+- `bug/COVE-3-fix-login-crash`
+
+Examples — no issue (off-cycle fixes):
 - `docs/update-readme`
+- `chore/bump-cloudflared-2026-6`
 
 ---
 

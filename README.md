@@ -15,10 +15,10 @@ This is a monorepo. Apps, services, and shared packages live under their respect
 
 ```
 cove/
-├── apps/
-│   ├── ios/                # Swift / SwiftUI iOS app (this is what runs in Xcode)
+├── apps/                   # Client applications
+│   └── ios/                # Swift / SwiftUI iOS app (this is what runs in Xcode)
+├── services/               # Backend services
 │   └── cove-api/           # Go gateway service (Phase 1)
-├── services/               # Reserved (README only); backend services live under apps/cove-<name>/
 ├── packages/               # Shared schemas, design tokens (planned)
 └── docs/                   # Cross-cutting product/architecture docs
 ```

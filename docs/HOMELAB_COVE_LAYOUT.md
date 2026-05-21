@@ -53,14 +53,14 @@ homelab/
 
 ## Service source (in the cove monorepo)
 
-Backend services live in the `danicajiao/cove` monorepo under `apps/cove-<name>/`, **not** in separate repos. The `services-ci.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
+Backend services live in the `danicajiao/cove` monorepo under `services/cove-<name>/`, **not** in separate repos. The `services-ci.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
 
 | Service | Path in `danicajiao/cove` | Phase | Sub-issue |
 |---|---|---|---|
-| `cove-api` | `apps/cove-api/` | 1 (shipped) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
-| `cove-image` | `apps/cove-image/` | 2 | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
-| `cove-product` | `apps/cove-product/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
-| `cove-user` | `apps/cove-user/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
+| `cove-api` | `services/cove-api/` | 1 (shipped) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
+| `cove-image` | `services/cove-image/` | 2 | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
+| `cove-product` | `services/cove-product/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
+| `cove-user` | `services/cove-user/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
 
 `cove-api` shipped in Phase 1; the remaining services are added under the same convention as each phase begins.
 

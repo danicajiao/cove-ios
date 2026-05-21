@@ -8,15 +8,15 @@ Cove is a monorepo containing the Cove iOS app and (eventually) a web client, ba
 
 ```
 cove/
-├── apps/
-│   ├── ios/                # Swift / SwiftUI iOS app — see apps/ios/Cove/
-│   └── cove-api/           # Go gateway service (Phase 1) — see apps/cove-api/
-├── services/               # Reserved (README only); backend services live under apps/cove-<name>/
+├── apps/                   # Client applications
+│   └── ios/                # Swift / SwiftUI iOS app — see apps/ios/Cove/
+├── services/               # Backend services
+│   └── cove-api/           # Go gateway service (Phase 1) — see services/cove-api/
 ├── packages/               # Shared code (api-schema, design-tokens — planned)
 └── docs/                   # Cross-cutting product/architecture docs
 ```
 
-Backend services live alongside the iOS app under `apps/` using the `cove-<name>` convention (e.g. `apps/cove-api/`), not under the top-level `services/` directory.
+Backend services live under `services/` using the `cove-<name>` convention (e.g. `services/cove-api/`). `apps/` is reserved for client applications — the iOS app today, a web client later.
 
 **iOS-specific:**
 
@@ -118,16 +118,16 @@ let (data, _) = try await URLSession.shared.data(from: url)
 
 ### OpenAPI spec sync
 
-The iOS copy of the spec lives at `apps/ios/Cove/Networking/Generated/openapi.yaml`. It is **not** auto-synced from `apps/cove-api/api/openapi.yaml`. When the gateway spec changes, copy it manually and regenerate:
+The iOS copy of the spec lives at `apps/ios/Cove/Networking/Generated/openapi.yaml`. It is **not** auto-synced from `services/cove-api/api/openapi.yaml`. When the gateway spec changes, copy it manually and regenerate:
 
 ```bash
-cp apps/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
+cp services/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
 # Then build in Xcode (⌘B) — the plugin regenerates Types.swift and Client.swift
 ```
 
 ### Adding a new gateway endpoint
 
-1. Add the route to `apps/cove-api/api/openapi.yaml`
+1. Add the route to `services/cove-api/api/openapi.yaml`
 2. Copy the updated spec into iOS (command above)
 3. Build — the generated `Client` now has a new method
 4. Add a method to `CoveAPIClient.swift` that calls the generated method and unwraps the response enum into a plain Swift type

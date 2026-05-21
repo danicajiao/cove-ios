@@ -120,7 +120,7 @@ danicajiao/homelab              ← cluster infra (GitOps source for Argo CD)
 
 Each service is built independently — no unified build tool required at this scale. The pattern:
 
-- **Each service has its own `Dockerfile`** at `apps/cove-<service>/Dockerfile`
+- **Each service has its own `Dockerfile`** at `services/cove-<service>/Dockerfile`
 - **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/services-ci.yml`)
 - **iOS** keeps its existing Fastlane CI lane
 - **A root `Makefile`** provides convenience targets for local use. The commit SHA is injected via `--build-arg` so the `/health` endpoint can report the running build:
@@ -132,7 +132,7 @@ build-cove-api: ## Build the cove-api Docker image
     docker build \
         --build-arg COMMIT_SHA=$(COMMIT_SHA) \
         -t cove-api:$(COMMIT_SHA) \
-        apps/cove-api/
+        services/cove-api/
 
 build-all: build-cove-api ## Build Docker images for all services
 ```
@@ -354,7 +354,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 Not yet planned in detail; tracked separately. Scope:
 
-- Build `cove-vendor` at `apps/cove-vendor/`
+- Build `cove-vendor` at `services/cove-vendor/`
 - Vendor onboarding flow (multi-step, business verification)
 - Vendor profile management
 - Vendor dashboard API (separate iOS/web surface for producers)

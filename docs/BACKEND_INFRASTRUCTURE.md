@@ -87,6 +87,9 @@ danicajiao/cove                 ← all source code and docs
 │
 ├── apps/
 │   ├── ios/                    ← Swift / SwiftUI iOS app
+│   └── web/                    ← (planned)
+│
+├── services/
 │   ├── cove-api/               ← cove-api gateway service (Phase 1)
 │   ├── cove-image/             ← cove-image service (Phase 2)
 │   ├── cove-product/           ← cove-product service (Phase 3)

@@ -6,11 +6,11 @@ on:
       - main
     paths:
       - 'services/cove-api/**'
-      - '.github/workflows/services-ci.yml'
+      - '.github/workflows/ci-services.yml'
   pull_request:
     paths:
       - 'services/cove-api/**'
-      - '.github/workflows/services-ci.yml'
+      - '.github/workflows/ci-services.yml'
   # Allows manually triggering a build+push from any branch.
   # Useful for bootstrapping GAR before the integration branch merges to main,
   # or for emergency re-deploys.

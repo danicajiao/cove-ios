@@ -7,6 +7,7 @@
 
 import FirebaseAuth
 import Foundation
+import HTTPTypes
 import OpenAPIRuntime
 import OpenAPIURLSession
 

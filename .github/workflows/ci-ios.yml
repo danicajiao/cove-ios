@@ -49,6 +49,10 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Install SwiftLint
+        if: steps.swift-changes.outputs.skip != 'true'
+        run: brew install swiftlint
+
       - name: Run SwiftFormat (lint only)
         if: steps.swift-changes.outputs.skip != 'true'
         run: swiftformat --lint .

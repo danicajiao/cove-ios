@@ -119,7 +119,9 @@ See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how
 
 This project uses trunk-based development. Every branch is tied to a GitHub issue.
 
-Format: `<label>/<issue-id>-<description-in-kebab-case>`
+Format: `<label>/<REPO>-<issue-number>-<short-description>` when a GitHub issue exists, or `<label>/<short-description>` for off-cycle changes with no issue.
+
+The `<REPO>` prefix is ALL CAPS and identifies the issue tracker — always `COVE` for this repo.
 
 | Label | Use |
 |---|---|
@@ -129,7 +131,7 @@ Format: `<label>/<issue-id>-<description-in-kebab-case>`
 | `docs/` | Documentation-only changes |
 | `chore/` | Maintenance, config, tooling |
 
-Examples: `feature/21-favorites-view`, `bug/3-fix-login-crash`, `docs/update-readme`
+Examples: `feature/COVE-21-favorites-view`, `bug/COVE-3-fix-login-crash`, `docs/update-readme`
 
 ### Pull Requests
 
@@ -138,6 +140,15 @@ PR titles or descriptions should include a closing keyword and the issue number 
 ```
 Closes #21
 ```
+
+This project spans two repos (`danicajiao/cove` and `danicajiao/homelab`). When referencing an issue or PR in the other repo, always use the fully qualified format so GitHub links it correctly:
+
+```
+danicajiao/homelab#28   ← referencing a homelab PR from cove
+danicajiao/cove#234     ← referencing a cove issue from homelab
+```
+
+Note: `Closes owner/repo#N` does not auto-close cross-repo — GitHub only auto-closes within the same repo.
 
 ### CI
 

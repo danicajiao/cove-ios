@@ -326,11 +326,11 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 ### Phase 1 — Gateway
 
-- Deploy `cove-gateway` to `cove-staging`
-- iOS `APIClient` sends Firebase ID Token on all requests
-- Gateway validates token, returns placeholder responses for all routes
-- iOS app routes all backend calls through `APIClient` (Firestore/Storage still called directly for data)
-- Smoke test: authenticated request to `api.coveapp.dev/health` returns 200
+- Deploy `cove-api` to `cove-staging` and `cove-prod` behind Cloudflare Tunnel
+- iOS `CoveAPIClient` sends Firebase ID Token on all requests via `FirebaseAuthMiddleware`
+- Gateway validates token, returns typed responses defined in `openapi.yaml`
+- iOS app routes all cove-api calls through `CoveAPIClient`; Firebase SDK still used directly for Auth, Firestore, and Storage
+- Smoke test: `CoveAPIClient.shared.health()` returns a `HealthResponse` with `status == "ok"`
 
 ### Phase 2 — Image service
 

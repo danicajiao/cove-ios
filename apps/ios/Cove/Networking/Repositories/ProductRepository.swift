@@ -26,8 +26,7 @@ protocol ProductRepository {
 
     /// Fetches a single product by its unique ID.
     ///
-    /// - Throws: `APIError.notFound` (or an equivalent domain error) when no product
-    ///   exists for the given ID.
+    /// - Throws: `RepositoryError.notFound` when no product exists for the given ID.
     func fetchProduct(id: String) async throws -> any Product
 
     /// Fetches the type-specific detail document for a product.

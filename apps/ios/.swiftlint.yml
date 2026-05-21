@@ -4,6 +4,7 @@ included:
 excluded:
   - Pods
   - Cove.xcodeproj
+  - Cove/Networking/Generated
 
 opt_in_rules:
   - empty_count

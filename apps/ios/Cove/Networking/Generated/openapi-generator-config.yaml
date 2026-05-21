@@ -1,0 +1,16 @@
+# swift-openapi-generator configuration.
+#
+# Tells the build plugin which artefacts to generate from openapi.yaml.
+# Both files (this config and openapi.yaml) must live in the same directory
+# and be part of the Cove Xcode target — the plugin discovers them
+# automatically from the target's input files at build time.
+#
+# generate:
+#   types  — Components.Schemas.* structs and Operations.* input/output types
+#   client — Client struct with one method per operation (e.g. getHealth())
+#
+# The generated Types.swift and Client.swift are written into DerivedData
+# (never into the source tree) and recompiled whenever openapi.yaml changes.
+generate:
+  - types
+  - client

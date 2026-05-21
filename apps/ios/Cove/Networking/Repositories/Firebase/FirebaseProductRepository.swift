@@ -29,11 +29,11 @@ final class FirebaseProductRepository: ProductRepository {
         let snapshot = try await firestore.collection("products").document(id).getDocument()
 
         guard snapshot.exists else {
-            throw APIError.notFound
+            throw RepositoryError.notFound
         }
 
         guard let product = decodeProduct(from: snapshot) else {
-            throw APIError.server(statusCode: 422, message: "Unrecognized product category for id \(id)")
+            throw RepositoryError.decodingFailed("Unrecognized product category for id \(id)")
         }
 
         return product
@@ -46,7 +46,7 @@ final class FirebaseProductRepository: ProductRepository {
             .getDocument()
 
         guard snapshot.exists else {
-            throw APIError.notFound
+            throw RepositoryError.notFound
         }
 
         if product is CoffeeProduct {
@@ -56,7 +56,7 @@ final class FirebaseProductRepository: ProductRepository {
         } else if product is ApparelProduct {
             return try snapshot.data(as: ApparelProductDetails.self)
         } else {
-            throw APIError.server(statusCode: 422, message: "Unrecognized product type — cannot decode details")
+            throw RepositoryError.decodingFailed("Unrecognized product type — cannot decode details")
         }
     }
 

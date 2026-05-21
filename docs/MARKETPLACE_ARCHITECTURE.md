@@ -46,11 +46,11 @@ The marketplace surface is split across four services. Each lives in this monore
 
 | Service | Path | Responsibility |
 |---|---|---|
-| `cove-gateway` | `apps/gateway/` | Single ingress point. Validates Firebase ID tokens, routes to backend services. |
-| `cove-product` | `apps/product/` | Vendors, categories, products, variants, details, search. |
-| `cove-user` | `apps/user/` | User profiles and favorites. |
-| `cove-image` | `apps/image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. |
-| `cove-vendor` | `apps/vendor/` (future) | Vendor onboarding flow, profile management, vendor dashboard API. Schema is pre-positioned in Phase 3; service is built in a follow-up phase. |
+| `cove-api` | `apps/cove-api/` | Single ingress point (BFF gateway). Validates Firebase ID tokens, routes to backend services. |
+| `cove-product` | `apps/cove-product/` | Vendors, categories, products, variants, details, search. |
+| `cove-user` | `apps/cove-user/` | User profiles and favorites. |
+| `cove-image` | `apps/cove-image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. |
+| `cove-vendor` | `apps/cove-vendor/` (future) | Vendor onboarding flow, profile management, vendor dashboard API. Schema is pre-positioned in Phase 3; service is built in a follow-up phase. |
 
 The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [App Architecture](APP_ARCHITECTURE.md)).
 
@@ -338,7 +338,7 @@ iOS app
 api.coveapp.dev  (Cloudflare Tunnel)
    │
    ▼
-cove-gateway
+cove-api
    │  Validates Firebase ID token via Firebase Admin SDK
    │  Routes /products/* to cove-product Service
    │

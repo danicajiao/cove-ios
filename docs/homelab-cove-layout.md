@@ -7,7 +7,7 @@
 Originally planned as a separate `cove-infra` repo, then consolidated into homelab because:
 
 - **One cluster → one GitOps source of truth.** Splitting GitOps for the same cluster across two repos creates coordination headaches around shared platform components.
-- **Shared platform operators deduplicate across tenants.** Argo CD, External Secrets Operator, CloudNativePG, MinIO, the observability stack — all installed once, used by every tenant.
+- **Shared platform operators deduplicate across tenants.** Argo CD, External Secrets Operator, CloudNativePG, Garage, the observability stack — all installed once, used by every tenant.
 - **Argo CD bootstrap is a one-time, cluster-wide concern**, not a per-product one.
 
 If Cove ever migrates off the home K3s cluster (e.g., to GKE), the `apps/cove/` subtree and the cove-relevant pieces of `infra/` carve out cleanly into a new repo. No design choice today blocks that path.
@@ -20,7 +20,7 @@ homelab/
 │   ├── gaming/
 │   │   └── minecraft/                    # separate tenant, not Cove
 │   └── cove/
-│       ├── base/                         # cove-gateway, cove-product, cove-user, cove-image (added Phases 1-3)
+│       ├── base/                         # cove-api (Phase 1); cove-product, cove-user, cove-image land in Phases 2-3
 │       └── overlays/
 │           ├── staging/                  # → cove-staging namespace
 │           └── prod/                     # → cove-prod namespace
@@ -28,32 +28,41 @@ homelab/
 │   ├── argocd/
 │   ├── external-secrets/
 │   ├── cnpg/
-│   ├── minio/
+│   ├── garage/
 │   ├── kube-prometheus-stack/
 │   ├── loki/
+│   ├── alloy/
 │   └── cloudflare-tunnel/
 └── argocd/                               # Argo CD Application manifests (app-of-apps roots)
-    ├── root.yaml
+    ├── root.yaml                         # applied directly; not listed in kustomization.yaml
+    ├── kustomization.yaml                # lists every child Application below
     ├── argocd-self.yaml
-    ├── infra-app.yaml
+    ├── external-secrets.yaml
+    ├── cnpg.yaml
+    ├── garage.yaml
+    ├── kube-prometheus-stack.yaml
+    ├── loki.yaml
+    ├── alloy.yaml
+    ├── cloudflare-tunnel.yaml
+    ├── minecraft.yaml
     ├── apps-cove-staging.yaml
     └── apps-cove-prod.yaml
 ```
 
 `apps/` is per-tenant per-environment. `infra/` is cluster-singleton platform components. `argocd/` is the app-of-apps tree Argo CD reconciles against.
 
-## Service repos (still planned, separate)
+## Service source (in the cove monorepo)
 
-Each backend service is its own repo with its own CI pipeline. The repo builds container images and pushes to GAR; `homelab` declares how those images run.
+Backend services live in the `danicajiao/cove` monorepo under `apps/cove-<name>/`, **not** in separate repos. The `services-ci.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
 
-| Repo | Phase | Sub-issue |
-|---|---|---|
-| `cove-gateway` | 1 | [#229](https://github.com/danicajiao/cove-ios/issues/229) |
-| `cove-image` | 2 | [#238](https://github.com/danicajiao/cove-ios/issues/238) |
-| `cove-product` | 3 | [#250](https://github.com/danicajiao/cove-ios/issues/250) |
-| `cove-user` | 3 | [#250](https://github.com/danicajiao/cove-ios/issues/250) |
+| Service | Path in `danicajiao/cove` | Phase | Sub-issue |
+|---|---|---|---|
+| `cove-api` | `apps/cove-api/` | 1 (shipped) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
+| `cove-image` | `apps/cove-image/` | 2 | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
+| `cove-product` | `apps/cove-product/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
+| `cove-user` | `apps/cove-user/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
 
-These repos do not exist yet — created when each phase begins.
+`cove-api` shipped in Phase 1; the remaining services are added under the same convention as each phase begins.
 
 ## Runbooks
 

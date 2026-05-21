@@ -1,5 +1,5 @@
 # Cove - A Curated Marketplace
-[![CI - Main](https://github.com/danicajiao/cove-ios/actions/workflows/ci-main.yml/badge.svg)](https://github.com/danicajiao/cove-ios/actions/workflows/ci-main.yml)
+[![CI - Main](https://github.com/danicajiao/cove/actions/workflows/ci-main.yml/badge.svg)](https://github.com/danicajiao/cove/actions/workflows/ci-main.yml)
 
 <img width="1630" alt="Screenshot 2025-04-23 at 12 36 21 AM" src="https://github.com/user-attachments/assets/a6194687-e7ce-4ca4-a534-b6852527d8ad" />
 
@@ -16,8 +16,9 @@ This is a monorepo. Apps, services, and shared packages live under their respect
 ```
 cove/
 ├── apps/
-│   └── ios/                # Swift / SwiftUI iOS app (this is what runs in Xcode)
-├── services/               # Backend services (planned)
+│   ├── ios/                # Swift / SwiftUI iOS app (this is what runs in Xcode)
+│   └── cove-api/           # Go gateway service (Phase 1)
+├── services/               # Reserved (README only); backend services live under apps/cove-<name>/
 ├── packages/               # Shared schemas, design tokens (planned)
 └── docs/                   # Cross-cutting product/architecture docs
 ```
@@ -43,8 +44,8 @@ cove/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/danicajiao/cove-ios.git
-cd cove-ios
+git clone https://github.com/danicajiao/cove.git
+cd cove
 
 # 2. Open the iOS project
 open apps/ios/Cove.xcodeproj

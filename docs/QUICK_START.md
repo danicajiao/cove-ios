@@ -12,8 +12,8 @@ Get the Cove iOS app building and running on your local machine.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/danicajiao/cove-ios.git
-cd cove-ios
+git clone https://github.com/danicajiao/cove.git
+cd cove
 ```
 
 ### 2. Open the project

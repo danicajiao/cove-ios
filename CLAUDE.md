@@ -9,11 +9,14 @@ Cove is a monorepo containing the Cove iOS app and (eventually) a web client, ba
 ```
 cove/
 ├── apps/
-│   └── ios/                # Swift / SwiftUI iOS app — see apps/ios/Cove/
-├── services/               # Backend services (planned)
+│   ├── ios/                # Swift / SwiftUI iOS app — see apps/ios/Cove/
+│   └── cove-api/           # Go gateway service (Phase 1) — see apps/cove-api/
+├── services/               # Reserved (README only); backend services live under apps/cove-<name>/
 ├── packages/               # Shared code (api-schema, design-tokens — planned)
 └── docs/                   # Cross-cutting product/architecture docs
 ```
+
+Backend services live alongside the iOS app under `apps/` using the `cove-<name>` convention (e.g. `apps/cove-api/`), not under the top-level `services/` directory.
 
 **iOS-specific:**
 

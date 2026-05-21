@@ -29,9 +29,9 @@ Welcome to the documentation for the Cove iOS app.
   - App Store Connect API key
   - GitHub Personal Access Token
 
-### Architecture (Planned)
-- **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - Planned infrastructure: K3s, GCP API Gateway, Cloudflare Tunnel, migration phases
-- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: hybrid SQL, NoSQL & GraphQL backend
+### Backend Architecture
+- **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - K3s cluster, the `cove-api` gateway, Cloudflare Tunnel, and migration phases (Phases 0 and 1 complete)
+- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: single Postgres cluster with per-service schemas, REST APIs
 - **[Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md)** - Planned category hierarchy and filtering system
 - **[Homelab Layout for Cove](homelab-cove-layout.md)** - Where Cove's backend services and platform operators live in the [`homelab`](https://github.com/danicajiao/homelab) repo
 
@@ -65,7 +65,7 @@ Welcome to the documentation for the Cove iOS app.
 ### Something in CI/CD isn't working
 → See Troubleshooting section in [CI/CD Workflows](CI_CD_WORKFLOWS.md)
 
-### I want to understand the planned backend infrastructure
+### I want to understand the backend infrastructure
 → Read [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)
 
 ### I want to understand the planned data layer

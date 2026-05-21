@@ -12,7 +12,7 @@ This document describes the CI/CD workflows configured for the Cove iOS app, inc
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
 │         ▼                 ▼                     ▼              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  CI - PR     │  │  CI - Main   │  │  CD - TestFlight     │  │
+│  │  CI - iOS    │  │  CI - iOS    │  │  CD - TestFlight     │  │
 │  │  (Lint only) │  │  (Build/Test)│  │  CD - App Store      │  │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
 └─────────┼─────────────────┼─────────────────────┼──────────────┘
@@ -36,15 +36,20 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 
 ## Workflows
 
-### 1. CI - Pull Request (`ci-pr.yml`)
+### 1. CI - iOS (`ci-ios.yml`)
 
-**Trigger:** All pull requests (no path filter — runs on every PR)
+**Triggers:**
+- Pull requests touching `apps/ios/**` (excluding `*.md`)
+- Pushes to `main` touching `apps/ios/**` (excluding `*.md`)
 
-**Purpose:** Ensure code quality before merging
+**Purpose:** Quality gate on PRs; build + test validation after merge to main
+
+Two jobs run depending on the event — only one fires per run:
+
+#### `lint-and-validate` (pull requests only)
 
 **Steps:**
-- ✅ Detect whether any Swift files changed (skips remaining steps if none changed)
-- ✅ Install SwiftLint (when Swift files changed)
+- ✅ Detect whether any Swift files changed (skips lint steps if none changed)
 - ✅ Run SwiftFormat in lint-only mode (when Swift files changed)
 - ✅ Run SwiftLint with `--strict` (when Swift files changed)
 - ✅ Check for merge conflict markers (when Swift files changed)
@@ -54,15 +59,8 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 - Runs on macOS-26
 - No build or test execution (fast feedback)
 - No code signing required
-- No dependency installation
 
-**Note:** This workflow focuses on quick linting checks only. Build and test validation happens on the main branch after merge.
-
-### 2. CI - Main Branch (`ci-main.yml`)
-
-**Trigger:** Push to `main` branch (when source code, project files, or dependencies change)
-
-**Purpose:** Validate build and tests after merge to main
+#### `build-and-test` (pushes to main only)
 
 **Steps:**
 - ✅ Build the iOS app using Fastlane
@@ -76,7 +74,7 @@ The Cove iOS app uses GitHub Actions for continuous integration and deployment f
 
 **Note:** Tests continue on error to allow viewing all test results even if some fail.
 
-### 3. CD - Deploy to TestFlight (`cd-testflight.yml`)
+### 2. CD - Deploy to TestFlight (`cd-testflight.yml`)
 
 **Trigger:** Manual workflow dispatch with optional reason input
 

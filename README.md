@@ -1,5 +1,5 @@
 # Cove - A Curated Marketplace
-[![CI - Main](https://github.com/danicajiao/cove/actions/workflows/ci-main.yml/badge.svg)](https://github.com/danicajiao/cove/actions/workflows/ci-main.yml)
+[![CI - iOS](https://github.com/danicajiao/cove/actions/workflows/ci-ios.yml/badge.svg)](https://github.com/danicajiao/cove/actions/workflows/ci-ios.yml)
 
 <img width="1630" alt="Screenshot 2025-04-23 at 12 36 21 AM" src="https://github.com/user-attachments/assets/a6194687-e7ce-4ca4-a534-b6852527d8ad" />
 

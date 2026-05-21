@@ -1,14 +1,23 @@
-name: CI - Pull Request (iOS)
+name: CI - iOS
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/ios/**'
+      - '!apps/ios/**/*.md'
+      - '.github/workflows/ci-ios.yml'
   pull_request:
     paths:
       - 'apps/ios/**'
-      - '.github/workflows/ci-pr.yml'
+      - '!apps/ios/**/*.md'
+      - '.github/workflows/ci-ios.yml'
 
 jobs:
   lint-and-validate:
     name: Lint & Validate
+    if: github.event_name == 'pull_request'
     runs-on: macos-26
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
@@ -22,6 +31,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.1'
+          bundler-cache: true
+          working-directory: apps/ios
+
       - name: Check for Swift file changes
         id: swift-changes
         run: |
@@ -32,10 +48,6 @@ jobs:
           else
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Install SwiftLint
-        if: steps.swift-changes.outputs.skip != 'true'
-        run: brew install swiftlint
 
       - name: Run SwiftFormat (lint only)
         if: steps.swift-changes.outputs.skip != 'true'
@@ -58,3 +70,31 @@ jobs:
         run: |
           plutil -lint "Cove/Supporting Files/Info.plist"
           echo "✓ Info.plist is valid"
+
+  build-and-test:
+    name: Build and Test
+    if: github.event_name == 'push'
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.1.app/Contents/Developer
+    defaults:
+      run:
+        working-directory: apps/ios
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.1'
+          bundler-cache: true
+          working-directory: apps/ios
+
+      - name: Build iOS app
+        run: bundle exec fastlane build
+
+      - name: Run tests
+        run: bundle exec fastlane test
+        continue-on-error: true

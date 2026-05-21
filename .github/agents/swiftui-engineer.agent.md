@@ -163,7 +163,7 @@ Use `github/issue_write` with `method: "update"` to write the updated body back.
 
 ## Codebase Context
 
-**Repository**: `owner: "danicajiao"`, `repo: "cove-ios"`
+**Repository**: `owner: "danicajiao"`, `repo: "cove"`
 
 **Project structure:**
 - Views: `apps/ios/Cove/Views/<Name>View.swift`

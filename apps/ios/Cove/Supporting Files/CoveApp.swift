@@ -9,8 +9,33 @@ import FBSDKCoreKit
 import FirebaseAuth
 import FirebaseCore
 import GoogleSignIn
+import OSLog
 import SwiftUI
 import UIKit
+
+// MARK: - Gateway smoke test
+
+#if DEBUG
+    private extension CoveApp {
+        /// Calls `GET /health` once at launch and logs the result.
+        ///
+        /// Exercises the full path: iOS → Cloudflare Tunnel → cove-api gateway.
+        /// `/health` is unauthenticated so this runs before the user signs in.
+        /// Failure is logged but never surfaces to the user — it must not block
+        /// or alter app launch in any way.
+        func runGatewaySmokeTest() async {
+            let logger = Logger(subsystem: "com.danicajiao.cove", category: "SmokeTest")
+            do {
+                let health = try await CoveAPIClient.shared.health()
+                logger.info("✓ cove-api reachable — service: \(health.service), status: \(health.status), commit: \(health.commit)")
+            } catch {
+                logger.warning("✗ cove-api smoke test failed: \(error.localizedDescription)")
+            }
+        }
+    }
+#endif
+
+// MARK: - AppDelegate
 
 /// no changes in your AppDelegate class
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -75,6 +100,11 @@ struct CoveApp: App {
                         }
                     }
                 }
+            }
+            .task {
+                #if DEBUG
+                    await runGatewaySmokeTest()
+                #endif
             }
             .onChange(of: appState.authState) { _, _ in
                 authPath = []

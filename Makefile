@@ -12,7 +12,7 @@ build-cove-api: ## Build the cove-api Docker image
 	docker build \
 		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 		-t cove-api:$(COMMIT_SHA) \
-		apps/cove-api/
+		services/cove-api/
 
 .PHONY: build-all
 build-all: build-cove-api ## Build Docker images for all services
@@ -21,11 +21,11 @@ build-all: build-cove-api ## Build Docker images for all services
 
 .PHONY: lint
 lint: ## Run linters for all services
-	cd apps/cove-api && go vet ./...
+	cd services/cove-api && go vet ./...
 
 .PHONY: test
 test: ## Run tests for all services
-	cd apps/cove-api && go test ./...
+	cd services/cove-api && go test ./...
 
 # ── Help ────────────────────────────────────────────────────────────────────
 

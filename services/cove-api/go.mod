@@ -1,4 +1,4 @@
-module github.com/danicajiao/cove/apps/cove-api
+module github.com/danicajiao/cove/services/cove-api
 
 go 1.22.0
 

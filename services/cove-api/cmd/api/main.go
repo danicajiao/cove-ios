@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"google.golang.org/api/option"
 
-	covauth "github.com/danicajiao/cove/apps/cove-api/internal/auth"
+	covauth "github.com/danicajiao/cove/services/cove-api/internal/auth"
 )
 
 // commitSHA is set at build time via ldflags:

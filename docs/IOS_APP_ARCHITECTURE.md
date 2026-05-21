@@ -1,4 +1,4 @@
-# App Architecture
+# iOS App Architecture
 
 This document covers the Cove iOS app's architecture — how it's structured, how data flows, and how key systems work.
 

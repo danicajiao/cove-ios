@@ -76,4 +76,4 @@ Operational docs live in [`homelab/docs/`](https://github.com/danicajiao/homelab
 ## See also
 
 - [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) — overall stack and migration phases
-- [App Architecture](APP_ARCHITECTURE.md) — current iOS app structure
+- [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — current iOS app structure

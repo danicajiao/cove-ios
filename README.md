@@ -82,7 +82,7 @@ apps/ios/Cove/
 └── Resources/          # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
 
-See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how data flows through the app.
+See [iOS App Architecture](docs/IOS_APP_ARCHITECTURE.md) for a detailed breakdown of how data flows through the app.
 
 ## Feature Status
 
@@ -109,7 +109,7 @@ See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how
 | Doc | Description |
 |---|---|
 | [Quick Start Guide](docs/QUICK_START.md) | Prerequisites, setup, and troubleshooting |
-| [App Architecture](docs/APP_ARCHITECTURE.md) | MVVM structure, data flows, Firebase model |
+| [iOS App Architecture](docs/IOS_APP_ARCHITECTURE.md) | MVVM structure, data flows, Firebase model |
 | [CI/CD Workflows](docs/CI_CD_WORKFLOWS.md) | GitHub Actions workflows, Fastlane lanes, versioning |
 | [Secrets Setup](docs/SECRETS_SETUP.md) | Configuring GitHub secrets for CI/CD |
 | [All Docs](docs/README.md) | Full documentation index |

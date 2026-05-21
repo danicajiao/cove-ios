@@ -52,7 +52,7 @@ The marketplace surface is split across four services. Each lives in this monore
 | `cove-image` | `services/cove-image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. |
 | `cove-vendor` | `services/cove-vendor/` (future) | Vendor onboarding flow, profile management, vendor dashboard API. Schema is pre-positioned in Phase 3; service is built in a follow-up phase. |
 
-The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [App Architecture](APP_ARCHITECTURE.md)).
+The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [App Architecture](IOS_APP_ARCHITECTURE.md)).
 
 ---
 
@@ -405,7 +405,7 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for the cluster topology
 - [Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md) — category hierarchy, gender as attribute, product filtering details
 - [Media Architecture](MEDIA_ARCHITECTURE.md) — image storage, transformation, serving, vendor upload, signed URLs
 - [Postgres Primer](POSTGRES_PRIMER.md) — schemas, indexes, JSONB, full-text search, ltree
-- [App Architecture](APP_ARCHITECTURE.md) — iOS app structure, ViewModels, repository protocol layer
+- [App Architecture](IOS_APP_ARCHITECTURE.md) — iOS app structure, ViewModels, repository protocol layer
 
 ---
 

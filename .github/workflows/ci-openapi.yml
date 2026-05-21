@@ -3,7 +3,7 @@ name: CI - OpenAPI Lint
 on:
   pull_request:
     paths:
-      - 'apps/cove-api/api/**'
+      - 'services/cove-api/api/**'
       - '.github/workflows/ci-openapi.yml'
 
 jobs:
@@ -19,4 +19,4 @@ jobs:
         run: npm install -g @redocly/cli@latest
 
       - name: Lint openapi.yaml
-        run: redocly lint --config apps/cove-api/redocly.yaml apps/cove-api/api/openapi.yaml
+        run: redocly lint --config services/cove-api/redocly.yaml services/cove-api/api/openapi.yaml

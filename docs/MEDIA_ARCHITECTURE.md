@@ -336,7 +336,7 @@ https://api.coveapp.dev/i/<sig>/rs:fill:600:600/plain/s3://cove-media/<key>.webp
 | Component | What it does |
 |---|---|
 | `https://api.coveapp.dev` | Public hostname (Cloudflare Tunnel) |
-| `/i/` | Path prefix routed to imgproxy via cove-gateway. **Not Bearer-authenticated** — see [Auth model](#auth-model) below. |
+| `/i/` | Path prefix routed to imgproxy via cove-api. **Not Bearer-authenticated** — see [Auth model](#auth-model) below. |
 | `<sig>` | HMAC-SHA256 signature over the path. Server-side secret. Prevents URL forgery. |
 | `rs:fill:600:600` | imgproxy processing options. `rs` = resize, `fill` = crop to fill exact dimensions. Other options chainable: `rs:fill:600:600/q:80/bg:fff`. |
 | `plain/` | Source URL format mode. `plain` keeps the source URL human-readable; alternative is base64. |
@@ -403,7 +403,7 @@ The implementation is straightforward: `cove-product` checks the product state w
 
 ### "But the catalog is auth-only — why is the image URL public?"
 
-Image **URLs** are public; the **API that produces them** is not. To discover a product image's URL, a client must first call `/products/search` or `/products/{id}` with a valid Firebase ID Token. The Bearer-token check at `cove-gateway` happens *before* the URL is returned.
+Image **URLs** are public; the **API that produces them** is not. To discover a product image's URL, a client must first call `/products/search` or `/products/{id}` with a valid Firebase ID Token. The Bearer-token check at `cove-api` happens *before* the URL is returned.
 
 Once a URL is in hand, anyone can fetch the bytes — but the URL is unguessable (HMAC-SHA256 signature), and you can't enumerate them without going through the authenticated API. This is the same pattern Etsy, Shopify storefronts, Amazon product images, and every major marketplace uses. Authenticated image serving is reserved for things like medical records, financial documents, and other categories where bytes leaking would be a real harm — not for product catalog images.
 

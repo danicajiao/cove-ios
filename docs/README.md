@@ -12,7 +12,7 @@ Welcome to the documentation for the Cove iOS app.
 
 ### App
 - **[Design System](DESIGN_SYSTEM.md)** - Color tokens, typography, spacing, radius, shadow, and Figma↔Swift component mapping
-- **[App Architecture](APP_ARCHITECTURE.md)** - How the app is structured and how data flows
+- **[App Architecture](IOS_APP_ARCHITECTURE.md)** - How the app is structured and how data flows
   - MVVM pattern and ViewModels
   - Authentication and navigation
   - Product type system
@@ -29,11 +29,11 @@ Welcome to the documentation for the Cove iOS app.
   - App Store Connect API key
   - GitHub Personal Access Token
 
-### Architecture (Planned)
-- **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - Planned infrastructure: K3s, GCP API Gateway, Cloudflare Tunnel, migration phases
-- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: hybrid SQL, NoSQL & GraphQL backend
+### Backend Architecture
+- **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - K3s cluster, the `cove-api` gateway, Cloudflare Tunnel, and migration phases (Phases 0 and 1 complete)
+- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: single Postgres cluster with per-service schemas, REST APIs
 - **[Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md)** - Planned category hierarchy and filtering system
-- **[Homelab Layout for Cove](homelab-cove-layout.md)** - Where Cove's backend services and platform operators live in the [`homelab`](https://github.com/danicajiao/homelab) repo
+- **[Homelab Layout for Cove](HOMELAB_COVE_LAYOUT.md)** - Where Cove's backend services and platform operators live in the [`homelab`](https://github.com/danicajiao/homelab) repo
 
 ### Backend Reference
 - **[Postgres Primer](POSTGRES_PRIMER.md)** - Schemas, indexes, EXPLAIN ANALYZE, transactions, JSONB, full-text search, and ltree — the concepts Cove's backend depends on
@@ -51,7 +51,7 @@ Welcome to the documentation for the Cove iOS app.
 → Start with [Quick Start Guide](QUICK_START.md)
 
 ### I want to understand how the app works
-→ Read [App Architecture](APP_ARCHITECTURE.md)
+→ Read [App Architecture](IOS_APP_ARCHITECTURE.md)
 
 ### I'm implementing UI and need color/font/spacing tokens
 → Read [Design System](DESIGN_SYSTEM.md)
@@ -65,7 +65,7 @@ Welcome to the documentation for the Cove iOS app.
 ### Something in CI/CD isn't working
 → See Troubleshooting section in [CI/CD Workflows](CI_CD_WORKFLOWS.md)
 
-### I want to understand the planned backend infrastructure
+### I want to understand the backend infrastructure
 → Read [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)
 
 ### I want to understand the planned data layer

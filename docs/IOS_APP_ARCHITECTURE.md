@@ -1,4 +1,4 @@
-# App Architecture
+# iOS App Architecture
 
 This document covers the Cove iOS app's architecture — how it's structured, how data flows, and how key systems work.
 
@@ -192,10 +192,10 @@ This means TestFlight builds hit staging automatically; App Store builds hit pro
 **How the generation works:**
 
 ```
-apps/cove-api/api/openapi.yaml          ← backend source of truth
+services/cove-api/api/openapi.yaml          ← backend source of truth
         │
         │  manual copy when spec changes:
-        │  cp apps/cove-api/api/openapi.yaml \
+        │  cp services/cove-api/api/openapi.yaml \
         │     apps/ios/Cove/Networking/Generated/openapi.yaml
         ▼
 Cove/Networking/Generated/
@@ -262,10 +262,10 @@ If no user is signed in the request is forwarded without a header. Unauthenticat
 
 When a new route is added to cove-api:
 
-1. Backend adds the route to `apps/cove-api/api/openapi.yaml`
+1. Backend adds the route to `services/cove-api/api/openapi.yaml`
 2. Copy the updated spec into iOS:
    ```bash
-   cp apps/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
+   cp services/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
    ```
 3. Build (`⌘B`) — the plugin regenerates `Types.swift` and `Client.swift`
 4. Add a method to `CoveAPIClient.swift` that calls the generated method and unwraps the response

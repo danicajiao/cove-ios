@@ -9,7 +9,7 @@ The first backend service, the `cove-api` gateway, ships in Phase 1 and lives at
 `cove-user` under the same `services/cove-<name>/` convention.
 
 Each service owns its own `Dockerfile` and is built and pushed by the
-`services-ci.yml` GitHub Actions workflow on changes to its path. The OpenAPI
+`ci-services.yml` GitHub Actions workflow on changes to its path. The OpenAPI
 spec for `cove-api` is the source of truth for request/response shapes and lives
 at `services/cove-api/api/openapi.yaml`.
 

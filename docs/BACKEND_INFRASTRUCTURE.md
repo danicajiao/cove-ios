@@ -121,7 +121,7 @@ danicajiao/homelab              ← cluster infra (GitOps source for Argo CD)
 Each service is built independently — no unified build tool required at this scale. The pattern:
 
 - **Each service has its own `Dockerfile`** at `services/cove-<service>/Dockerfile`
-- **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/services-ci.yml`)
+- **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/ci-services.yml`)
 - **iOS** keeps its existing Fastlane CI lane
 - **A root `Makefile`** provides convenience targets for local use. The commit SHA is injected via `--build-arg` so the `/health` endpoint can report the running build:
 

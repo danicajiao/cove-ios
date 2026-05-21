@@ -53,7 +53,7 @@ homelab/
 
 ## Service source (in the cove monorepo)
 
-Backend services live in the `danicajiao/cove` monorepo under `services/cove-<name>/`, **not** in separate repos. The `services-ci.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
+Backend services live in the `danicajiao/cove` monorepo under `services/cove-<name>/`, **not** in separate repos. The `ci-services.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
 
 | Service | Path in `danicajiao/cove` | Phase | Sub-issue |
 |---|---|---|---|

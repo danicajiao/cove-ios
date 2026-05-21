@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'apps/ios/**'
+      - '!apps/ios/**/*.md'
       - '.github/workflows/ci-pr.yml'
 
 jobs:

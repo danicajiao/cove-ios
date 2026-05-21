@@ -10,7 +10,7 @@ import (
 
 	firebaseauth "firebase.google.com/go/v4/auth"
 
-	"github.com/danicajiao/cove/apps/cove-api/internal/auth"
+	"github.com/danicajiao/cove/services/cove-api/internal/auth"
 )
 
 // mockVerifier implements TokenVerifier for use in unit tests.

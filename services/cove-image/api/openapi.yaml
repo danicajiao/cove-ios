@@ -1,0 +1,152 @@
+openapi: "3.1.0"
+
+info:
+  title: cove-image
+  version: "0.1.0"
+  description: |
+    Image upload and processing service for Cove.
+    Accepts multipart/form-data uploads, validates content type and size,
+    derives a content-addressed object key, and stores images in Garage S3.
+
+    Authentication: this service does NOT validate Firebase tokens directly.
+    It trusts the X-Cove-Uid header injected by the upstream cove-api gateway.
+    All endpoints (except /health) reject requests missing this header.
+
+    Full spec (including imgproxy delivery endpoints) is tracked in issue #242.
+
+servers:
+  - url: http://cove-image.cove-image.svc.cluster.local:8080
+    description: In-cluster (default)
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check
+      description: |
+        Returns service name, status, and Git commit SHA.
+        Unauthenticated — used by Kubernetes liveness/readiness probes.
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /images:
+    post:
+      operationId: uploadImage
+      summary: Upload an image
+      description: |
+        Accepts a multipart/form-data upload with a required `file` part.
+        Validates content type (jpeg, png, webp) and file size (max 10 MiB by default).
+        Derives a content-addressed object key (SHA-256 of the file bytes) and
+        writes the object to the Garage S3 bucket.
+
+        Idempotent: uploading the same bytes twice returns the same key and URL.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          description: Firebase UID injected by the upstream cove-api gateway.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file to upload (jpeg, png, or webp; max 10 MiB).
+                product_id:
+                  type: string
+                  description: Optional product ID to associate with the image.
+                variant:
+                  type: string
+                  description: Optional variant label (e.g. "front", "back", "detail").
+      responses:
+        "201":
+          description: Image stored successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
+          description: Missing or invalid file field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: File exceeds the maximum allowed size
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "415":
+          description: Unsupported content type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error (e.g. S3 write failure)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: cove-image
+        status:
+          type: string
+          example: ok
+        commit:
+          type: string
+          example: "abc1234"
+
+    UploadResponse:
+      type: object
+      required:
+        - key
+        - url
+      properties:
+        key:
+          type: string
+          description: Content-addressed object key in the Garage bucket.
+          example: "images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.jpg"
+        url:
+          type: string
+          description: Relative URL for retrieving the image via the imgproxy path.
+          example: "/images/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.jpg"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: "unsupported content type \"image/gif\"; must be image/jpeg, image/png, or image/webp"

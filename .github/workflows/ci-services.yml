@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'apps/cove-api/**'
-      - '.github/workflows/services-ci.yml'
+      - 'services/cove-api/**'
+      - '.github/workflows/ci-services.yml'
   pull_request:
     paths:
-      - 'apps/cove-api/**'
-      - '.github/workflows/services-ci.yml'
+      - 'services/cove-api/**'
+      - '.github/workflows/ci-services.yml'
   # Allows manually triggering a build+push from any branch.
   # Useful for bootstrapping GAR before the integration branch merges to main,
   # or for emergency re-deploys.
@@ -33,15 +33,15 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: apps/cove-api/go.mod
-          cache-dependency-path: apps/cove-api/go.sum
+          go-version-file: services/cove-api/go.mod
+          cache-dependency-path: services/cove-api/go.sum
 
       - name: Run tests
-        working-directory: apps/cove-api
+        working-directory: services/cove-api
         run: go test ./...
 
       - name: Run vet
-        working-directory: apps/cove-api
+        working-directory: services/cove-api
         run: go vet ./...
 
       # Authenticate to GCP using Workload Identity Federation.
@@ -62,7 +62,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v6
         with:
-          context: apps/cove-api
+          context: services/cove-api
           push: true
           tags: us-central1-docker.pkg.dev/cove-6a685/services/cove-api:sha-${{ github.sha }}
           build-args: COMMIT_SHA=${{ github.sha }}
@@ -73,6 +73,6 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: apps/cove-api
+          context: services/cove-api
           push: false
           build-args: COMMIT_SHA=${{ github.sha }}

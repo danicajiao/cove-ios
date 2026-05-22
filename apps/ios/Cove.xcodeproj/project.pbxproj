@@ -16,6 +16,8 @@
 		D00DB7392FAB034900D56700 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB7382FAB034900D56700 /* GoogleSignIn */; };
 		D00DB73B2FAB034900D56700 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB73A2FAB034900D56700 /* GoogleSignInSwift */; };
 		D00DB73E2FAB03FE00D56700 /* RiveRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB73D2FAB03FE00D56700 /* RiveRuntime */; };
+		D0429F302FBE4BE5004F25C1 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = D0429F2F2FBE4BE5004F25C1 /* OpenAPIRuntime */; };
+		D0429F332FBE4C0F004F25C1 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = D0429F322FBE4C0F004F25C1 /* OpenAPIURLSession */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,7 +50,9 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				D00DB72D2FAB015100D56700 /* FirebaseCore in Frameworks */,
+				D0429F332FBE4C0F004F25C1 /* OpenAPIURLSession in Frameworks */,
 				D00DB7342FAB02D000D56700 /* FacebookCore in Frameworks */,
+				D0429F302FBE4BE5004F25C1 /* OpenAPIRuntime in Frameworks */,
 				D00DB73E2FAB03FE00D56700 /* RiveRuntime in Frameworks */,
 				D00DB7362FAB02D000D56700 /* FacebookLogin in Frameworks */,
 				D00DB73B2FAB034900D56700 /* GoogleSignInSwift in Frameworks */,
@@ -91,6 +95,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D0429F352FBE4C7D004F25C1 /* PBXTargetDependency */,
 				D0429CEB2FAEDCCF004F25C1 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
@@ -107,6 +112,8 @@
 				D00DB7382FAB034900D56700 /* GoogleSignIn */,
 				D00DB73A2FAB034900D56700 /* GoogleSignInSwift */,
 				D00DB73D2FAB03FE00D56700 /* RiveRuntime */,
+				D0429F2F2FBE4BE5004F25C1 /* OpenAPIRuntime */,
+				D0429F322FBE4C0F004F25C1 /* OpenAPIURLSession */,
 			);
 			productName = CoffeeCommerce;
 			productReference = D02B2FB227BD7E61004732CB /* Cove.app */;
@@ -141,6 +148,9 @@
 				D00DB7372FAB034900D56700 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				D00DB73C2FAB03FD00D56700 /* XCRemoteSwiftPackageReference "rive-ios" */,
 				D0429CE92FAEDC03004F25C1 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */,
+				D0429F2D2FBE4B6E004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				D0429F2E2FBE4BE5004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				D0429F312FBE4C0F004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = D02B2FB327BD7E61004732CB /* Products */;
@@ -172,6 +182,10 @@
 		D0429CEB2FAEDCCF004F25C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = D0429CEA2FAEDCCF004F25C1 /* SwiftLintBuildToolPlugin */;
+		};
+		D0429F352FBE4C7D004F25C1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D0429F342FBE4C7D004F25C1 /* OpenAPIGenerator */;
 		};
 /* End PBXTargetDependency section */
 
@@ -428,6 +442,30 @@
 				minimumVersion = 0.63.2;
 			};
 		};
+		D0429F2D2FBE4B6E004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.12.1;
+			};
+		};
+		D0429F2E2FBE4BE5004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.11.0;
+			};
+		};
+		D0429F312FBE4C0F004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -480,6 +518,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D0429CE92FAEDC03004F25C1 /* XCRemoteSwiftPackageReference "SwiftLintPlugins" */;
 			productName = "plugin:SwiftLintBuildToolPlugin";
+		};
+		D0429F2F2FBE4BE5004F25C1 /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0429F2E2FBE4BE5004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		D0429F322FBE4C0F004F25C1 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0429F312FBE4C0F004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+		D0429F342FBE4C7D004F25C1 /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0429F2D2FBE4B6E004F25C1 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

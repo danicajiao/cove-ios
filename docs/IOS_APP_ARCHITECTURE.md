@@ -1,4 +1,4 @@
-# App Architecture
+# iOS App Architecture
 
 This document covers the Cove iOS app's architecture — how it's structured, how data flows, and how key systems work.
 
@@ -10,6 +10,7 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [Tab Structure](#tab-structure)
 - [ViewModels](#viewmodels)
 - [Global State](#global-state)
+- [Networking](#networking)
 - [Product Type System](#product-type-system)
 - [Firebase Data Model](#firebase-data-model)
 - [Key Data Flows](#key-data-flows)
@@ -19,7 +20,11 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 
 ## Overview
 
-Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through a combination of `@StateObject`, `@EnvironmentObject`, and `@Published` properties. Firebase is the sole backend — Firestore for data, Firebase Auth for authentication, and Cloud Storage for images.
+Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through a combination of `@StateObject`, `@EnvironmentObject`, and `@Published` properties.
+
+The app talks to two separate backends:
+- **Firebase** — Auth (sign-in), Firestore (structured data), Cloud Storage (images). Accessed directly through the Firebase iOS SDK.
+- **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec.
 
 ---
 
@@ -141,6 +146,129 @@ Injected at the root (`CoveApp`) via `.environmentObject` and available througho
 - Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
 - `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
 - Used by `LikeButton` to read and mutate favorite state across all views
+
+---
+
+## Networking
+
+The app has two completely separate networking tracks. They never share code.
+
+```
+Firebase SDK                        cove-api gateway
+(Google-managed infrastructure)     (K3s homelab, Cloudflare Tunnel)
+
+FirebaseAuth  ─────────────────►  Auth token issuance only
+FirebaseFirestore ─────────────►  Structured data (Phase 1–2 only; Firestore retired in Phase 3)
+FirebaseStorage ───────────────►  Images (Phase 1–2 only; retired in Phase 2)
+
+                                  CoveAPIClient ──────────────────►  cove-api
+                                  (all new gateway calls go here)
+```
+
+### APIEnvironment
+
+`APIEnvironment` selects the server URL at compile time:
+
+```swift
+// Debug builds → staging-api.coveapp.dev
+// Release builds → api.coveapp.dev
+static var current: APIEnvironment {
+    #if DEBUG
+        return .staging
+    #else
+        return .production
+    #endif
+}
+```
+
+This means TestFlight builds hit staging automatically; App Store builds hit production. No runtime toggle, no Info.plist key.
+
+---
+
+### CoveAPIClient
+
+`CoveAPIClient` is the only path the iOS app uses to call cove-api. It wraps a generated `Client` struct produced by `swift-openapi-generator` from the gateway's OpenAPI spec.
+
+**How the generation works:**
+
+```
+services/cove-api/api/openapi.yaml          ← backend source of truth
+        │
+        │  manual copy when spec changes:
+        │  cp services/cove-api/api/openapi.yaml \
+        │     apps/ios/Cove/Networking/Generated/openapi.yaml
+        ▼
+Cove/Networking/Generated/
+  openapi.yaml                          ← iOS copy of the spec
+  openapi-generator-config.yaml         ← instructs plugin: generate types + client
+        │
+        │  ⌘B triggers the OpenAPIGenerator build plugin
+        ▼
+DerivedData/.../GeneratedSources/       ← never checked in, never edited
+  Types.swift                           ← Components.Schemas.* structs
+  Client.swift                          ← one typed method per API operation
+        │
+        │  compiled into the app binary alongside hand-written code
+        ▼
+Cove/Networking/CoveAPIClient.swift     ← thin wrapper, what ViewModels call
+```
+
+The generated files live in DerivedData and are never committed. They recompile automatically whenever `openapi.yaml` changes.
+
+**What `CoveAPIClient` adds on top of the generated `Client`:**
+
+| Concern | How it's handled |
+|---|---|
+| Server URL | `APIEnvironment.current.baseURL` — staging in Debug, prod in Release |
+| Auth | `FirebaseAuthMiddleware` injects `Authorization: Bearer <token>` on every request |
+| Response unwrapping | Each method switches over the generated response enum and returns a plain Swift type |
+| Shared instance | `CoveAPIClient.shared` for standard use; injectable `serverURL` + `session` for tests |
+
+**Calling an endpoint:**
+
+```swift
+// What a ViewModel or repository calls:
+let health = try await CoveAPIClient.shared.health()
+// health.service == "cove-api"
+// health.status  == "ok"
+// health.commit  == "a3f8c12"
+```
+
+---
+
+### FirebaseAuthMiddleware
+
+A `ClientMiddleware` that runs on every outgoing request to cove-api. It fetches the current Firebase user's ID token and injects it as a Bearer header before forwarding the request.
+
+```
+CoveAPIClient.shared.health()
+    │
+    ├─ FirebaseAuthMiddleware.intercept(...)
+    │    ├─ Auth.auth().currentUser? → get ID token
+    │    └─ request.headerFields[.authorization] = "Bearer <token>"
+    │
+    ├─ URLSessionTransport sends HTTP request to staging-api.coveapp.dev
+    │
+    └─ response decoded into Components.Schemas.HealthResponse
+```
+
+Routes that opt out of auth (e.g. `GET /health`) receive the header anyway — the gateway ignores it. This keeps the middleware unconditional with no per-route branching.
+
+If no user is signed in the request is forwarded without a header. Unauthenticated routes continue to work; protected routes receive a 401 from the gateway.
+
+---
+
+### Adding a new gateway endpoint
+
+When a new route is added to cove-api:
+
+1. Backend adds the route to `services/cove-api/api/openapi.yaml`
+2. Copy the updated spec into iOS:
+   ```bash
+   cp services/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi.yaml
+   ```
+3. Build (`⌘B`) — the plugin regenerates `Types.swift` and `Client.swift`
+4. Add a method to `CoveAPIClient.swift` that calls the generated method and unwraps the response
 
 ---
 

@@ -26,7 +26,7 @@ You are a senior iOS engineer and expert Figma user. You bridge the gap between 
 Fetch the issue with the `gh` CLI:
 
 ```bash
-gh issue view <number> --repo danicajiao/cove-ios --json number,title,body,labels
+gh issue view <number> --repo danicajiao/cove --json number,title,body,labels
 ```
 
 Extract:
@@ -164,13 +164,13 @@ Before creating the PR, re-read the GitHub issue and go through every checklist 
 Write the updated body back with:
 
 ```bash
-gh issue edit <number> --repo danicajiao/cove-ios --body-file <path-to-updated-body.md>
+gh issue edit <number> --repo danicajiao/cove --body-file <path-to-updated-body.md>
 ```
 
 For an unchecked item that's blocked, leave the box unchecked and add a comment explaining why:
 
 ```bash
-gh issue comment <number> --repo danicajiao/cove-ios --body "Skipped <item> because <reason>."
+gh issue comment <number> --repo danicajiao/cove --body "Skipped <item> because <reason>."
 ```
 
 ### 7. Create a Branch and PR
@@ -182,7 +182,7 @@ This agent runs in an isolated git worktree — the branch was already renamed i
 3. Create the PR with `gh pr create`:
    ```bash
    gh pr create \
-     --repo danicajiao/cove-ios \
+     --repo danicajiao/cove \
      --title "[#<number>] Implement <Screen Name> UI" \
      --body-file pr-body.md \
      --base <integration-branch-or-main>
@@ -199,10 +199,10 @@ This agent runs in an isolated git worktree — the branch was already renamed i
 
 | Task | Tool |
 |---|---|
-| Read GitHub issue | `gh issue view <number> --repo danicajiao/cove-ios --json number,title,body,labels` |
-| Update issue body | `gh issue edit <number> --repo danicajiao/cove-ios --body-file <path>` |
-| Comment on issue | `gh issue comment <number> --repo danicajiao/cove-ios --body "..."` |
-| Create pull request | `gh pr create --repo danicajiao/cove-ios --title ... --body-file ... --base <branch>` |
+| Read GitHub issue | `gh issue view <number> --repo danicajiao/cove --json number,title,body,labels` |
+| Update issue body | `gh issue edit <number> --repo danicajiao/cove --body-file <path>` |
+| Comment on issue | `gh issue comment <number> --repo danicajiao/cove --body "..."` |
+| Create pull request | `gh pr create --repo danicajiao/cove --title ... --body-file ... --base <branch>` |
 | Get full design + code hints | `mcp__be768108-4036-4a54-bf42-1167f0b466f2__get_design_context` |
 | Get visual screenshot | `mcp__be768108-4036-4a54-bf42-1167f0b466f2__get_screenshot` |
 | Extract design tokens / variables | `mcp__be768108-4036-4a54-bf42-1167f0b466f2__get_variable_defs` |
@@ -222,7 +222,7 @@ This agent runs in an isolated git worktree — the branch was already renamed i
 
 ## Codebase Context
 
-**Repository**: `owner: "danicajiao"`, `repo: "cove-ios"`
+**Repository**: `owner: "danicajiao"`, `repo: "cove"`
 
 **Project structure:**
 - Views: `apps/ios/Cove/Views/<Name>View.swift`

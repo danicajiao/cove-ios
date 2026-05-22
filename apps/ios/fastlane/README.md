@@ -4,15 +4,15 @@ This directory contains Fastlane configuration for automating iOS app deployment
 
 ## Installation
 
-1. Install Ruby dependencies:
-   ```bash
-   bundle install
-   ```
+Install Ruby dependencies:
 
-2. Install CocoaPods:
-   ```bash
-   pod install
-   ```
+```bash
+bundle install
+```
+
+Dependencies are managed with Swift Package Manager and resolve automatically
+when the project is opened in Xcode or built by `xcodebuild` — there is no
+CocoaPods step.
 
 ## Available Lanes
 
@@ -43,7 +43,7 @@ bundle exec fastlane release version:1.1.0
 ## Configuration
 
 The Fastfile is configured for the Cove app with:
-- Workspace: `Cove.xcworkspace`
+- Project: `Cove.xcodeproj`
 - Scheme: `Cove`
 - Bundle ID: `com.danicajiao.cove`
 
@@ -57,7 +57,7 @@ For deployment lanes, you'll need:
 These lanes are integrated with GitHub Actions workflows:
 - `cd-testflight.yml` - Uses `fastlane beta` to deploy to TestFlight
 - `cd-appstore.yml` - Uses `fastlane release` to submit to App Store
-- `ci-main.yml` - Uses `fastlane build` and `fastlane test` on every push to main
+- `ci-ios.yml` - Uses `fastlane build` and `fastlane test` on every push to main (also runs lint on PRs)
 
 **Note:** The workflows use Fastlane for all iOS automation, providing:
 - Consistent build and deployment process

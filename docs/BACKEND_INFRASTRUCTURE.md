@@ -1,6 +1,6 @@
 # Backend Infrastructure
 
-> **Status:** Phase 0 complete. The cluster is fully bootstrapped and running. The iOS app still uses Firebase directly — backend services come online in Phases 1–3 one at a time. Firebase Auth is kept throughout.
+> **Status:** Phases 0 and 1 complete. The cluster is fully bootstrapped and running, and the `cove-api` gateway is deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes gateway calls through `CoveAPIClient` while still using Firebase directly for Auth, Firestore, and Storage — the remaining backend services come online in Phases 2–3 one at a time. Firebase Auth is kept throughout.
 
 ## Contents
 
@@ -38,7 +38,7 @@ iOS App
 api.coveapp.dev  (Cloudflare Tunnel — no open ports on the home machine)
     │
     ▼
-cove-gateway  (K3s pod, cove-staging / cove-prod namespace)
+cove-api  (K3s pod, cove-staging / cove-prod namespace)
     │  Validates Firebase ID Token via Firebase Admin SDK
     │  Routes to backend services by path prefix
     │
@@ -87,10 +87,13 @@ danicajiao/cove                 ← all source code and docs
 │
 ├── apps/
 │   ├── ios/                    ← Swift / SwiftUI iOS app
-│   ├── gateway/                ← cove-gateway service (Phase 1)
-│   ├── image/                  ← cove-image service (Phase 2)
-│   ├── product/                ← cove-product service (Phase 3)
-│   └── user/                   ← cove-user service (Phase 3)
+│   └── web/                    ← (planned)
+│
+├── services/
+│   ├── cove-api/               ← cove-api gateway service (Phase 1)
+│   ├── cove-image/             ← cove-image service (Phase 2)
+│   ├── cove-product/           ← cove-product service (Phase 3)
+│   └── cove-user/              ← cove-user service (Phase 3)
 │
 ├── packages/                   ← shared code (API schema, types — as needed)
 └── docs/
@@ -120,21 +123,24 @@ danicajiao/homelab              ← cluster infra (GitOps source for Argo CD)
 
 Each service is built independently — no unified build tool required at this scale. The pattern:
 
-- **Each service has its own `Dockerfile`** at `apps/<service>/Dockerfile`
-- **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services)
+- **Each service has its own `Dockerfile`** at `services/cove-<service>/Dockerfile`
+- **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/ci-services.yml`)
 - **iOS** keeps its existing Fastlane CI lane
-- **A root `Makefile`** provides convenience targets for local use:
+- **A root `Makefile`** provides convenience targets for local use. The commit SHA is injected via `--build-arg` so the `/health` endpoint can report the running build:
 
 ```makefile
-build-gateway:
-    docker build -t cove-gateway apps/gateway/
+COMMIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 
-build-all:
-    docker build -t cove-gateway  apps/gateway/
-    docker build -t cove-image    apps/image/
-    docker build -t cove-product  apps/product/
-    docker build -t cove-user     apps/user/
+build-cove-api: ## Build the cove-api Docker image
+    docker build \
+        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
+        -t cove-api:$(COMMIT_SHA) \
+        services/cove-api/
+
+build-all: build-cove-api ## Build Docker images for all services
 ```
+
+As `cove-image`, `cove-product`, and `cove-user` land in later phases, each gets its own `build-cove-<service>` target wired into `build-all`.
 
 This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
 
@@ -148,7 +154,7 @@ Services drop the `-svc` suffix. The pod, K8s Service, and image name are all th
 
 | Service | What it does | Phase |
 |---|---|---|
-| `cove-gateway` | BFF — validates Firebase token, routes to backend services | Phase 1 |
+| `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 |
 | `cove-image` | Image upload, resizing, CDN delivery via Garage | Phase 2 |
 | `cove-product` | Product catalog, categories, search | Phase 3 |
 | `cove-user` | User profiles, follows, producer accounts | Phase 3 |
@@ -157,15 +163,156 @@ In Kubernetes, each service runs as a `Deployment` in `cove-staging` or `cove-pr
 
 ---
 
+## GitHub Actions → GCP authentication (Workload Identity Federation)
+
+GitHub Actions workflows that push container images to Artifact Registry authenticate to GCP using **Workload Identity Federation (WIF)** — no long-lived service account JSON key is stored anywhere.
+
+### How it works
+
+Instead of a key file, GCP trusts GitHub's identity provider directly. When a workflow job starts, GitHub issues it a signed JWT proving "I am a job in repo `danicajiao/cove`, on branch `main`". GCP verifies that signature against GitHub's public OIDC endpoint and exchanges it for a short-lived access token (1 hour). When the job ends the token is already expired — nothing to rotate or leak.
+
+```
+GitHub Actions job
+    │  OIDC token: "repo:danicajiao/cove, ref:refs/heads/main"
+    │  signed by GitHub's identity provider
+    ▼
+GCP Workload Identity Federation
+    │  verifies signature + checks attribute conditions
+    │  (only danicajiao/cove on main can impersonate this SA)
+    ▼
+Short-lived GCP access token (expires in 1 hour)
+    │
+    ▼
+Artifact Registry push (us-central1-docker.pkg.dev/cove-6a685/services/*)
+```
+
+### One-time GCP setup
+
+Run these commands once in your terminal (requires `gcloud` CLI authenticated as a project owner):
+
+```bash
+PROJECT_ID="cove-6a685"
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+POOL_ID="github-actions"
+PROVIDER_ID="github"
+SA_NAME="github-actions-ci"
+REPO="danicajiao/cove"
+
+# 1. Create the Workload Identity Pool
+gcloud iam workload-identity-pools create $POOL_ID \
+  --project=$PROJECT_ID \
+  --location=global \
+  --display-name="GitHub Actions"
+
+# 2. Add GitHub as an OIDC provider inside that pool
+gcloud iam workload-identity-pools providers create-oidc $PROVIDER_ID \
+  --project=$PROJECT_ID \
+  --location=global \
+  --workload-identity-pool=$POOL_ID \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='${REPO}'"
+
+# 3. Create the service account CI will impersonate
+gcloud iam service-accounts create $SA_NAME \
+  --project=$PROJECT_ID \
+  --display-name="GitHub Actions CI"
+
+# 4. Grant the service account permission to push to Artifact Registry
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+# 5. Allow the GitHub Actions identity to impersonate the service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project=$PROJECT_ID \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
+```
+
+### Get the values for GitHub repository variables
+
+After running the commands above, retrieve the two values needed by the workflow:
+
+```bash
+# WIF_PROVIDER — paste this into GitHub → Settings → Variables → WIF_PROVIDER
+echo "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}"
+
+# WIF_SERVICE_ACCOUNT — paste this into GitHub → Settings → Variables → WIF_SERVICE_ACCOUNT
+echo "${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+```
+
+These go in **Variables** (not Secrets) in GitHub → Settings → Secrets and variables → Actions → Variables tab. They are not sensitive — they identify the WIF pool, not a credential.
+
+---
+
+## Token validation strategy
+
+**Decision: Option A — trust the gateway, propagate UID via header.**
+
+`cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-product`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
+
+```
+iOS App
+  │  Authorization: Bearer <Firebase ID token>
+  ▼
+cove-api
+  │  validates token via Firebase Admin SDK
+  │  X-Cove-Uid: <uid>          ← injected, Bearer token stripped
+  ▼
+cove-image / cove-product / cove-user
+     reads X-Cove-Uid from header, no Firebase SDK required
+```
+
+### Why this is safe
+
+Downstream services are never exposed to public traffic. They are reachable only via in-cluster Kubernetes Service DNS (`cove-image.cove-staging.svc.cluster.local`). An attacker on the public internet cannot send a forged `X-Cove-Uid` header — they can only reach `cove-api` via Cloudflare Tunnel, and `cove-api` overwrites the header on every request regardless of what the client sent.
+
+NetworkPolicy manifests (added in `danicajiao/homelab#25`) enforce this at the cluster level: downstream services only accept traffic from `cove-api`, not from arbitrary pods. (Note: K3s ships with flannel, which does not enforce NetworkPolicy — these manifests are declarative intent that becomes active if the cluster migrates to a policy-enforcing CNI such as Cilium or Calico.)
+
+### Implementation pattern
+
+`cove-api` reverse-proxy handler (added when routing is wired in Phase 2+):
+
+```go
+// Strip any client-supplied X-Cove-Uid header to prevent spoofing,
+// then inject the validated UID before forwarding the request.
+outboundReq.Header.Del("X-Cove-Uid")
+outboundReq.Header.Set("X-Cove-Uid", uid)
+```
+
+Downstream service middleware (each service implements this instead of the Firebase Admin SDK):
+
+```go
+uid := r.Header.Get("X-Cove-Uid")
+if uid == "" {
+    http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+    return
+}
+```
+
+### When to revisit
+
+Revisit if any of the following change:
+
+- A downstream service gains a public ingress (even temporarily)
+- The cluster moves to multi-tenant infrastructure (GKE, shared node pools)
+- A security audit flags lateral movement risk within the cluster
+
+At that point Option C (internal JWT signed with a cluster secret) provides defence-in-depth without the Firebase Admin SDK cost of Option B.
+
+---
+
 ## Container images
 
 Images are stored in Google Artifact Registry under the `cove-6a685` project:
 
 ```
-us-central1-docker.pkg.dev/cove/services/cove-gateway:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-image:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-product:sha-abc1234
-us-central1-docker.pkg.dev/cove/services/cove-user:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-api:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-product:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-user:sha-abc1234
 ```
 
 Tags use the Git commit SHA (not `latest`) so every deployed version is traceable. The staging overlay pins the `sha-*` tag from the most recent CI build; the prod overlay promotes the same tag after staging validation.
@@ -183,13 +330,13 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 - `cove-staging` and `cove-prod` namespaces exist, Argo CD overlays wired up
 - iOS app still calls Firebase directly — no behavior change
 
-### Phase 1 — Gateway
+### Phase 1 — Gateway ✅ complete
 
-- Deploy `cove-gateway` to `cove-staging`
-- iOS `APIClient` sends Firebase ID Token on all requests
-- Gateway validates token, returns placeholder responses for all routes
-- iOS app routes all backend calls through `APIClient` (Firestore/Storage still called directly for data)
-- Smoke test: authenticated request to `api.coveapp.dev/health` returns 200
+- Deploy `cove-api` to `cove-staging` and `cove-prod` behind Cloudflare Tunnel
+- iOS `CoveAPIClient` sends Firebase ID Token on all requests via `FirebaseAuthMiddleware`
+- Gateway validates token, returns typed responses defined in `openapi.yaml`
+- iOS app routes all cove-api calls through `CoveAPIClient`; Firebase SDK still used directly for Auth, Firestore, and Storage
+- Smoke test: `CoveAPIClient.shared.health()` returns a `HealthResponse` with `status == "ok"`
 
 ### Phase 2 — Image service
 
@@ -210,7 +357,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 Not yet planned in detail; tracked separately. Scope:
 
-- Build `cove-vendor` at `apps/vendor/`
+- Build `cove-vendor` at `services/cove-vendor/`
 - Vendor onboarding flow (multi-step, business verification)
 - Vendor profile management
 - Vendor dashboard API (separate iOS/web surface for producers)
@@ -247,4 +394,4 @@ K3s uses the same Kubernetes API as GKE — manifests written today run on GKE u
 - [Postgres Primer](POSTGRES_PRIMER.md) — indexes, JSONB, full-text search, ltree
 - [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) — data layer design
 - [Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md) — category hierarchy and filtering
-- [App Architecture](APP_ARCHITECTURE.md) — current iOS app structure and Firebase usage
+- [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — current iOS app structure and Firebase usage

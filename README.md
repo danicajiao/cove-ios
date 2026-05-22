@@ -1,5 +1,5 @@
 # Cove - A Curated Marketplace
-[![CI - Main](https://github.com/danicajiao/cove-ios/actions/workflows/ci-main.yml/badge.svg)](https://github.com/danicajiao/cove-ios/actions/workflows/ci-main.yml)
+[![CI - iOS](https://github.com/danicajiao/cove/actions/workflows/ci-ios.yml/badge.svg)](https://github.com/danicajiao/cove/actions/workflows/ci-ios.yml)
 
 <img width="1630" alt="Screenshot 2025-04-23 at 12 36 21 AM" src="https://github.com/user-attachments/assets/a6194687-e7ce-4ca4-a534-b6852527d8ad" />
 
@@ -15,9 +15,10 @@ This is a monorepo. Apps, services, and shared packages live under their respect
 
 ```
 cove/
-├── apps/
+├── apps/                   # Client applications
 │   └── ios/                # Swift / SwiftUI iOS app (this is what runs in Xcode)
-├── services/               # Backend services (planned)
+├── services/               # Backend services
+│   └── cove-api/           # Go gateway service (Phase 1)
 ├── packages/               # Shared schemas, design tokens (planned)
 └── docs/                   # Cross-cutting product/architecture docs
 ```
@@ -43,8 +44,8 @@ cove/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/danicajiao/cove-ios.git
-cd cove-ios
+git clone https://github.com/danicajiao/cove.git
+cd cove
 
 # 2. Open the iOS project
 open apps/ios/Cove.xcodeproj
@@ -81,7 +82,7 @@ apps/ios/Cove/
 └── Resources/          # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
 
-See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how data flows through the app.
+See [iOS App Architecture](docs/IOS_APP_ARCHITECTURE.md) for a detailed breakdown of how data flows through the app.
 
 ## Feature Status
 
@@ -108,7 +109,7 @@ See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how
 | Doc | Description |
 |---|---|
 | [Quick Start Guide](docs/QUICK_START.md) | Prerequisites, setup, and troubleshooting |
-| [App Architecture](docs/APP_ARCHITECTURE.md) | MVVM structure, data flows, Firebase model |
+| [iOS App Architecture](docs/IOS_APP_ARCHITECTURE.md) | MVVM structure, data flows, Firebase model |
 | [CI/CD Workflows](docs/CI_CD_WORKFLOWS.md) | GitHub Actions workflows, Fastlane lanes, versioning |
 | [Secrets Setup](docs/SECRETS_SETUP.md) | Configuring GitHub secrets for CI/CD |
 | [All Docs](docs/README.md) | Full documentation index |
@@ -119,7 +120,9 @@ See [App Architecture](docs/APP_ARCHITECTURE.md) for a detailed breakdown of how
 
 This project uses trunk-based development. Every branch is tied to a GitHub issue.
 
-Format: `<label>/<issue-id>-<description-in-kebab-case>`
+Format: `<label>/<REPO>-<issue-number>-<short-description>` when a GitHub issue exists, or `<label>/<short-description>` for off-cycle changes with no issue.
+
+The `<REPO>` prefix is ALL CAPS and identifies the issue tracker — always `COVE` for this repo.
 
 | Label | Use |
 |---|---|
@@ -129,7 +132,7 @@ Format: `<label>/<issue-id>-<description-in-kebab-case>`
 | `docs/` | Documentation-only changes |
 | `chore/` | Maintenance, config, tooling |
 
-Examples: `feature/21-favorites-view`, `bug/3-fix-login-crash`, `docs/update-readme`
+Examples: `feature/COVE-21-favorites-view`, `bug/COVE-3-fix-login-crash`, `docs/update-readme`
 
 ### Pull Requests
 
@@ -138,6 +141,15 @@ PR titles or descriptions should include a closing keyword and the issue number 
 ```
 Closes #21
 ```
+
+This project spans two repos (`danicajiao/cove` and `danicajiao/homelab`). When referencing an issue or PR in the other repo, always use the fully qualified format so GitHub links it correctly:
+
+```
+danicajiao/homelab#28   ← referencing a homelab PR from cove
+danicajiao/cove#234     ← referencing a cove issue from homelab
+```
+
+Note: `Closes owner/repo#N` does not auto-close cross-repo — GitHub only auto-closes within the same repo.
 
 ### CI
 

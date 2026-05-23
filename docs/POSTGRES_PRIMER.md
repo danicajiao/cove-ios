@@ -22,9 +22,9 @@ Assumed starting point: comfortable with Firestore, new to relational databases.
 
 ## The database layout
 
-Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema (`business`, `product`, `user`). This primer covers the Postgres *mechanics* those schemas rely on; the **canonical schema, entities, and service ownership live in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** — refer there for the actual table definitions. The examples below are illustrative.
+Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema (`directory`, `product`, `user`). This primer covers the Postgres *mechanics* those schemas rely on; the **canonical schema, entities, and service ownership live in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** — refer there for the actual table definitions. The examples below are illustrative.
 
-Each service connects with a Postgres role whose `search_path` is set to its own schema, so application queries stay unqualified — `SELECT * FROM products` inside `cove-product` works without ever typing `product.products`. Cross-schema references (e.g., `user.favorites` → `product.products`, `product.products.vendor_id` → `vendor.vendors`) use real foreign keys, since all schemas live in the same database.
+Each service connects with a Postgres role whose `search_path` is set to its own schema, so application queries stay unqualified — `SELECT * FROM products` inside `cove-product` works without ever typing `product.products`. Cross-schema references (e.g., `user.favorites` → `product.products`, `product.products.maker_id` → `directory.makers`) use real foreign keys, since all schemas live in the same database.
 
 ### Why one cluster, not one per service
 
@@ -589,7 +589,7 @@ Quick lookups for terms used throughout. For full context, see the corresponding
 
 **Role** — A Postgres "user" with login and permission grants. Services connect as their own role (`cove_product`, `cove_user`) so schema ownership is enforced at the database level.
 
-**Schema** — A namespace inside a Postgres database that groups tables, functions, and types. Cove uses one schema per service (`product`, `vendor`, `user`) within a single `cove` database.
+**Schema** — A namespace inside a Postgres database that groups tables, functions, and types. Cove uses one schema per service (`directory`, `product`, `user`) within a single `cove` database.
 
 **search_path** — Ordered list of schemas Postgres checks for unqualified names. Each service's role has its own schema first, so application queries stay unqualified (`SELECT * FROM products` works inside `cove-product` because `search_path = product, public`).
 

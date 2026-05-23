@@ -347,21 +347,23 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 ### Phase 3 — Data services
 
-- Provision a single CNPG `Cluster` (`cove-db`) hosting the `cove` database with three schemas: `product`, `vendor`, and `user`. The `vendor` schema is pre-positioned for a future `cove-vendor` service — no service owns it in Phase 3; `cove-product` and `cove-user` get read-only + FK reference grants.
+> Being re-planned against the trust-layer data model — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / product / signals).
+
+- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3; `cove-product` and `cove-user` get read-only + FK reference grants.
 - Deploy `cove-product` and `cove-user` to `cove-staging`
 - Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows)
-- iOS app calls `api.coveapp.dev/products/*` and `api.coveapp.dev/users/*`
+- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/products/*`, and `api.coveapp.dev/users/*`
 - Firestore retired
 
-### Phase 4 (planned) — Vendor service
+### Phase 4 (planned) — Directory service
 
 Not yet planned in detail; tracked separately. Scope:
 
-- Build `cove-vendor` at `services/cove-vendor/`
-- Vendor onboarding flow (multi-step, business verification)
-- Vendor profile management
-- Vendor dashboard API (separate iOS/web surface for producers)
-- Take ownership of the `vendor` schema via a permissions flip — no schema migration, no data move; `cove-product` keeps SELECT for catalog reads
+- Build `cove-directory` at `services/cove-directory/`
+- Self-serve onboarding flow (maker + storefront, business/individual verification)
+- Maker and storefront profile management; trust-signal verification
+- Producer-facing dashboard API (separate iOS/web surface)
+- Take ownership of the `directory` schema via a permissions flip — no schema migration, no data move; `cove-product` keeps SELECT for discovery reads
 
 ---
 

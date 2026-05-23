@@ -6,7 +6,7 @@
 
 - [Overview](#overview)
 - [The core reframe: the trust layer is the product](#the-core-reframe-the-trust-layer-is-the-product)
-- [Entity model: maker, seller, product](#entity-model-maker-seller-product)
+- [Entity model: maker, storefront, product](#entity-model-maker-storefront-product)
 - [Services](#services)
 - [Single Postgres cluster, schemas per service](#single-postgres-cluster-schemas-per-service)
 - [The trust signal system](#the-trust-signal-system)
@@ -27,7 +27,7 @@
 
 ## Overview
 
-Cove is a **local commerce discovery platform**. Users search for what they want — "handmade ceramics," "cold brew," "wool blankets" — and Cove surfaces nearby producers and businesses that have earned trust through verified values, ranked above whoever simply has the most reviews or ad spend. Purchases happen in person; there is no order management or payment processing in v1.
+Cove is a **local commerce discovery platform**. Users search for what they want — "handmade ceramics," "cold brew," "wool blankets" — and Cove surfaces nearby makers and the places to find them, ranked by earned trust rather than ad spend or review volume. Purchases happen in person; there is no order management or payment processing in v1.
 
 The v1 backend uses:
 - **Postgres** (one CNPG cluster, schemas per service) for all structured data
@@ -43,7 +43,7 @@ The v1 backend uses:
 - Reviews, comments, social feed
 - Inventory tracking, stock management
 - Paid placement or promoted listings — **visibility is never for sale**
-- National or non-local business listings
+- National or non-local listings
 - GraphQL (REST is the API surface)
 - Firebase Auth replacement (kept indefinitely)
 
@@ -51,7 +51,7 @@ The v1 backend uses:
 
 ## The core reframe: the trust layer is the product
 
-Cove's defensible advantage is its **trust layer** — discovery rooted in verified business values, where visibility cannot be purchased. Where Yelp and Google rank by ad spend or review volume, Cove ranks by earned trust.
+Cove's defensible advantage is its **trust layer** — discovery rooted in verified values, where visibility cannot be purchased. Where Yelp and Google rank by ad spend or review volume, Cove ranks by earned trust.
 
 The consequences for the data model:
 
@@ -59,36 +59,36 @@ The consequences for the data model:
 - **Trust signals are first-class structured data**, not display badges. They drive the ranking.
 - **Visibility is never for sale.** The ranking function consumes only trust, proximity, and relevance — never spend.
 
-This is why the model below centers the *business graph and trust layer* rather than a product catalog. Products are the search surface; the trust-ranked business graph is the product.
+This is why the model below centers the *maker + place graph and trust layer* rather than a product catalog. Products are the search surface; the trust-ranked graph is the product.
 
 ---
 
-## Entity model: maker, seller, product
+## Entity model: maker, storefront, product
 
-Cove separates **who makes** a thing from **where you buy it** — *"Cove tells you who near you makes or sells it."*
+Cove separates **who makes** a thing from **where you find it** — *"Cove tells you who near you makes or sells it."*
 
 | Entity | Role | Carries | Local-availability gate? |
 |---|---|---|---|
-| **brand** (maker) | Who produces the product | Provenance trust signals (B Corp, 1% for the Planet) | No — can be national |
-| **storefront** (local seller) | Where you physically go to get it | Local-business signals (Living Wage, Community Verified) + **location** | **Yes — must be local** |
-| **product** | What a user searches for | Its own signals (USDA Organic) + FK to a brand + FK to a storefront | Via its storefront |
+| **maker** | Who produces it — a company *or* an individual | Provenance signals (B Corp, 1% for the Planet) + **tier** (Verified Business / Individual Lister) | No — can be national |
+| **storefront** | Where to find it — `type`: shop / gallery / studio / market / taproom | Local signals (Living Wage, Community Verified) + **location** | **Yes — must be local** |
+| **product** | What a user searches for | Its own signals (USDA Organic); **made by** one maker, **available at** many storefronts | Via its storefronts |
 
-### Why separating maker from seller matters
+"Storefront" is the internal entity name; a `type` enum carries the specifics (a market stall and a gallery are both storefronts of different types). The consumer-facing label is **"Where to find it,"** so the word never has to read as warm marketing copy.
+
+### Why separating maker from where-to-find-it matters
 
 It correctly handles real cases and reframes the "national chains" concern:
 
-- **A local boutique selling Patagonia.** Storefront = the boutique (local, its own signals). Brand = Patagonia (B Corp, national). The product carries Patagonia's brand trust *on top of* the boutique's local trust.
+- **A local boutique selling Patagonia.** Storefront = the boutique (`type: shop`, local, its own signals). Maker = Patagonia (B Corp, national). The product carries Patagonia's maker trust *on top of* the boutique's local trust.
+- **An individual potter.** Maker = the potter (Individual Lister tier, her provenance signals). She's available at her **studio** (`type: studio`, by appointment), a **gallery** (`type: gallery`, someone else's), and the **Saturday market** (`type: market`, a shared place). One maker, one product, many storefronts.
 - **Patagonia's own RiNo store.** Surfaces *because* it has a local storefront AND genuine signals — not excluded for being national.
 - **Walmart.** Has local stores too, but no meaningful trust signals, so the ranking buries it.
 
-The rule is not "local only." It is **require a local point of sale, then rank by trust.** The geographic gate applies to the **storefront**; the trust ranking does the promotion. Size becomes irrelevant; local availability + verified trust is what wins.
+The rule is not "local only." It is **require a local point of availability, then rank by trust.** The geographic gate applies to the **storefront**; the trust ranking does the promotion. Size becomes irrelevant; local availability + verified trust is what wins.
 
-### The same-organization case
+### Maker-operated storefronts
 
-A vertically integrated business (e.g. New Belgium Brewing with its own taproom) is modeled as a **brand** (New Belgium, B Corp) plus a **storefront** (the taproom, with location) it operates. Keeping them as separate rows is correct, not redundant:
-
-- The brand can be sold at *other* storefronts (a local bottle shop), carrying its trust there.
-- The storefront can sell *other* brands (guest taps), each carrying their own trust.
+A storefront may be operated by the maker themselves (a potter's studio, New Belgium's taproom) or be an independent place that carries many makers' goods (a boutique, a gallery, a farmers market). A nullable `operated_by_maker_id` on `storefronts` records the former — useful for showing "the maker's own studio" and for attributing trust. A vertically integrated business like New Belgium is a **maker** (B Corp) plus a **storefront** (`type: taproom`) it operates; keeping them as separate rows is correct, because the maker can also be sold at other storefronts and the taproom can carry guest makers.
 
 ---
 
@@ -97,12 +97,12 @@ A vertically integrated business (e.g. New Belgium Brewing with its own taproom)
 | Service | Path | Responsibility |
 |---|---|---|
 | `cove-api` | `services/cove-api/` | Single ingress (BFF gateway). Validates Firebase ID tokens, routes to backend services, forwards UID via `X-Cove-Uid`. |
-| `cove-product` | `services/cove-product/` | The discovery surface: brands, storefronts, products, categories, trust signals, scoring, and the discovery query. Reads the whole business graph. |
+| `cove-product` | `services/cove-product/` | The discovery surface: makers, storefronts, products, availability, categories, trust signals, scoring, and the discovery query. Reads the whole graph. |
 | `cove-user` | `services/cove-user/` | User profiles, favorites, follows. |
 | `cove-image` | `services/cove-image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. Stateless. |
-| `cove-vendor` | `services/cove-vendor/` (future) | Business onboarding self-serve flow, brand/storefront profile management, signal verification. Takes over writes to the `business` schema when it ships. |
+| `cove-directory` | `services/cove-directory/` (future) | Self-serve onboarding, maker/storefront profile management, signal verification. Takes over writes to the `directory` schema when it ships. |
 
-**v1 service ownership note:** `cove-product` owns the entire discovery surface for v1, including the `business` schema (brands + storefronts) which is seeded once during migration and read by `cove-product` for discovery. When `cove-vendor` ships (business onboarding), it takes over writes to `business` via a permissions flip — `cove-product` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern Phase 3 already uses.
+**v1 service ownership note:** `cove-product` owns the entire discovery surface for v1, including the `directory` schema (makers + storefronts) which is seeded once during migration and read by `cove-product` for discovery. When `cove-directory` ships (onboarding), it takes over writes to `directory` via a permissions flip — `cove-product` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern.
 
 The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [iOS App Architecture](IOS_APP_ARCHITECTURE.md)).
 
@@ -114,63 +114,64 @@ All v1 services share one CNPG `Cluster` (`cove-db`) and one database (`cove`), 
 
 | Schema | Owning service | Tables |
 |---|---|---|
-| `business` | `cove-vendor` (future); read-only from `cove-product` in v1 | `brands`, `storefronts` |
-| `product` | `cove-product` | `categories`, `products`, `media`, `signals`, `entity_signals` |
+| `directory` | `cove-directory` (future); read-only from `cove-product` in v1 | `makers`, `storefronts` |
+| `product` | `cove-product` | `categories`, `products`, `availability`, `media`, `signals`, `entity_signals` |
 | `user` | `cove-user` | `users`, `favorites`, `follows` |
 
 ### Why one cluster, not one per service
 
-The microservices orthodoxy is "one database per service" for failure isolation and team autonomy. None of those preconditions apply at Cove's v1 scale (one developer, single-node K3s, one product surface). What does apply is the cost of giving up referential integrity, JOINs, and atomic writes — and the **discovery query JOINs across all three schemas** (products + brands + storefronts + signals). One cluster with schemas keeps logical service ownership while preserving Postgres's relational guarantees across the whole graph. Splitting later is a known, low-risk migration.
+The microservices orthodoxy is "one database per service" for failure isolation and team autonomy. None of those preconditions apply at Cove's v1 scale (one developer, single-node K3s, one product surface). What does apply is the cost of giving up referential integrity, JOINs, and atomic writes — and the **discovery query JOINs across all three schemas** (products + makers + storefronts + availability + signals). One cluster with schemas keeps logical service ownership while preserving Postgres's relational guarantees across the whole graph. Splitting later is a known, low-risk migration.
 
 ### Cross-schema foreign keys
 
 The relational graph spans all three schemas, enforced by real FKs with `ON DELETE CASCADE`:
 
 ```
-product.products.brand_id        ──►  business.brands(id)
-product.products.storefront_id   ──►  business.storefronts(id)
-product.entity_signals.{brand_id|storefront_id|product_id}  ──►  the referenced entity
-user.favorites.product_id        ──►  product.products(id)
-user.follows.brand_id            ──►  business.brands(id)
-user.follows.storefront_id       ──►  business.storefronts(id)
+product.products.maker_id            ──►  directory.makers(id)
+product.availability.product_id      ──►  product.products(id)
+product.availability.storefront_id   ──►  directory.storefronts(id)
+directory.storefronts.operated_by_maker_id  ──►  directory.makers(id)
+product.entity_signals.{maker_id|storefront_id|product_id}  ──►  the referenced entity
+user.favorites.product_id            ──►  product.products(id)
+user.follows.{maker_id|storefront_id}  ──►  the referenced entity
 ```
 
 ---
 
 ## The trust signal system
 
-Signals attach at **three levels** — brand, storefront, and product. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
+Signals attach at **three levels** — maker, storefront, and product. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
 
 ### Worked example: New Belgium Brewing
 
 ```
-Brand: New Belgium Brewing
+Maker: New Belgium Brewing
   └─ signal: B Corp Certified          ← company-level (the maker)
 
-Storefront: New Belgium Taproom (RiNo)
-  └─ signal: Living Wage Certified     ← local-business-level (has the location)
+Storefront: New Belgium Taproom (RiNo, type: taproom, operated by the maker)
+  └─ signal: Living Wage Certified     ← local-place-level (has the location)
 
 Product: "The Purist Clean Lager"  (made by New Belgium)
   └─ signal: USDA Organic              ← product-level (this beer only)
 
 Product: "Fat Tire"  (made by New Belgium)
-  └─ (no organic signal)               ← same brand, no product-level cert
+  └─ (no organic signal)               ← same maker, no product-level cert
 ```
 
-Discovering "Purist Clean Lager" yields **B Corp (from the brand) + Living Wage (from the storefront) + USDA Organic (from the product)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Product-level signals differentiate products from the same maker.
+Discovering "Purist Clean Lager" yields **B Corp (from the maker) + Living Wage (from the storefront) + USDA Organic (from the product)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Product-level signals differentiate products from the same maker.
 
 ### Signal taxonomy
 
 | Signal | Verification method | Typical level |
 |---|---|---|
-| B Corp Certified | Cross-reference B Lab directory | brand |
-| USDA Organic | Cross-reference USDA directory | product (sometimes brand) |
-| Fair Trade Certified | Cross-reference issuing body | product / brand |
-| 1% for the Planet | Cross-reference member directory | brand |
-| Colorado Proud | CO Dept. of Agriculture (location-tied) | brand / product |
-| Living Wage Certified | Cross-reference Living Wage directory | storefront / brand |
-| Community Verified | Community vouching (softer signal) | storefront / brand |
-| DUNS-verified ("Verified Business" tier) | DUNS number lookup | storefront / brand |
+| B Corp Certified | Cross-reference B Lab directory | maker |
+| USDA Organic | Cross-reference USDA directory | product (sometimes maker) |
+| Fair Trade Certified | Cross-reference issuing body | product / maker |
+| 1% for the Planet | Cross-reference member directory | maker |
+| Colorado Proud | CO Dept. of Agriculture (location-tied) | maker / product |
+| Living Wage Certified | Cross-reference Living Wage directory | storefront / maker |
+| Community Verified | Community vouching (softer signal) | storefront / maker |
+| DUNS-verified ("Verified Business" tier) | DUNS number lookup | maker (drives `tier`) |
 
 ### The exclusive-arc attachment
 
@@ -191,17 +192,17 @@ CREATE TABLE product.signals (
 CREATE TABLE product.entity_signals (
     id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     signal_id     uuid NOT NULL REFERENCES product.signals(id),
-    brand_id      uuid REFERENCES business.brands(id)         ON DELETE CASCADE,
-    storefront_id uuid REFERENCES business.storefronts(id)    ON DELETE CASCADE,
-    product_id    uuid REFERENCES product.products(id)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)         ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)    ON DELETE CASCADE,
+    product_id    uuid REFERENCES product.products(id)         ON DELETE CASCADE,
     status        text NOT NULL DEFAULT 'pending',  -- 'verified' | 'pending' | 'community_vouched'
     verified_at   timestamptz,
     verified_via  text,                             -- directory URL, DUNS #, voucher reference
     created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK (num_nonnulls(brand_id, storefront_id, product_id) = 1)
+    CHECK (num_nonnulls(maker_id, storefront_id, product_id) = 1)
 );
 
-CREATE INDEX ON product.entity_signals (brand_id);
+CREATE INDEX ON product.entity_signals (maker_id);
 CREATE INDEX ON product.entity_signals (storefront_id);
 CREATE INDEX ON product.entity_signals (product_id);
 ```
@@ -215,15 +216,15 @@ Adding a new signal type (e.g. "Certified Plastic Negative") is a single `INSERT
 A discovery result aggregates trust across the three levels:
 
 ```
-result_trust_score(product, brand, storefront) =
-      brand.trust_score          -- materialized from brand signals (B Corp, etc.)
+result_trust_score(product, maker, storefront) =
+      maker.trust_score          -- materialized from maker signals (B Corp, etc.)
     + storefront.trust_score     -- materialized from storefront signals (Living Wage, etc.)
     + Σ product's own signals    -- USDA Organic, etc. — usually 0–2, added at query time
 ```
 
-**Materialize** `brand.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the product's own signals live.
+**Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the product's own signals live.
 
-The brief's "rewards breadth and diversity of trust signals rather than any single credential" is a refinement of *how* the sum works — diminishing returns on stacking similar signals, a bonus for spanning categories. **Start with flat additive weights**; tune the function later. This does not block the schema.
+The brief's "rewards breadth and diversity of trust signals rather than any single credential" is a refinement of *how* the sum works — diminishing returns on stacking similar signals, a bonus for spanning categories — and the `maker.tier` (Individual Lister vs Verified Business) shifts the weighting (Individual Listers lean more on community vouching). **Start with flat additive weights**; tune the function later. This does not block the schema.
 
 ---
 
@@ -235,11 +236,11 @@ The standard for radius search on Postgres is **PostGIS** — a `geography` colu
 
 ```sql
 -- storefront location (lon/lat); SRID 4326 = WGS84
-ALTER TABLE business.storefronts ADD COLUMN location geography(Point, 4326);
-CREATE INDEX ON business.storefronts USING GIST (location);
+ALTER TABLE directory.storefronts ADD COLUMN location geography(Point, 4326);
+CREATE INDEX ON directory.storefronts USING GIST (location);
 
 -- "storefronts within 20 miles of Denver" — 20 mi = 32186.9 meters
-SELECT * FROM business.storefronts
+SELECT * FROM directory.storefronts
 WHERE ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9);
 ```
 
@@ -297,98 +298,110 @@ Conventions: UUID PKs, `text` over `varchar`, `timestamptz`, snake_case plural t
 CREATE EXTENSION IF NOT EXISTS ltree;
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE SCHEMA business;
+CREATE SCHEMA directory;
 CREATE SCHEMA product;
 CREATE SCHEMA "user";   -- quoted: reserved word in some contexts
 
--- v1 service roles. cove_vendor is NOT created yet — the business schema
--- exists but cove-product reads it until cove-vendor ships.
+-- v1 service roles. cove_directory is NOT created yet — the directory schema
+-- exists but cove-product reads it until cove-directory ships.
 CREATE ROLE cove_product LOGIN PASSWORD :'product_password';
 CREATE ROLE cove_user    LOGIN PASSWORD :'user_password';
 
 GRANT USAGE ON SCHEMA product  TO cove_product;
 GRANT USAGE ON SCHEMA "user"   TO cove_user;
 
--- cove_product reads + references the business graph for discovery
-GRANT USAGE      ON SCHEMA business                          TO cove_product;
-GRANT SELECT     ON business.brands, business.storefronts    TO cove_product;
-GRANT REFERENCES ON business.brands, business.storefronts    TO cove_product;
+-- cove_product reads + references the directory graph for discovery
+GRANT USAGE      ON SCHEMA directory                          TO cove_product;
+GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_product;
+GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_product;
 
--- cove_user references products + the business graph for favorites/follows
-GRANT USAGE      ON SCHEMA product, business                 TO cove_user;
-GRANT SELECT     ON product.products                         TO cove_user;
-GRANT SELECT     ON business.brands, business.storefronts    TO cove_user;
-GRANT REFERENCES ON product.products                         TO cove_user;
-GRANT REFERENCES ON business.brands, business.storefronts    TO cove_user;
+-- cove_user references products + the directory graph for favorites/follows
+GRANT USAGE      ON SCHEMA product, directory                 TO cove_user;
+GRANT SELECT     ON product.products                          TO cove_user;
+GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_user;
+GRANT REFERENCES ON product.products                          TO cove_user;
+GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_user;
 
-ALTER ROLE cove_product SET search_path = product, business, public;
+ALTER ROLE cove_product SET search_path = product, directory, public;
 ALTER ROLE cove_user    SET search_path = "user", public;
 ```
 
-### `business` schema
+### `directory` schema
 
 ```sql
--- The maker. Can be local or national; carries provenance trust signals.
-CREATE TABLE business.brands (
+-- The maker. A company OR an individual; carries provenance signals.
+CREATE TABLE directory.makers (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     name        text        NOT NULL,
     description text,
-    trust_score numeric     NOT NULL DEFAULT 0,    -- materialized from brand signals
+    tier        text        NOT NULL DEFAULT 'individual_lister',  -- 'verified_business' | 'individual_lister'
+    trust_score numeric     NOT NULL DEFAULT 0,    -- materialized from maker signals
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
--- The local point of sale. Must have a verifiable local address (the integrity gate).
-CREATE TABLE business.storefronts (
-    id          uuid                 PRIMARY KEY DEFAULT gen_random_uuid(),
-    name        text                 NOT NULL,
-    description text,
-    address     text                 NOT NULL,
-    location    geography(Point,4326) NOT NULL,   -- the proximity dimension + integrity gate
-    tier        text                 NOT NULL DEFAULT 'individual_lister',  -- 'verified_business' | 'individual_lister'
-    trust_score numeric              NOT NULL DEFAULT 0,   -- materialized from storefront signals
-    created_at  timestamptz          NOT NULL DEFAULT now()
+-- Where to find products locally. Must have a verifiable local address (the integrity gate).
+CREATE TABLE directory.storefronts (
+    id                   uuid                  PRIMARY KEY DEFAULT gen_random_uuid(),
+    name                 text                  NOT NULL,
+    description          text,
+    type                 text                  NOT NULL,   -- 'shop' | 'gallery' | 'studio' | 'market' | 'taproom'
+    address              text                  NOT NULL,
+    location             geography(Point,4326) NOT NULL,   -- proximity dimension + integrity gate
+    operated_by_maker_id uuid REFERENCES directory.makers(id),  -- nullable: the maker's own place
+    trust_score          numeric               NOT NULL DEFAULT 0,   -- materialized from storefront signals
+    created_at           timestamptz           NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON business.storefronts USING GIST (location);
-CREATE INDEX ON business.brands      (trust_score DESC);
-CREATE INDEX ON business.storefronts (trust_score DESC);
+CREATE INDEX ON directory.storefronts USING GIST (location);
+CREATE INDEX ON directory.storefronts (operated_by_maker_id);
+CREATE INDEX ON directory.makers      (trust_score DESC);
+CREATE INDEX ON directory.storefronts (trust_score DESC);
 ```
 
 ### `product` schema
 
 ```sql
 CREATE TABLE product.products (
-    id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    brand_id     uuid        NOT NULL REFERENCES business.brands(id),       -- the maker
-    storefront_id uuid       NOT NULL REFERENCES business.storefronts(id),  -- where it's sold locally
-    category_id  uuid        NOT NULL REFERENCES product.categories(id),
-    name         text        NOT NULL,
-    description  text,
-    price_cents  integer,                          -- nullable: informational; no transactions in v1
-    attributes   jsonb       NOT NULL DEFAULT '{}', -- filter facets (gender, season, ...)
-    details      jsonb       NOT NULL DEFAULT '{}', -- long-form display data (materials, notes)
-    search_vec   tsvector    GENERATED ALWAYS AS (
+    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    maker_id    uuid        NOT NULL REFERENCES directory.makers(id),   -- the maker
+    category_id uuid        NOT NULL REFERENCES product.categories(id),
+    name        text        NOT NULL,
+    description text,
+    price_cents integer,                          -- nullable: informational; no transactions in v1
+    attributes  jsonb       NOT NULL DEFAULT '{}', -- filter facets (gender, season, ...)
+    details     jsonb       NOT NULL DEFAULT '{}', -- long-form display data (materials, notes)
+    search_vec  tsvector    GENERATED ALWAYS AS (
         to_tsvector('english', coalesce(name, '') || ' ' || coalesce(description, ''))
     ) STORED,
-    is_active    boolean     NOT NULL DEFAULT true,
-    created_at   timestamptz NOT NULL DEFAULT now()
+    is_active   boolean     NOT NULL DEFAULT true,
+    created_at  timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX ON product.products USING GIN (search_vec);
 CREATE INDEX ON product.products USING GIN (attributes);
-CREATE INDEX ON product.products (category_id)   WHERE is_active = true;
-CREATE INDEX ON product.products (storefront_id);
-CREATE INDEX ON product.products (brand_id);
+CREATE INDEX ON product.products (category_id) WHERE is_active = true;
+CREATE INDEX ON product.products (maker_id);
+
+-- Where each product is available: many-to-many product ↔ storefront.
+-- A maker's mug can be at her studio AND a gallery AND the Saturday market.
+CREATE TABLE product.availability (
+    product_id    uuid        NOT NULL REFERENCES product.products(id)       ON DELETE CASCADE,
+    storefront_id uuid        NOT NULL REFERENCES directory.storefronts(id)  ON DELETE CASCADE,
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (product_id, storefront_id)
+);
+
+CREATE INDEX ON product.availability (storefront_id);
 
 -- categories, signals, entity_signals defined in their sections above.
 
--- Images. Polymorphic: brand logos, storefront photos, product images.
+-- Images. Polymorphic: maker logos, storefront photos, product images.
 -- See docs/MEDIA_ARCHITECTURE.md for the storage + serving pipeline.
 CREATE TABLE product.media (
     id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    brand_id      uuid REFERENCES business.brands(id)        ON DELETE CASCADE,
-    storefront_id uuid REFERENCES business.storefronts(id)   ON DELETE CASCADE,
-    product_id    uuid REFERENCES product.products(id)       ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)        ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)   ON DELETE CASCADE,
+    product_id    uuid REFERENCES product.products(id)        ON DELETE CASCADE,
     media_key     text        NOT NULL,             -- Garage cove-media object key (content-addressed)
     role          text        NOT NULL DEFAULT 'gallery',   -- 'primary' | 'gallery' | 'logo'
     sort_order    integer     NOT NULL DEFAULT 0,
@@ -396,12 +409,12 @@ CREATE TABLE product.media (
     width         integer     NOT NULL,
     height        integer     NOT NULL,
     created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK (num_nonnulls(brand_id, storefront_id, product_id) = 1)
+    CHECK (num_nonnulls(maker_id, storefront_id, product_id) = 1)
 );
 
 CREATE INDEX ON product.media (product_id, sort_order);
 CREATE INDEX ON product.media (storefront_id);
-CREATE INDEX ON product.media (brand_id);
+CREATE INDEX ON product.media (maker_id);
 ```
 
 ### `user` schema
@@ -423,13 +436,13 @@ CREATE TABLE "user".favorites (
 
 CREATE INDEX ON "user".favorites (uid, created_at DESC);
 
--- Follows can target a brand OR a storefront (exclusive arc).
+-- Follows can target a maker OR a storefront (exclusive arc).
 CREATE TABLE "user".follows (
-    uid           text        NOT NULL REFERENCES "user".users(uid)         ON DELETE CASCADE,
-    brand_id      uuid REFERENCES business.brands(id)        ON DELETE CASCADE,
-    storefront_id uuid REFERENCES business.storefronts(id)   ON DELETE CASCADE,
+    uid           text        NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)       ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)  ON DELETE CASCADE,
     created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK (num_nonnulls(brand_id, storefront_id) = 1)
+    CHECK (num_nonnulls(maker_id, storefront_id) = 1)
 );
 
 CREATE INDEX ON "user".follows (uid, created_at DESC);
@@ -439,32 +452,34 @@ CREATE INDEX ON "user".follows (uid, created_at DESC);
 
 ## The discovery query
 
-The discovery query is the product. "handmade ceramics near me" composes **three index types in one statement** — proximity (GiST), relevance (GIN full-text), and trust (materialized scores) — blended into a single ranking:
+The discovery query is the product. "handmade ceramics near me" composes **three index types in one statement** — proximity (GiST), relevance (GIN full-text), and trust (materialized scores) — blended into a single ranking. Because a product is available at many storefronts, it joins through `availability` and collapses to the best (nearest, highest-trust) result per product with `DISTINCT ON`:
 
 ```sql
-SELECT
+SELECT DISTINCT ON (p.id)
     p.id, p.name,
-    b.name AS brand_name,
+    m.name AS maker_name,
     s.name AS storefront_name,
+    s.type AS storefront_type,
     ST_Distance(s.location, $loc)            AS distance_m,
     ts_rank(p.search_vec, q)                 AS relevance,
-    b.trust_score + s.trust_score            AS base_trust   -- product signals added in app or a lateral sum
+    m.trust_score + s.trust_score            AS base_trust   -- product signals added in app
 FROM product.products p
-JOIN business.brands      b ON b.id = p.brand_id
-JOIN business.storefronts s ON s.id = p.storefront_id,
+JOIN directory.makers       m ON m.id = p.maker_id
+JOIN product.availability   a ON a.product_id = p.id
+JOIN directory.storefronts  s ON s.id = a.storefront_id,
      websearch_to_tsquery('english', $query) q
 WHERE p.is_active
   AND ST_DWithin(s.location, $loc, $radius)  -- GiST: proximity gate + integrity
   AND p.search_vec @@ q                       -- GIN: relevance match
-ORDER BY (
-      $w_trust     * (b.trust_score + s.trust_score)
+ORDER BY p.id, (
+      $w_trust     * (m.trust_score + s.trust_score)
     + $w_relevance * ts_rank(p.search_vec, q)
     + $w_proximity * (1.0 / (1 + ST_Distance(s.location, $loc)))
-) DESC
-LIMIT 25;
+) DESC;
+-- outer query re-sorts the DISTINCT ON results by the same blended score for the final ranking
 ```
 
-That `ORDER BY` blend is Cove's secret sauce. Yelp ranks by ad spend, Google by review volume; Cove ranks by **trust + proximity + relevance** — the thing competitors cannot cheaply copy, because it requires rebuilding the incentive structure.
+That blended score is Cove's secret sauce. Yelp ranks by ad spend, Google by review volume; Cove ranks by **trust + proximity + relevance** — the thing competitors cannot cheaply copy, because it requires rebuilding the incentive structure. (A product available at several nearby storefronts collapses to one result via `DISTINCT ON (p.id)` keeping the best storefront; the response can still list all nearby storefronts under "Where to find it.")
 
 ---
 
@@ -480,7 +495,7 @@ api.coveapp.dev  (Cloudflare Tunnel)
 cove-api  (validates token, injects X-Cove-Uid, routes /discovery, /products/* → cove-product)
    ▼
 cove-product
-   │  Runs the discovery query (products ⋈ brands ⋈ storefronts, trust + proximity + relevance)
+   │  Runs the discovery query (products ⋈ makers ⋈ availability ⋈ storefronts; trust + proximity + relevance)
    │  Resolves each result's signals; signs imgproxy URLs for media (see MEDIA_ARCHITECTURE.md)
    ▼
 HTTP 200 → iOS app
@@ -534,11 +549,10 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 ## What is deliberately not modeled
 
 - **Orders, payments, inventory, fulfillment** — Cove connects, it does not transact (v1 scope)
-- **Product variants / SKUs** — over-built for a no-transaction discovery app; a product is "what a business makes/sells," not a purchasable SKU
+- **Product variants / SKUs** — over-built for a no-transaction discovery app; a product is "what a maker makes," not a purchasable SKU
 - **Sophisticated trust scoring** — start flat-additive; add diversity/diminishing-returns tuning later
-- **Same product across multiple storefronts** — one product row per storefront is fine for v1; promoting `product` to brand-owned with a `sold_at` join is a clean later migration if de-duplication matters
 - **pgvector / semantic search** — Postgres full-text (`tsvector`/GIN) is sufficient for v1 keyword discovery; vector embeddings become relevant when AI-assisted discovery is scoped (leave room, don't build now)
-- **Availability signals** (market schedules, gallery hours, pop-up dates) — brief v3
+- **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the product↔storefront link in v1, schedule metadata comes later
 - **Reviews, ratings, social feed** — out of scope
 - **Multi-currency, historical pricing** — `price_cents` is informational USD
 
@@ -548,11 +562,12 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 
 To reconcile before the Phase 3 epic is re-planned:
 
-1. **Service ownership** — confirm `cove-product` owning the full discovery surface (incl. `business` reads) for v1, with `cove-vendor` taking over `business` writes later.
+1. **Service ownership** — confirm `cove-product` owning the full discovery surface (incl. `directory` reads) for v1, with `cove-directory` taking over `directory` writes later.
 2. **PostGIS in CNPG** — confirm the extension can be provisioned on the homelab Postgres before Phase 3.
 3. **Trust score recomputation** — for v1 it's seeded once; define the trigger/job model for when signals change post-onboarding.
-4. **Discovery API shape** — finalize `/discovery` query params and response in `cove-product`'s OpenAPI spec.
-5. **`details` on products vs a separate table** — folded into a `details` JSONB column here; split back out only if payloads get large enough to hurt list queries.
+4. **Discovery API shape** — finalize `/discovery` query params and response in `cove-product`'s OpenAPI spec, including how "Where to find it" lists multiple storefronts per result.
+5. **Independent-storefront tier** — `tier` lives on `maker`. A registered independent storefront (a boutique that resells, with no maker of its own) earns trust via its signals, not a tier; revisit if storefronts need their own tier.
+6. **`details` on products vs a separate table** — folded into a `details` JSONB column here; split back out only if payloads get large enough to hurt list queries.
 
 ---
 
@@ -574,4 +589,5 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 3.1** (May 2026) — Single shared cluster (`cove-db`) with schemas-per-service; cross-schema FKs.
 - **Version 3.2** (May 2026) — `vendor` schema pre-positioned for a future `cove-vendor` service.
 - **Version 3.3** (May 2026) — Product media split into a `product_media` child table.
-- **Version 4.0** (May 2026) — **Trust-layer reframe.** `vendor` split into `business` (brands + storefronts); the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `product_variants` (no transactions). Folded `product_details` into a `details` column and `product_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_PRODUCT_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
+- **Version 4.0** (May 2026) — **Trust-layer reframe.** Split the old `vendor` into a maker + place graph; the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `product_variants` (no transactions). Folded `product_details` into a `details` column and `product_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_PRODUCT_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
+- **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on products with a many-to-many `availability` join so one maker's product can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.

@@ -50,27 +50,9 @@ The principle that ties them together: **one source of truth, infinite derived v
 
 ## Data model
 
-A product owns zero or more media items. The primary image is used in every list view; gallery images show up on the detail screen carousel.
+Images are stored in the polymorphic `product.media` table — one row per image, attached to a product, maker (logo), or storefront (photo) via an exclusive arc. A product's `primary` image is used in every list view; `gallery` images show up on the detail screen carousel. The **canonical table definition lives in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)**; this doc covers the storage, transformation, and serving pipeline that sits on top of it.
 
-```sql
-CREATE TABLE product.product_media (
-    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id  uuid        NOT NULL REFERENCES product.products(id) ON DELETE CASCADE,
-    media_key   text        NOT NULL,                 -- Garage object key (content-addressed)
-    role        text        NOT NULL CHECK (role IN ('primary', 'gallery')),
-    sort_order  integer     NOT NULL DEFAULT 0,
-    alt_text    text,                                 -- accessibility, future SEO
-    width       integer     NOT NULL,                 -- source dimensions (for layout hints)
-    height      integer     NOT NULL,
-    created_at  timestamptz NOT NULL DEFAULT now(),
-
-    -- Exactly one primary per product. Deferrable so vendors can swap
-    -- primary in a single transaction (DELETE + INSERT or two UPDATEs).
-    UNIQUE (product_id, role) DEFERRABLE INITIALLY DEFERRED
-);
-
-CREATE INDEX ON product.product_media (product_id, sort_order);
-```
+The fields this pipeline relies on: `media_key` (the content-addressed Garage object key), `role` (`primary` / `gallery` / `logo`), `sort_order` (carousel order), `alt_text`, and source `width`/`height` (layout hints for the client).
 
 Notes:
 
@@ -141,7 +123,7 @@ ProductSummary:
     id:         { type: string, format: uuid }
     name:       { type: string }
     priceCents: { type: integer }
-    vendorName: { type: string }
+    makerName:  { type: string }
     primaryImage:
       $ref: '#/components/schemas/ImageVariants'
 
@@ -161,16 +143,16 @@ SQL backing it (search query, primary image only):
 ```sql
 SELECT
     p.id, p.name, p.price_cents,
-    v.name AS vendor_name,
-    m.media_key, m.width, m.height, m.alt_text
+    mk.name AS maker_name,
+    img.media_key, img.width, img.height, img.alt_text
 FROM product.products p
-JOIN vendor.vendors v ON v.id = p.vendor_id
+JOIN directory.makers mk ON mk.id = p.maker_id
 LEFT JOIN LATERAL (
     SELECT media_key, width, height, alt_text
-    FROM product.product_media
+    FROM product.media
     WHERE product_id = p.id AND role = 'primary'
     LIMIT 1
-) m ON TRUE
+) img ON TRUE
 WHERE p.is_active
   AND p.search_vec @@ websearch_to_tsquery('english', $1)
 ORDER BY ts_rank(p.search_vec, websearch_to_tsquery('english', $1)) DESC
@@ -211,7 +193,7 @@ SQL fetches the full gallery for the product:
 
 ```sql
 SELECT id, media_key, role, sort_order, alt_text, width, height
-FROM product.product_media
+FROM product.media
 WHERE product_id = $1
 ORDER BY sort_order;
 ```
@@ -315,7 +297,7 @@ Upload is decoupled from product association:
 
 1. Vendor app calls `POST /images` with the image bytes → response: `{ media_key, width, height }`
 2. Vendor app calls `POST /products` (or `PATCH`) with the desired role: `{ media_key, role: 'primary' }`
-3. `cove-product` inserts into `product_media`
+3. `cove-product` inserts into `media`
 
 This split means a vendor can upload several images and then arrange them — no need for the upload endpoint to know about products.
 
@@ -483,18 +465,18 @@ For products with very high traffic, the variants stay warm at the Cloudflare ed
 
 ## Garbage collection
 
-When a product is deleted, `ON DELETE CASCADE` removes its `product_media` rows. The Garage objects themselves are **not** automatically removed — we want to keep them briefly in case a vendor changes their mind, and content-addressing means the same image might still be referenced by another product.
+When a product is deleted, `ON DELETE CASCADE` removes its `media` rows. The Garage objects themselves are **not** automatically removed — we want to keep them briefly in case a vendor changes their mind, and content-addressing means the same image might still be referenced by another product.
 
 A small periodic job sweeps unreferenced objects:
 
 ```sql
--- Find Garage keys referenced by no product_media row.
+-- Find Garage keys referenced by no media row.
 -- Run weekly; delete objects older than 30 days that don't appear in this query.
-SELECT DISTINCT media_key FROM product.product_media;
+SELECT DISTINCT media_key FROM product.media;
 ```
 
 The job lists Garage objects, diffs against the SELECT, and deletes any object that is:
-- Not referenced in `product_media`
+- Not referenced in `media`
 - Older than 30 days (gives vendors a window to recover)
 
 This stays out of the hot path entirely.
@@ -512,7 +494,7 @@ These are real future requirements but explicitly out of scope for v1:
 - **AVIF output** — modern format, ~20% smaller than WebP. Add as a new variant suffix when iOS / web client adoption justifies the imgproxy CPU cost increase.
 - **Per-vendor signing keys** — would let us revoke one vendor's image access without rotating the global key. Defer until vendor portal exists.
 
-Each of these can slot in without disturbing the v1 architecture — add a new endpoint, new variant, new field on `product_media`, or new background job. The data model and serving model don't need to change to accommodate them.
+Each of these can slot in without disturbing the v1 architecture — add a new endpoint, new variant, new field on `media`, or new background job. The data model and serving model don't need to change to accommodate them.
 
 ---
 

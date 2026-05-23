@@ -14,6 +14,7 @@ Assumed starting point: comfortable with Firestore, new to relational databases.
 - [JSONB](#jsonb)
 - [Full-text search with tsvector and tsquery](#full-text-search-with-tsvector-and-tsquery)
 - [Category hierarchy with ltree](#category-hierarchy-with-ltree)
+- [Geospatial search with PostGIS](#geospatial-search-with-postgis)
 - [Quick reference](#quick-reference)
 - [Glossary](#glossary)
 
@@ -21,15 +22,7 @@ Assumed starting point: comfortable with Firestore, new to relational databases.
 
 ## The database layout
 
-Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema:
-
-| Schema | Owning service | Primary tables |
-|---|---|---|
-| `product` | `cove-product` | `categories`, `products`, `product_variants`, `product_details` |
-| `vendor` | `cove-vendor` (future) | `vendors` |
-| `user` | `cove-user` | `users`, `favorites`, `follows` |
-
-The `vendor` schema is pre-positioned in Phase 3 — it exists at the database level but no service formally owns it yet. `cove-product` and `cove-user` get read-only + FK reference grants; vendor data is seeded once during the Firestore migration and stays static until the `cove-vendor` service ships in a follow-up phase. See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the rationale.
+Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema (`business`, `product`, `user`). This primer covers the Postgres *mechanics* those schemas rely on; the **canonical schema, entities, and service ownership live in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** — refer there for the actual table definitions. The examples below are illustrative.
 
 Each service connects with a Postgres role whose `search_path` is set to its own schema, so application queries stay unqualified — `SELECT * FROM products` inside `cove-product` works without ever typing `product.products`. Cross-schema references (e.g., `user.favorites` → `product.products`, `product.products.vendor_id` → `vendor.vendors`) use real foreign keys, since all schemas live in the same database.
 
@@ -66,37 +59,11 @@ SHOW search_path;
 -- "$user", public
 ```
 
-**When this matters for Cove:** CNPG provisions the `cove` database, then bootstrap migrations create the `product`, `vendor`, and `user` schemas plus service roles for the services that exist (`cove_product`, `cove_user`). The `cove_vendor` role isn't created yet — the schema exists but no service owns it until the future `cove-vendor` service ships. The `ltree` extension lives in `public` (the chart default) so it's reachable from any schema.
+**How Cove uses this:** CNPG provisions the `cove` database, then bootstrap migrations create the per-service schemas plus a role per service, each with its `search_path` scoped to its own schema (so application queries stay unqualified — `SELECT * FROM products` resolves inside `cove-product`). Extensions like `ltree` and `postgis` live in `public` so they're reachable from any schema. The full bootstrap (schemas, roles, cross-schema grants) is in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); the mechanic to understand here is `search_path`:
 
 ```sql
--- Bootstrap sketch — runs once after the cluster comes up
-
--- Schemas first
-CREATE SCHEMA product;
-CREATE SCHEMA vendor;
-CREATE SCHEMA "user";
-
--- Roles for services that exist in Phase 3
-CREATE ROLE cove_product LOGIN PASSWORD :'product_password';
-CREATE ROLE cove_user    LOGIN PASSWORD :'user_password';
-
--- Each role owns its schema
-GRANT USAGE ON SCHEMA product TO cove_product;
-GRANT USAGE ON SCHEMA "user"  TO cove_user;
-
--- cove_product reads vendor.vendors for product responses + FK validation
-GRANT USAGE      ON SCHEMA vendor TO cove_product;
-GRANT SELECT     ON vendor.vendors TO cove_product;
-GRANT REFERENCES ON vendor.vendors TO cove_product;
-
--- cove_user reads product.products and vendor.vendors for JOIN reads
--- and FK validation (favorites + follows)
-GRANT USAGE      ON SCHEMA product, vendor TO cove_user;
-GRANT SELECT     ON product.products, vendor.vendors TO cove_user;
-GRANT REFERENCES ON product.products, vendor.vendors TO cove_user;
-
-ALTER ROLE cove_product SET search_path = product, public;
-ALTER ROLE cove_user    SET search_path = "user", public;
+-- A role whose unqualified queries resolve against its own schema first
+ALTER ROLE cove_product SET search_path = product, business, public;
 ```
 
 Cross-schema foreign keys are the unlock that makes the single-cluster model practical:
@@ -498,6 +465,64 @@ A `parent_id` column requires a recursive CTE (`WITH RECURSIVE`) to traverse the
 
 ---
 
+## Geospatial search with PostGIS
+
+Cove's core query is "what's near me." Discovery is gated by a radius: storefronts within N miles of the user. The right tool for this on Postgres is **PostGIS** — an extension that adds spatial types, functions, and index support.
+
+### Why not a B-tree on lat/long, or geohashing?
+
+- **B-tree fails** because it's a one-dimensional ordered structure. "Within 20 miles" is a 2D query over latitude *and* longitude simultaneously; a B-tree can range-scan one dimension but not both together, so it can't answer proximity efficiently.
+- **Application-level geohashing** (encoding lat/long into a prefix string) is a real technique, but it's the wrong tool *on Postgres*. Geohash cells break at boundaries — two points 10m apart can land in different cells — so you'd query neighboring cells and re-filter by exact distance anyway. It shines on key-value stores (Redis) that lack native spatial support; Postgres has PostGIS.
+
+### The PostGIS approach
+
+A `geography` column stores a point as longitude/latitude on a spheroid (SRID 4326 = WGS84). A **GiST index** makes radius queries fast, and `ST_DWithin` computes true great-circle distance:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- geography(Point, 4326): lon/lat on the earth's spheroid
+ALTER TABLE storefronts ADD COLUMN location geography(Point, 4326);
+CREATE INDEX ON storefronts USING GIST (location);
+
+-- Insert a point — note ST_MakePoint takes (longitude, latitude) order
+UPDATE storefronts SET location = ST_MakePoint(-104.99, 39.74)::geography
+WHERE id = $1;
+```
+
+### `geography` vs `geometry`
+
+PostGIS has two spatial types. The distinction matters:
+
+| Type | Coordinate system | Distance unit | Use when |
+|---|---|---|---|
+| `geography` | Spheroid (real earth) | **meters** | Real-world lat/long, distances across cities/regions — **Cove's case** |
+| `geometry` | Flat plane | coordinate units | Projected/local data, or when you've already projected to a planar SRID |
+
+`geography` does the right thing for "miles from a point" without you handling projection math. The cost is slightly slower computation — irrelevant at Cove's scale.
+
+### Radius query
+
+`ST_DWithin(a, b, meters)` returns true if two points are within the given distance. It uses the GiST index, so it's fast:
+
+```sql
+-- Storefronts within 20 miles of downtown Denver.
+-- ST_DWithin on geography takes METERS — 20 mi = 32186.9 m. This is the
+-- single most common gotcha: geography = meters, always.
+SELECT id, name, ST_Distance(location, ST_MakePoint(-104.99, 39.74)::geography) AS distance_m
+FROM storefronts
+WHERE ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9)
+ORDER BY distance_m;
+```
+
+`ST_Distance` returns the actual distance (also in meters for `geography`), useful for displaying "2.1 mi away" or feeding a proximity term into a ranking `ORDER BY`.
+
+### Infra note
+
+PostGIS is **not** bundled in vanilla Postgres images the way `ltree` is — it must be installed and the extension enabled. On the homelab CNPG cluster this means using a PostGIS-enabled image and declaring the extension before any geospatial schema work. See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for how the discovery query blends `ST_DWithin` proximity with full-text relevance and trust scoring.
+
+---
+
 ## Quick reference
 
 ```sql
@@ -517,6 +542,9 @@ JOIN categories c ON c.id = p.category_id WHERE c.path <@ 'produce'
 
 -- Direct children of a category
 WHERE path ~ 'produce.*{1}'
+
+-- Points within a radius (needs GIST index on a geography column; meters!)
+WHERE ST_DWithin(location, ST_MakePoint($lon, $lat)::geography, 32186.9)
 
 -- Read query plan
 EXPLAIN ANALYZE SELECT ...
@@ -541,7 +569,13 @@ Quick lookups for terms used throughout. For full context, see the corresponding
 
 **GIN** — Generalized Inverted Index. Indexes the *contents* of composite values: JSONB keys, array elements, tsvector lexemes. Required for `@>` containment, `?` key-exists, and `@@` full-text matches.
 
-**GiST** — Generalized Search Tree. The index type used by `ltree` for hierarchical operators (`<@`, `@>`, `~`).
+**GiST** — Generalized Search Tree. The index type used by `ltree` for hierarchical operators (`<@`, `@>`, `~`) and by PostGIS for spatial proximity (`ST_DWithin`).
+
+**geography (PostGIS)** — A spatial column type storing lon/lat points on the earth's spheroid (SRID 4326). Distances are in **meters**. Indexed with GiST; queried with `ST_DWithin` (radius) and `ST_Distance` (exact distance). Preferred over `geometry` for real-world location data.
+
+**PostGIS** — Postgres extension adding spatial types, functions, and index support. Not bundled in vanilla Postgres — must be installed and enabled. Powers Cove's "within N miles" discovery gate.
+
+**ST_DWithin** — PostGIS function returning true if two geographies are within a given distance (meters, for `geography`). Uses the GiST index, so radius filters are fast.
 
 **JSONB** — Binary-stored, queryable, indexable JSON. Preferred over `json` for any column you'll query. Operators: `->` (get as JSONB), `->>` (get as text), `@>` (contains), `?` (key exists).
 

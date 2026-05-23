@@ -30,7 +30,7 @@ Every product in Cove has at least one image, and most have a small gallery. Tho
 - Cache aggressively at the edge so the cluster doesn't re-do work
 - Stay safe from URL abuse without breaking how `<img>` and `AsyncImage` work
 
-This doc describes the system that delivers all of that. For the broader catalog model see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); for product schema specifics see [Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md).
+This doc describes the system that delivers all of that. For the broader data model — including the polymorphic `media` table and product/brand/storefront schema — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md).
 
 ---
 
@@ -518,8 +518,7 @@ Each of these can slot in without disturbing the v1 architecture — add a new e
 
 ## References
 
-- [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) — the broader service layout and data model
-- [Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md) — product schema and category hierarchy
+- [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) — the canonical data model (service layout, schema, polymorphic media table)
 - [Postgres Primer](POSTGRES_PRIMER.md) — Postgres mechanics
 - [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) — cluster topology, deployment, Garage
 - [imgproxy documentation](https://docs.imgproxy.net/) — full options reference, signing details, deployment guides

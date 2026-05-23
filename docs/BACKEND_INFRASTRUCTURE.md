@@ -391,7 +391,6 @@ K3s uses the same Kubernetes API as GKE — manifests written today run on GKE u
 
 ## References
 
-- [Postgres Primer](POSTGRES_PRIMER.md) — indexes, JSONB, full-text search, ltree
-- [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) — data layer design
-- [Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md) — category hierarchy and filtering
+- [Postgres Primer](POSTGRES_PRIMER.md) — indexes, JSONB, full-text search, ltree, PostGIS
+- [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) — the canonical data model (entities, trust layer, schemas, discovery query)
 - [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — current iOS app structure and Firebase usage

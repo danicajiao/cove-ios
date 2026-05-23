@@ -31,8 +31,7 @@ Welcome to the documentation for the Cove iOS app.
 
 ### Backend Architecture
 - **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - K3s cluster, the `cove-api` gateway, Cloudflare Tunnel, and migration phases (Phases 0 and 1 complete)
-- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - Planned data layer: single Postgres cluster with per-service schemas, REST APIs
-- **[Category & Product Architecture](CATEGORY_AND_PRODUCT_ARCHITECTURE.md)** - Planned category hierarchy and filtering system
+- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - The canonical data model: brand/storefront/product entities, the trust signal system, composite scoring, geospatial discovery, schemas, and the discovery query
 - **[Homelab Layout for Cove](HOMELAB_COVE_LAYOUT.md)** - Where Cove's backend services and platform operators live in the [`homelab`](https://github.com/danicajiao/homelab) repo
 
 ### Backend Reference

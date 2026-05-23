@@ -254,6 +254,8 @@ See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs 
 
 ### Category hierarchy via `ltree`
 
+**Cove's v1 taxonomy is capped at 3 levels** (`root.mid.leaf` — e.g. `food.coffee.whole_bean`). This is deep enough to power the homepage category cards and category-scoped discovery without creating a taxonomy maintenance burden. Leaf nodes are what users see and interact with; deeper nesting is deliberately out of scope.
+
 Categories nest arbitrarily deep (`food.produce.vegetables`) and need fast "everything in this subtree" queries. Postgres's `ltree` extension stores the root-to-leaf path in one column:
 
 ```sql
@@ -268,6 +270,15 @@ CREATE INDEX ON product.categories USING BTREE (path);
 ```
 
 Labels must be `[A-Za-z0-9_]+`, so a display name like "Cheese & Dairy" maps to `cheese_and_dairy` for the path while the user-facing label lives in `name`. `ltree` gives one column the work of a `parent_id`/`ancestors`/`level` denormalization, with built-in operators for every traversal (`<@` descendants, `@>` ancestors, `~` lquery patterns). See [Postgres Primer](POSTGRES_PRIMER.md) for the operator reference.
+
+### Category cards and personalization
+
+The homepage surfaces **category cards** — browse-mode entry points into the discovery surface. Cards are personalized per user via a two-phase model:
+
+1. **Onboarding (explicit signal):** the user picks interest categories during first launch. Stored as `user.interests` rows. Cards are seeded from these picks.
+2. **Behavioral (implicit signal):** as the user browses, attention events (taps, product views, dwell time) are recorded in `user.events`. The recommendation query blends explicit interests + engagement count to reorder cards over time.
+
+The iOS app fetches cards from `GET /recommendations/categories` (owned by `cove-user`). The endpoint returns the same shape regardless of phase — the ranking logic evolves without any iOS changes. Category-scoped discovery is triggered by tapping a card: `GET /discovery?category=food.coffee&lat=...`.
 
 ### Facets and filters, not categories
 
@@ -446,6 +457,31 @@ CREATE TABLE "user".follows (
 );
 
 CREATE INDEX ON "user".follows (uid, created_at DESC);
+
+-- Onboarding interest picks — explicit category preferences, editable later in settings.
+CREATE TABLE "user".interests (
+    uid         text NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
+    category_id uuid NOT NULL REFERENCES product.categories(id),
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (uid, category_id)
+);
+
+CREATE INDEX ON "user".interests (uid);
+
+-- Attention events — implicit behavioral signals for recommendation ranking.
+-- event_type: 'category_tap' | 'product_view' | 'result_dwell' | 'search'
+CREATE TABLE "user".events (
+    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    uid         text        NOT NULL REFERENCES "user".users(uid) ON DELETE CASCADE,
+    event_type  text        NOT NULL,
+    category_id uuid REFERENCES product.categories(id),
+    product_id  uuid REFERENCES product.products(id),
+    metadata    jsonb       NOT NULL DEFAULT '{}', -- dwell_ms, search_query, scroll_depth, etc.
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ON "user".events (uid, created_at DESC);
+CREATE INDEX ON "user".events (uid, category_id) WHERE category_id IS NOT NULL;
 ```
 
 ---
@@ -532,6 +568,13 @@ ImageRepository (protocol)           ← ProductCardView, image-loading sites
 └── CoveAPIImageRepository           ← target (cove-image + imgproxy)
 ```
 
+**`ProductTypes.swift` is replaced by API-driven categories.** The current file (`apps/ios/Cove/Enums/ProductTypes.swift`) hardcodes three Firestore document IDs as a Swift enum — a Firebase-era artifact. In the target architecture:
+- The onboarding screen fetches the category tree from `GET /categories` and lets the user pick leaf nodes
+- The homepage fetches `GET /recommendations/categories` to render personalized category cards
+- Tapping a card triggers `GET /discovery?category=<path>&lat=...`
+
+No Swift enum, no hardcoded IDs. Categories are data from the API.
+
 ---
 
 ## Deployment
@@ -565,7 +608,7 @@ To reconcile before the Phase 3 epic is re-planned:
 1. **Service ownership** — confirm `cove-product` owning the full discovery surface (incl. `directory` reads) for v1, with `cove-directory` taking over `directory` writes later.
 2. **PostGIS in CNPG** — confirm the extension can be provisioned on the homelab Postgres before Phase 3.
 3. **Trust score recomputation** — for v1 it's seeded once; define the trigger/job model for when signals change post-onboarding.
-4. **Discovery API shape** — finalize `/discovery` query params and response in `cove-product`'s OpenAPI spec, including how "Where to find it" lists multiple storefronts per result.
+4. **Discovery and category API shape** — finalize in OpenAPI specs: `/discovery` query params + response (including multi-storefront "Where to find it" per result); `GET /categories` (browsable tree, owned by `cove-product`); `GET /recommendations/categories` (personalized homepage cards, owned by `cove-user`); `POST /users/me/events` (attention event ingest, owned by `cove-user`).
 5. **Independent-storefront tier** — `tier` lives on `maker`. A registered independent storefront (a boutique that resells, with no maker of its own) earns trust via its signals, not a tier; revisit if storefronts need their own tier.
 6. **`details` on products vs a separate table** — folded into a `details` JSONB column here; split back out only if payloads get large enough to hurt list queries.
 
@@ -591,3 +634,4 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 3.3** (May 2026) — Product media split into a `product_media` child table.
 - **Version 4.0** (May 2026) — **Trust-layer reframe.** Split the old `vendor` into a maker + place graph; the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `product_variants` (no transactions). Folded `product_details` into a `details` column and `product_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_PRODUCT_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on products with a many-to-many `availability` join so one maker's product can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
+- **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `user.interests` and `user.events` tables to the `user` schema. Documented `ProductTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.

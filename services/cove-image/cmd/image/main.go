@@ -166,7 +166,7 @@ func uploadHandler(garage *storage.GarageClient, maxBytes int64) http.HandlerFun
 
 		writeJSON(w, http.StatusCreated, uploadResponse{
 			Key: key,
-			URL: "/images/" + key,
+			URL: "/" + key,
 		})
 	}
 }

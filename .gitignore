@@ -148,3 +148,6 @@ ExportOptions.plist
 
 ### Claude worktrees ###
 .claude/worktrees/
+
+### Cove Product Brief ###
+docs/Cove - Product Brief.docx.pdf

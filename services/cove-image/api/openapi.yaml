@@ -37,6 +37,90 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
+  /images/{filename}/url:
+    get:
+      operationId: getImageURL
+      summary: Get a signed imgproxy URL for an image
+      description: |
+        Returns a short-lived signed URL that the client can follow to fetch a
+        resized/re-encoded variant of the image directly from imgproxy.
+
+        cove-image is not in the image bytes' hot path — it only generates the
+        HMAC-SHA256 signature and returns the URL. The client fetches the image
+        by following the URL, which is routed through the cove-api /i/* proxy
+        to the in-cluster imgproxy service.
+
+        The URL embeds an `exp:` imgproxy processing option so imgproxy will
+        reject requests after `expires_at`. The default TTL is 1 hour
+        (configurable via the IMGPROXY_URL_TTL environment variable).
+
+        Choice rationale (signed-URL vs proxied-serve): the signed-URL approach
+        keeps cove-image out of the image bytes' hot path and lets imgproxy serve
+        directly, improving latency. Cloudflare caches the resized WebP responses
+        at the edge, so subsequent requests for the same transform are free.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: |
+            Filename segment of the image key, e.g.
+            `5069715ed40e20d8736d6d48ef9f84da8b240e1ead5ba28fdeb110d3d534105c.png`.
+            The full object key is `images/<filename>`.
+          schema:
+            type: string
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          description: Firebase UID injected by the upstream cove-api gateway.
+          schema:
+            type: string
+        - name: w
+          in: query
+          required: true
+          description: Output width in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: h
+          in: query
+          required: true
+          description: Output height in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: fit
+          in: query
+          required: false
+          description: |
+            Resize mode. `cover` (default) scales and crops to fill the exact
+            dimensions. `contain` scales to fit within the dimensions,
+            preserving aspect ratio.
+          schema:
+            type: string
+            enum: [cover, contain]
+            default: cover
+      responses:
+        "200":
+          description: Signed imgproxy URL generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageURLResponse"
+        "400":
+          description: Missing or invalid query params
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /images:
     post:
       operationId: uploadImage
@@ -126,6 +210,24 @@ components:
         commit:
           type: string
           example: "abc1234"
+
+    ImageURLResponse:
+      type: object
+      required:
+        - url
+        - expires_at
+      properties:
+        url:
+          type: string
+          description: |
+            Signed imgproxy URL. The client follows this URL to fetch the
+            resized/re-encoded image. Valid until `expires_at`.
+          example: "https://api.coveapp.dev/i/abc123sig.../exp:1748129400/rs:fill:600:600/plain/s3://cove-media/images/5069...png@webp"
+        expires_at:
+          type: string
+          format: date-time
+          description: RFC 3339 timestamp after which the URL is no longer valid.
+          example: "2026-05-24T23:00:00Z"
 
     UploadResponse:
       type: object

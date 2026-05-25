@@ -11,9 +11,11 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/danicajiao/cove/services/cove-image/internal/imgproxy"
 	"github.com/danicajiao/cove/services/cove-image/internal/storage"
 )
 
@@ -26,6 +28,10 @@ var commitSHA = "dev"
 
 // defaultMaxUploadBytes is 10 MiB.
 const defaultMaxUploadBytes = 10 * 1024 * 1024
+
+// maxDimension caps the w/h query params on the image URL endpoint to prevent
+// clients from requesting unreasonably large transforms.
+const maxDimension = 4096
 
 // allowedContentTypes is the set of MIME types accepted by the upload endpoint.
 var allowedContentTypes = map[string]string{
@@ -51,6 +57,37 @@ func main() {
 		maxBytes = parsed
 	}
 
+	// imgproxy signing — required for GET /images/{filename}/url.
+	// IMGPROXY_KEY and IMGPROXY_SALT are injected by the ExternalSecret in
+	// the homelab manifests. IMGPROXY_BASE_URL is the public-facing URL prefix
+	// that clients use to reach imgproxy (via the cove-api /i/* proxy, e.g.
+	// "https://api.coveapp.dev/i" or "https://staging-api.coveapp.dev/i").
+	imgproxyKey := os.Getenv("IMGPROXY_KEY")
+	imgproxySalt := os.Getenv("IMGPROXY_SALT")
+	imgproxyBaseURL := os.Getenv("IMGPROXY_BASE_URL")
+	if imgproxyKey == "" || imgproxySalt == "" || imgproxyBaseURL == "" {
+		log.Fatal("IMGPROXY_KEY, IMGPROXY_SALT, and IMGPROXY_BASE_URL must all be set")
+	}
+
+	imgproxyBucket := os.Getenv("IMGPROXY_BUCKET")
+	if imgproxyBucket == "" {
+		imgproxyBucket = "cove-media"
+	}
+
+	imgproxyTTL := time.Hour
+	if v := os.Getenv("IMGPROXY_URL_TTL"); v != "" {
+		secs, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || secs <= 0 {
+			log.Fatalf("invalid IMGPROXY_URL_TTL %q: must be a positive integer (seconds)", v)
+		}
+		imgproxyTTL = time.Duration(secs) * time.Second
+	}
+
+	signer, err := imgproxy.NewSigner(imgproxyKey, imgproxySalt, imgproxyBaseURL, imgproxyBucket, imgproxyTTL)
+	if err != nil {
+		log.Fatalf("failed to initialise imgproxy signer: %v", err)
+	}
+
 	r := chi.NewRouter()
 
 	// /health is unauthenticated — used by Kubernetes probes.
@@ -60,6 +97,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(uidMiddleware)
 		r.Post("/images", uploadHandler(garage, maxBytes))
+		r.Get("/images/{filename}/url", imageURLHandler(signer))
 	})
 
 	port := os.Getenv("PORT")
@@ -167,6 +205,70 @@ func uploadHandler(garage *storage.GarageClient, maxBytes int64) http.HandlerFun
 		writeJSON(w, http.StatusCreated, uploadResponse{
 			Key: key,
 			URL: "/" + key,
+		})
+	}
+}
+
+// imageURLResponse is the JSON body returned by GET /images/{filename}/url.
+type imageURLResponse struct {
+	URL       string `json:"url"`
+	ExpiresAt string `json:"expires_at"` // RFC 3339
+}
+
+// imageURLHandler returns a signed imgproxy URL for the requested image and
+// resize parameters. The client follows the URL directly — cove-image is not
+// in the image bytes' hot path.
+//
+// Route: GET /images/{filename}/url
+//
+// Query params:
+//   - w   (required) — output width in pixels (1–4096)
+//   - h   (required) — output height in pixels (1–4096)
+//   - fit (optional, default "cover") — "cover" (fill+crop) or "contain" (fit+letterbox)
+//
+// The signed URL embeds an exp: processing option so imgproxy rejects requests
+// after ExpiresAt. The default TTL is 1 hour (configurable via IMGPROXY_URL_TTL).
+func imageURLHandler(signer *imgproxy.Signer) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		filename := chi.URLParam(r, "filename")
+		if filename == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing image filename"})
+			return
+		}
+		// Reconstruct the full object key from the route segment. The upload
+		// endpoint stores objects under the "images/" prefix, so the key is
+		// always "images/<filename>".
+		objectKey := "images/" + filename
+
+		q := r.URL.Query()
+		wStr := q.Get("w")
+		hStr := q.Get("h")
+		if wStr == "" || hStr == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "w and h query params are required"})
+			return
+		}
+
+		width, err := strconv.Atoi(wStr)
+		if err != nil || width <= 0 || width > maxDimension {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("w must be an integer between 1 and %d", maxDimension),
+			})
+			return
+		}
+		height, err := strconv.Atoi(hStr)
+		if err != nil || height <= 0 || height > maxDimension {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("h must be an integer between 1 and %d", maxDimension),
+			})
+			return
+		}
+
+		fit := imgproxy.ParseFit(q.Get("fit"))
+		result := signer.Sign(objectKey, width, height, fit)
+
+		writeJSON(w, http.StatusOK, imageURLResponse{
+			URL:       result.URL,
+			ExpiresAt: result.ExpiresAt.UTC().Format(time.RFC3339),
 		})
 	}
 }

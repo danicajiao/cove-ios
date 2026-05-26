@@ -1,5 +1,5 @@
 //
-//  ProductCardView.swift
+//  ProductCard.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/6/22.
@@ -14,7 +14,7 @@ private struct RGBAComponents {
     let alpha: CGFloat
 }
 
-struct ProductCardView: View {
+struct ProductCard: View {
     var product: any Product
     var titleStr: String = "Title"
     var subtitleStr: String = "Subtitle"
@@ -178,7 +178,7 @@ extension UIImage {
     }
 }
 
-struct ProductCardView_Previews: PreviewProvider {
+struct ProductCard_Previews: PreviewProvider {
     static let product = ApparelProduct(
         id: "12345aaa",
         createdAt: Timestamp(),
@@ -191,6 +191,6 @@ struct ProductCardView_Previews: PreviewProvider {
     )
 
     static var previews: some View {
-        ProductCardView(product: product)
+        ProductCard(product: product)
     }
 }

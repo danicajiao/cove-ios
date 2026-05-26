@@ -1,5 +1,5 @@
 //
-//  BrandLogoView.swift
+//  BrandLogo.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 5/26/26.
@@ -12,7 +12,7 @@ import SwiftUI
 /// Fetches the signed imgproxy URL from the environment `ImageRepository`,
 /// then passes it to `AsyncImage`. Sized at 91 × 91 pts to fit inside the
 /// 131 × 131 `Circle` frame used in the Stores section of `HomeView`.
-struct BrandLogoView: View {
+struct BrandLogo: View {
     let imageKey: String
 
     @Environment(\.imageRepository) private var imageRepository
@@ -40,6 +40,6 @@ struct BrandLogoView: View {
         .fill(Color.Colors.Fills.inverse)
         .frame(width: 131, height: 131)
         .overlay {
-            BrandLogoView(imageKey: "images/preview-placeholder.webp")
+            BrandLogo(imageKey: "images/preview-placeholder.webp")
         }
 }

@@ -163,7 +163,7 @@ private struct ProductDetailContent: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.sm) {
                                     HStack(spacing: Spacing.md) {
-                                        RatingView(rating: 4)
+                                        Rating(rating: 4)
                                         Text("4.3")
                                             .font(Font.custom("Lato-Regular", size: 14))
                                     }
@@ -204,7 +204,7 @@ private struct ProductDetailContent: View {
                         ScrollView(.horizontal) {
                             HStack(spacing: Spacing.md) {
                                 ForEach(viewModel.similarProducts, id: \.id) { product in
-                                    ProductCardView(product: product)
+                                    ProductCard(product: product)
                                 }
                             }
                         }

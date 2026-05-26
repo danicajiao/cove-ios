@@ -80,7 +80,7 @@ struct HomeView: View {
                             spacing: Spacing.xl
                         ) {
                             ForEach(viewModel.products, id: \.id) { product in
-                                ProductCardView(product: product)
+                                ProductCard(product: product)
                             }
                         }
                     }
@@ -102,7 +102,7 @@ struct HomeView: View {
                                         .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
                                         .frame(width: 131, height: 131)
                                         .overlay {
-                                            BrandLogoView(imageKey: brand.imageURL)
+                                            BrandLogo(imageKey: brand.imageURL)
                                         }
 
                                     Text(brand.name)

@@ -137,34 +137,6 @@ struct HomeView: View {
     }
 }
 
-// MARK: - BrandLogoView
-
-/// Resolves a Garage image key to a signed URL and renders the brand logo.
-private struct BrandLogoView: View {
-    let imageKey: String
-
-    @Environment(\.imageRepository) private var imageRepository
-
-    @State private var imageURL: URL?
-
-    var body: some View {
-        AsyncImage(url: imageURL) { image in
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 91, height: 91)
-        } placeholder: {
-            ProgressView()
-        }
-        .padding(Spacing.xl)
-        .task(id: imageKey) {
-            imageURL = try? await imageRepository.imageURL(for: imageKey)
-        }
-    }
-}
-
-// MARK: - Previews
-
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {
         HomeView()

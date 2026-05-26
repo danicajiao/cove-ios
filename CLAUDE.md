@@ -251,6 +251,22 @@ Integration branches are optional and used for **cross-cutting epics** that span
 - The integration branch is created from `main` at the time the epic is planned
 - A PR from the integration branch to `main` is opened once all sub-issues are merged and tested
 
+### Issue and PR bodies: always use `--body-file`
+
+When creating issues or PRs with `gh`, write the body to a temp file and pass it via `--body-file`. Never use inline `--body "..."` with multi-line content — backticks and other special characters get mangled by the shell.
+
+```bash
+cat > /tmp/body.md << 'EOF'
+## Description
+Body content with `backticks` and other special characters works fine here.
+EOF
+
+gh issue create --title "My issue" --body-file /tmp/body.md
+gh pr create --title "My PR" --body-file /tmp/body.md
+```
+
+This applies to `gh issue edit` and `gh pr edit` as well — pass `--body-file` not `--body`.
+
 ### GitHub operations: use `gh`, not the MCP
 
 All GitHub interactions in this project — issue reads/writes, PR creation, sub-issue linking, label lookups, GraphQL mutations — must go through the `gh` CLI. **Never call a `mcp__plugin_github_github__*` tool.**

@@ -128,10 +128,15 @@ paths:
       description: |
         Accepts a multipart/form-data upload with a required `file` part.
         Validates content type (jpeg, png, webp) and file size (max 10 MiB by default).
-        Derives a content-addressed object key (SHA-256 of the file bytes) and
-        writes the object to the Garage S3 bucket.
 
-        Idempotent: uploading the same bytes twice returns the same key and URL.
+        Runs the normalization pipeline before storage:
+        1. Auto-rotates from the EXIF orientation flag (corrects sideways phone photos)
+        2. Strips all EXIF metadata including GPS coordinates
+        3. Re-encodes as WebP at quality 90 (~40-60% smaller than JPEG)
+        4. Derives a content-addressed key from SHA-256 of the normalized bytes
+
+        Idempotent: uploading the same image twice returns the same key.
+        HEIC is not accepted — convert to JPEG on-device before uploading.
       parameters:
         - name: X-Cove-Uid
           in: header
@@ -233,16 +238,28 @@ components:
       type: object
       required:
         - key
-        - url
+        - width
+        - height
       properties:
         key:
           type: string
-          description: Content-addressed object key in the Garage bucket.
-          example: "images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.jpg"
-        url:
-          type: string
-          description: Relative URL for retrieving the image via the imgproxy path.
-          example: "/images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.jpg"
+          description: |
+            Content-addressed Garage object key: "images/<sha256hex>.webp".
+            The SHA-256 is computed over the normalized WebP bytes.
+            Store this value as `media_key` in product.media.
+          example: "images/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.webp"
+        width:
+          type: integer
+          description: |
+            Image width in pixels after normalization and auto-rotation.
+            Store alongside the key in product.media for layout hints —
+            clients use source dimensions to reserve space before the image loads.
+          example: 3024
+        height:
+          type: integer
+          description: |
+            Image height in pixels after normalization and auto-rotation.
+          example: 4032
 
     ErrorResponse:
       type: object

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,9 +12,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/danicajiao/cove/services/cove-image/internal/imgproxy"
+	"github.com/danicajiao/cove/services/cove-image/internal/normalize"
 	"github.com/danicajiao/cove/services/cove-image/internal/storage"
 )
 
@@ -34,13 +35,22 @@ const defaultMaxUploadBytes = 10 * 1024 * 1024
 const maxDimension = 4096
 
 // allowedContentTypes is the set of MIME types accepted by the upload endpoint.
-var allowedContentTypes = map[string]string{
-	"image/jpeg": "jpg",
-	"image/png":  "png",
-	"image/webp": "webp",
+// HEIC is intentionally omitted — it requires libheif which is a heavier
+// dependency. iOS vendors can export JPEG via UIImageWriteToSavedPhotosAlbum
+// or AVAssetExportSession before uploading.
+var allowedContentTypes = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/webp": true,
 }
 
 func main() {
+	// Initialise libvips once for the lifetime of the process. govips is
+	// goroutine-safe after Startup; all HTTP handlers can call normalize.Image
+	// concurrently without additional locking.
+	vips.Startup(nil)
+	defer vips.Shutdown()
+
 	ctx := context.Background()
 
 	garage, err := storage.NewGarageClient(ctx)
@@ -126,17 +136,22 @@ func uidMiddleware(next http.Handler) http.Handler {
 }
 
 // uploadResponse is the JSON body returned on a successful upload.
+// Width and Height are the source image dimensions after normalization and
+// auto-rotation — callers should store these alongside the key for use as
+// layout hints (e.g. in product.media rows) to avoid a decode round-trip.
 type uploadResponse struct {
-	Key string `json:"key"`
-	URL string `json:"url"`
+	Key    string `json:"key"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
 }
 
 // uploadHandler returns an http.HandlerFunc that:
 //  1. Parses the multipart/form-data body
-//  2. Validates content type and size
-//  3. Derives a content-addressed key (images/{sha256hex}.{ext})
-//  4. Writes the file to Garage
-//  5. Returns 201 with {key, url}
+//  2. Validates content type (jpeg, png, webp) and size
+//  3. Runs the normalization pipeline (auto-rotate, strip EXIF, re-encode as WebP)
+//  4. Derives a content-addressed key from the SHA-256 of the normalized bytes
+//  5. Writes the normalized WebP to Garage
+//  6. Returns 201 with {key, width, height}
 func uploadHandler(garage *storage.GarageClient, maxBytes int64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Limit total body size before parsing the multipart form.
@@ -156,9 +171,9 @@ func uploadHandler(garage *storage.GarageClient, maxBytes int64) http.HandlerFun
 		}
 		defer file.Close()
 
-		// Read entire file into memory so we can detect content type, hash it,
-		// and know its exact size. maxBytes is enforced by MaxBytesReader above,
-		// so this is bounded.
+		// Read entire file into memory so we can detect content type, normalize
+		// it, and know its exact size. maxBytes is enforced by MaxBytesReader
+		// above, so this is bounded.
 		data, err := io.ReadAll(file)
 		if err != nil {
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": "file exceeds maximum allowed size"})
@@ -183,28 +198,34 @@ func uploadHandler(garage *storage.GarageClient, maxBytes int64) http.HandlerFun
 			contentType = http.DetectContentType(probe)
 		}
 
-		ext, ok := allowedContentTypes[contentType]
-		if !ok {
+		if !allowedContentTypes[contentType] {
 			writeJSON(w, http.StatusUnsupportedMediaType, map[string]string{
-				"error": fmt.Sprintf("unsupported content type %q; must be image/jpeg, image/png, or image/webp", contentType),
+				"error": fmt.Sprintf("unsupported content type %q; accepted: image/jpeg, image/png, image/webp", contentType),
 			})
 			return
 		}
 
-		// Derive content-addressed object key.
-		sum := sha256.Sum256(data)
-		hexSum := fmt.Sprintf("%x", sum)
-		key := fmt.Sprintf("images/%s.%s", hexSum, ext)
+		// Normalize: auto-rotate from EXIF, strip metadata (GPS, camera info),
+		// re-encode as WebP quality 90, derive a content-addressed key.
+		result, err := normalize.Image(data)
+		if err != nil {
+			log.Printf("ERROR: normalize key=%q: %v", contentType, err)
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": fmt.Sprintf("could not process image: %v", err),
+			})
+			return
+		}
 
-		if err := garage.PutObject(r.Context(), key, contentType, bytes.NewReader(data), int64(len(data))); err != nil {
-			log.Printf("ERROR: PutObject key=%q: %v", key, err)
+		if err := garage.PutObject(r.Context(), result.Key, "image/webp", bytes.NewReader(result.Data), int64(len(result.Data))); err != nil {
+			log.Printf("ERROR: PutObject key=%q: %v", result.Key, err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to store image"})
 			return
 		}
 
 		writeJSON(w, http.StatusCreated, uploadResponse{
-			Key: key,
-			URL: "/" + key,
+			Key:    result.Key,
+			Width:  result.Width,
+			Height: result.Height,
 		})
 	}
 }

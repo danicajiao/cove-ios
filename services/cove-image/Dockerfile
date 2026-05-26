@@ -1,7 +1,11 @@
 # Stage 1 — Build
-# Compiles the Go binary inside a full Go toolchain image.
-# Nothing from this stage ships in the final image.
-FROM golang:1.22-alpine AS builder
+# govips requires CGo (libvips C bindings), so we use a Debian-based Go image
+# and install the libvips development headers.
+FROM golang:1.25-bookworm AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 
@@ -16,15 +20,21 @@ COPY . .
 # can report the exact Git commit that is running.
 ARG COMMIT_SHA=dev
 
-RUN CGO_ENABLED=0 GOOS=linux go build \
+# CGO_ENABLED=1 is required — govips links against the libvips C library.
+RUN CGO_ENABLED=1 GOOS=linux go build \
     -ldflags "-X main.commitSHA=${COMMIT_SHA}" \
     -o cove-image \
     ./cmd/image/
 
 # Stage 2 — Run
-# Distroless has no shell, no package manager, and no OS tools —
-# only the binary and the C library it needs. Attack surface is minimal.
-FROM gcr.io/distroless/static-debian12
+# debian:bookworm-slim + libvips42 (runtime only, no dev headers or compiler).
+# The binary links against libvips at runtime so we must include the shared
+# library — gcr.io/distroless/static is not suitable for CGo binaries.
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libvips42 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /build/cove-image /cove-image
 

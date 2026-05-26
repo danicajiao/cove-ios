@@ -5,8 +5,6 @@
 //  Created by Daniel Cajiao on 2/16/22.
 //
 
-import FirebaseFirestore
-import FirebaseStorage
 import SwiftUI
 
 struct HomeView: View {
@@ -104,15 +102,7 @@ struct HomeView: View {
                                         .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
                                         .frame(width: 131, height: 131)
                                         .overlay {
-                                            AsyncImage(url: URL(string: brand.imageURL)) { image in
-                                                image
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: 91, height: 91)
-                                            } placeholder: {
-                                                ProgressView()
-                                            }
-                                            .padding(Spacing.xl)
+                                            BrandLogoView(imageKey: brand.imageURL)
                                         }
 
                                     Text(brand.name)
@@ -146,6 +136,34 @@ struct HomeView: View {
         }
     }
 }
+
+// MARK: - BrandLogoView
+
+/// Resolves a Garage image key to a signed URL and renders the brand logo.
+private struct BrandLogoView: View {
+    let imageKey: String
+
+    @Environment(\.imageRepository) private var imageRepository
+
+    @State private var imageURL: URL?
+
+    var body: some View {
+        AsyncImage(url: imageURL) { image in
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 91, height: 91)
+        } placeholder: {
+            ProgressView()
+        }
+        .padding(Spacing.xl)
+        .task(id: imageKey) {
+            imageURL = try? await imageRepository.imageURL(for: imageKey)
+        }
+    }
+}
+
+// MARK: - Previews
 
 struct HomeView_Previews: PreviewProvider {
     static var previews: some View {

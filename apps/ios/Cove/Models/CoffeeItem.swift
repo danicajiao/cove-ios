@@ -1,5 +1,5 @@
 //
-//  CoffeeProduct.swift
+//  CoffeeItem.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/6/23.
@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct CoffeeProduct: Product {
+struct CoffeeItem: Item {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String
@@ -15,7 +15,7 @@ struct CoffeeProduct: Product {
     var defaultImageURL: String
     var info: CoffeeInfo
     var isFavorite: Bool?
-    var productDetailsId: String
+    var itemDetailsId: String
 
 //    internal enum CodingKeys : String, CodingKey {
 //        case id
@@ -26,6 +26,14 @@ struct CoffeeProduct: Product {
 //        case info
 //        case sku
 //    }
+
+    /// Maps the renamed Swift property back to the existing Firestore field name.
+    /// Remove in Phase 3 when Firestore is decommissioned (#324).
+    private enum CodingKeys: String, CodingKey {
+        case id // @DocumentID — Firestore injects the document reference ID here
+        case createdAt, categoryId, defaultPrice, defaultImageURL, info, isFavorite
+        case itemDetailsId = "productDetailsId"
+    }
 
     struct CoffeeInfo: Codable {
         var name: String
@@ -41,7 +49,7 @@ struct CoffeeProduct: Product {
         hasher.combine(id)
     }
 
-    static func == (lhs: CoffeeProduct, rhs: CoffeeProduct) -> Bool {
+    static func == (lhs: CoffeeItem, rhs: CoffeeItem) -> Bool {
         lhs.id == rhs.id
     }
 

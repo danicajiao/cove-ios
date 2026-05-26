@@ -12,15 +12,15 @@ import Foundation
 /// Every method throws `RepositoryError.decodingFailed` until Phase 3
 /// fleshes it out with real `cove-user` calls (favorites live under the user service).
 final class CoveAPIFavoritesRepository: FavoritesRepository {
-    func listFavorites(uid: String) async throws -> [FavoriteProduct] {
+    func listFavorites(uid: String) async throws -> [FavoriteItem] {
         throw RepositoryError.decodingFailed("listFavorites not implemented — lands in Phase 3")
     }
 
-    func add(productId: String, categoryId: String, uid: String) async throws {
+    func add(itemId: String, categoryId: String, uid: String) async throws {
         throw RepositoryError.decodingFailed("add not implemented — lands in Phase 3")
     }
 
-    func remove(productId: String, uid: String) async throws {
+    func remove(itemId: String, uid: String) async throws {
         throw RepositoryError.decodingFailed("remove not implemented — lands in Phase 3")
     }
 }

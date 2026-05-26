@@ -44,7 +44,7 @@ cove-api  (K3s pod, cove-staging / cove-prod namespace)
     │
     ├── /images/*  ──►  cove-image   (Phase 2, deployed)
     ├── /i/*       ──►  imgproxy     (Phase 2, deployed — image transforms)
-    ├── /products/* ──►  cove-product (Phase 3)
+    ├── /items/* ──►  cove-item (Phase 3)
     └── /users/*   ──►  cove-user    (Phase 3)
 ```
 
@@ -94,7 +94,7 @@ danicajiao/cove                 ← all source code and docs
 ├── services/
 │   ├── cove-api/               ← cove-api gateway service (Phase 1, deployed)
 │   ├── cove-image/             ← cove-image service (Phase 2, deployed)
-│   ├── cove-product/           ← cove-product service (Phase 3)
+│   ├── cove-item/           ← cove-item service (Phase 3)
 │   └── cove-user/              ← cove-user service (Phase 3)
 │
 ├── packages/                   ← shared code (API schema, types — as needed)
@@ -148,7 +148,7 @@ build-cove-image: ## Build the cove-image Docker image
 build-all: build-cove-api build-cove-image ## Build Docker images for all services
 ```
 
-As `cove-product` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`.
+As `cove-item` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`.
 
 This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
 
@@ -164,7 +164,7 @@ Services drop the `-svc` suffix. The pod, K8s Service, and image name are all th
 |---|---|---|
 | `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 (deployed) |
 | `cove-image` | Image upload (`POST /images`), signed-URL serving (`GET /images/{filename}/url`), normalization to WebP, content-addressed storage in Garage | Phase 2 (deployed) |
-| `cove-product` | Product catalog, categories, search | Phase 3 |
+| `cove-item` | Item catalog, categories, search | Phase 3 |
 | `cove-user` | User profiles, follows, producer accounts | Phase 3 |
 
 In Kubernetes, each service runs as a `Deployment` in `cove-staging` or `cove-prod`, with a matching `Service` of the same name.
@@ -259,7 +259,7 @@ These go in **Variables** (not Secrets) in GitHub → Settings → Secrets and v
 
 **Decision: Option A — trust the gateway, propagate UID via header.**
 
-`cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-product`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
+`cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-item`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
 
 ```
 iOS App
@@ -269,7 +269,7 @@ cove-api
   │  validates token via Firebase Admin SDK
   │  X-Cove-Uid: <uid>          ← injected, Bearer token stripped
   ▼
-cove-image / cove-product / cove-user
+cove-image / cove-item / cove-user
      reads X-Cove-Uid from header, no Firebase SDK required
 ```
 
@@ -319,7 +319,7 @@ Images are stored in Google Artifact Registry under the `cove-6a685` project:
 ```
 us-central1-docker.pkg.dev/cove-6a685/services/cove-api:sha-abc1234
 us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-abc1234
-us-central1-docker.pkg.dev/cove-6a685/services/cove-product:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-item:sha-abc1234
 us-central1-docker.pkg.dev/cove-6a685/services/cove-user:sha-abc1234
 ```
 
@@ -350,7 +350,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 - `cove-image` deployed to `cove-staging` and `cove-prod`
 - `POST /images` — accepts JPEG/PNG/WebP, normalizes to WebP quality 90, strips EXIF (including GPS), stores content-addressed object in Garage `cove-media` bucket (`images/<sha256>.webp`)
-- `GET /images/{filename}/url` — generates a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL); interim mechanism until `cove-product` embeds pre-signed URLs in Phase 3
+- `GET /images/{filename}/url` — generates a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL); interim mechanism until `cove-item` embeds pre-signed URLs in Phase 3
 - `cove-api` proxies `/images/*` to `cove-image` and `/i/*` to imgproxy
 - iOS app loads all images via `CoveAPIClient.imageURL(filename:width:height:)` through the `ImageRepository` protocol; `CoveAPIImageRepository` is the active implementation
 - Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
@@ -358,12 +358,12 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 ### Phase 3 — Data services
 
-> Being re-planned against the trust-layer data model — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / product / signals).
+> Being re-planned against the trust-layer data model — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals).
 
-- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3; `cove-product` and `cove-user` get read-only + FK reference grants.
-- Deploy `cove-product` and `cove-user` to `cove-staging`
+- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `catalog`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3; `cove-item` and `cove-user` get read-only + FK reference grants.
+- Deploy `cove-item` and `cove-user` to `cove-staging`
 - Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows)
-- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/products/*`, and `api.coveapp.dev/users/*`
+- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/items/*`, and `api.coveapp.dev/users/*`
 - Firestore retired
 
 ### Phase 4 (planned) — Directory service
@@ -374,7 +374,7 @@ Not yet planned in detail; tracked separately. Scope:
 - Self-serve onboarding flow (maker + storefront, business/individual verification)
 - Maker and storefront profile management; trust-signal verification
 - Producer-facing dashboard API (separate iOS/web surface)
-- Take ownership of the `directory` schema via a permissions flip — no schema migration, no data move; `cove-product` keeps SELECT for discovery reads
+- Take ownership of the `directory` schema via a permissions flip — no schema migration, no data move; `cove-item` keeps SELECT for discovery reads
 
 ---
 

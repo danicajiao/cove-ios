@@ -1,5 +1,5 @@
 //
-//  ProductCard.swift
+//  ItemCard.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/6/22.
@@ -14,8 +14,8 @@ private struct RGBAComponents {
     let alpha: CGFloat
 }
 
-struct ProductCard: View {
-    var product: any Product
+struct ItemCard: View {
+    var item: any Item
     var titleStr: String = "Title"
     var subtitleStr: String = "Subtitle"
     var price: Float = 9
@@ -25,36 +25,36 @@ struct ProductCard: View {
     @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
 
-    init(product: any Product) {
-        self.product = product
+    init(item: any Item) {
+        self.item = item
 
-        if let coffeeProduct = product as? CoffeeProduct {
-            // product is a CoffeeProduct
-            titleStr = coffeeProduct.info.name
-            subtitleStr = coffeeProduct.info.roastery
-            price = coffeeProduct.defaultPrice
-        } else if let musicProduct = product as? MusicProduct {
-            // product is a MusicProduct
-            titleStr = musicProduct.info.album
-            subtitleStr = musicProduct.info.artist
-            price = musicProduct.defaultPrice
-        } else if let apparelProduct = product as? ApparelProduct {
-            // product is a ApparelProduct
-            titleStr = apparelProduct.info.name
-            subtitleStr = apparelProduct.info.brand
-            price = apparelProduct.defaultPrice
+        if let coffeeItem = item as? CoffeeItem {
+            // item is a CoffeeItem
+            titleStr = coffeeItem.info.name
+            subtitleStr = coffeeItem.info.roastery
+            price = coffeeItem.defaultPrice
+        } else if let musicItem = item as? MusicItem {
+            // item is a MusicItem
+            titleStr = musicItem.info.album
+            subtitleStr = musicItem.info.artist
+            price = musicItem.defaultPrice
+        } else if let apparelItem = item as? ApparelItem {
+            // item is an ApparelItem
+            titleStr = apparelItem.info.name
+            subtitleStr = apparelItem.info.brand
+            price = apparelItem.defaultPrice
         }
     }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            if let productId = product.id {
-                NavigationLink(value: Path.product(id: productId)) {
+            if let itemId = item.id {
+                NavigationLink(value: Path.item(id: itemId)) {
                     cardContent
                 }
                 .buttonStyle(PlainButtonStyle())
 
-                LikeButton(productId: productId, categoryId: product.categoryId)
+                LikeButton(itemId: itemId, categoryId: item.categoryId)
                     .padding(Spacing.sm)
             } else {
                 cardContent
@@ -114,7 +114,7 @@ struct ProductCard: View {
 
     private func fetchImage() async {
         do {
-            let url = try await imageRepository.imageURL(for: product.defaultImageURL)
+            let url = try await imageRepository.imageURL(for: item.defaultImageURL)
             let (data, _) = try await URLSession.shared.data(from: url)
             if let image = UIImage(data: data) {
                 uiImage = image
@@ -179,16 +179,16 @@ extension UIImage {
 }
 
 #Preview {
-    ProductCard(
-        product: ApparelProduct(
+    ItemCard(
+        item: ApparelItem(
             id: "12345aaa",
             createdAt: nil,
             categoryId: "apparel category id",
             defaultPrice: 23,
             defaultImageURL: "some url",
-            info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
+            info: ApparelItem.ApparelInfo(brand: "Some brand", name: "Some name"),
             isFavorite: true,
-            productDetailsId: "12345"
+            itemDetailsId: "12345"
         )
     )
 }

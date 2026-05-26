@@ -20,19 +20,19 @@ final class FirebaseFavoritesRepository: FavoritesRepository {
 
     // MARK: - FavoritesRepository
 
-    func listFavorites(uid: String) async throws -> [FavoriteProduct] {
+    func listFavorites(uid: String) async throws -> [FavoriteItem] {
         let snapshot = try await favoritesCollection(uid: uid).getDocuments()
-        return snapshot.documents.compactMap { try? $0.data(as: FavoriteProduct.self) }
+        return snapshot.documents.compactMap { try? $0.data(as: FavoriteItem.self) }
     }
 
-    func add(productId: String, categoryId: String, uid: String) async throws {
+    func add(itemId: String, categoryId: String, uid: String) async throws {
         try favoritesCollection(uid: uid)
-            .addDocument(from: FavoriteProduct(productId: productId, categoryId: categoryId))
+            .addDocument(from: FavoriteItem(itemId: itemId, categoryId: categoryId))
     }
 
-    func remove(productId: String, uid: String) async throws {
+    func remove(itemId: String, uid: String) async throws {
         let snapshot = try await favoritesCollection(uid: uid)
-            .whereField("productId", isEqualTo: productId)
+            .whereField("itemId", isEqualTo: itemId)
             .getDocuments()
 
         for document in snapshot.documents {

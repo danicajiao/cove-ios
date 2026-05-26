@@ -1,5 +1,5 @@
 //
-//  Product.swift
+//  Item.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/8/22.
@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-protocol Product: Codable, Identifiable, Hashable {
+protocol Item: Codable, Identifiable, Hashable {
 //    @Published var imgData: Data = Data()
 //    @Published var favorited = false
 
@@ -17,10 +17,10 @@ protocol Product: Codable, Identifiable, Hashable {
     var defaultPrice: Float { get }
     var defaultImageURL: String { get }
     var isFavorite: Bool? { get set }
-    var productDetailsId: String { get }
+    var itemDetailsId: String { get }
 }
 
-struct ExampleProduct: Product {
+struct ExampleItem: Item {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String
@@ -28,7 +28,7 @@ struct ExampleProduct: Product {
     var defaultImageURL: String
     var info: ExampleInfo
     var isFavorite: Bool?
-    var productDetailsId: String
+    var itemDetailsId: String
 
     struct ExampleInfo: Codable {
         var name: String
@@ -39,11 +39,11 @@ struct ExampleProduct: Product {
         hasher.combine(id)
     }
 
-    static func == (lhs: ExampleProduct, rhs: ExampleProduct) -> Bool {
+    static func == (lhs: ExampleItem, rhs: ExampleItem) -> Bool {
         lhs.id == rhs.id
     }
 
-    static let placeholder = ExampleProduct(
+    static let placeholder = ExampleItem(
         id: "aaaaa123445",
         createdAt: Timestamp(),
         categoryId: "some categoryID",
@@ -51,6 +51,6 @@ struct ExampleProduct: Product {
         defaultImageURL: "some url",
         info: ExampleInfo(name: "Some name", desc: "Some description"),
         isFavorite: true,
-        productDetailsId: "12345"
+        itemDetailsId: "12345"
     )
 }

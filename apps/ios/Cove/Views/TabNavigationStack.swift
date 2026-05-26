@@ -20,8 +20,8 @@ struct TabNavigationStack<Content: View>: View {
             content
                 .navigationDestination(for: Path.self) { path in
                     switch path {
-                    case let .product(id):
-                        ProductDetailView(productId: id)
+                    case let .item(id):
+                        ItemDetailView(itemId: id)
                             .environmentObject(bag)
                     default:
                         #if DEBUG

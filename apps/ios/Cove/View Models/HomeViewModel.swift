@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 class HomeViewModel: ObservableObject {
-    @Published var products = [any Product]()
+    var items = [any Item]()
     @Published var brands = [Brand]()
 
     let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
@@ -17,25 +17,25 @@ class HomeViewModel: ObservableObject {
 
     private var lastFetchTime: Date?
     private let cacheTimeout: TimeInterval = 300
-    private let productRepository: ProductRepository
+    private let itemRepository: ItemRepository
 
-    init(productRepository: ProductRepository = FirebaseProductRepository()) {
-        self.productRepository = productRepository
+    init(itemRepository: ItemRepository = FirebaseItemRepository()) {
+        self.itemRepository = itemRepository
     }
 
-    func fetchProducts(forceRefresh: Bool = false) async throws {
+    func fetchItems(forceRefresh: Bool = false) async throws {
         let cacheExpired = lastFetchTime.map { Date().timeIntervalSince($0) > cacheTimeout } ?? true
-        guard products.isEmpty || forceRefresh || cacheExpired else { return }
+        guard items.isEmpty || forceRefresh || cacheExpired else { return }
 
-        print("Fetching products...")
-        let fetched = try await productRepository.fetchHome()
+        print("Fetching items...")
+        let fetched = try await itemRepository.fetchHome()
 
         if fetched.isEmpty {
-            print("No products returned from request")
+            print("No items returned from request")
             return
         }
 
-        products = fetched
+        items = fetched
         lastFetchTime = Date()
     }
 
@@ -43,7 +43,7 @@ class HomeViewModel: ObservableObject {
         if !brands.isEmpty { return }
 
         print("Fetching brands...")
-        let fetched = try await productRepository.fetchBrands()
+        let fetched = try await itemRepository.fetchBrands()
 
         if fetched.isEmpty {
             print("No brands returned from request")

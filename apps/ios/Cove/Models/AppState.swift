@@ -17,7 +17,7 @@ enum Path: Hashable {
     case signup
     case main
     case home
-    case product(id: String)
+    case item(id: String)
 }
 
 enum AuthState {

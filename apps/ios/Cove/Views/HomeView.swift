@@ -73,14 +73,14 @@ struct HomeView: View {
                 VStack(spacing: Spacing.lg) {
                     SectionHeader(title: "Popular")
 
-                    if !viewModel.products.isEmpty {
+                    if !viewModel.items.isEmpty {
                         LazyVGrid(
                             columns: columns,
                             alignment: .center,
                             spacing: Spacing.xl
                         ) {
-                            ForEach(viewModel.products, id: \.id) { product in
-                                ProductCard(product: product)
+                            ForEach(viewModel.items, id: \.id) { item in
+                                ItemCard(item: item)
                             }
                         }
                     }
@@ -124,13 +124,13 @@ struct HomeView: View {
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .refreshable {
-            try? await viewModel.fetchProducts(forceRefresh: true)
+            try? await viewModel.fetchItems(forceRefresh: true)
             try? await viewModel.fetchBrands()
         }
         .onAppear {
             print("homeView appeared")
             Task {
-                try await viewModel.fetchProducts()
+                try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
             }
         }

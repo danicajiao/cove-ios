@@ -1,5 +1,5 @@
 //
-//  ProductRow.swift
+//  ItemRow.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 4/17/23.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct ProductRow: View {
-    @Binding var bagProduct: BagProduct
+struct ItemRow: View {
+    @Binding var bagItem: BagItem
 
     @Environment(\.imageRepository) private var imageRepository
 
@@ -16,7 +16,7 @@ struct ProductRow: View {
 
     var body: some View {
         Group {
-            if let coffeeProduct = bagProduct.product as? CoffeeProduct {
+            if let coffeeItem = bagItem.item as? CoffeeItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -34,10 +34,10 @@ struct ProductRow: View {
 //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(coffeeProduct.info.name)
+                        Text(coffeeItem.info.name)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(coffeeProduct.info.roastery)
+                        Text(coffeeItem.info.roastery)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -45,8 +45,8 @@ struct ProductRow: View {
 
                         HStack {
                             Button {
-                                if bagProduct.quantity > 1 {
-                                    bagProduct.quantity -= 1
+                                if bagItem.quantity > 1 {
+                                    bagItem.quantity -= 1
                                 }
                             } label: {
                                 Image(systemName: "minus.square")
@@ -54,15 +54,15 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 1 ? true : false)
+                            .disabled(bagItem.quantity == 1 ? true : false)
 
-                            Text(String(bagProduct.quantity))
+                            Text(String(bagItem.quantity))
                                 .font(Font.custom("Lato-Regular", size: 14))
                                 .frame(width: 30, height: 20)
 
                             Button {
-                                if bagProduct.quantity < 15 {
-                                    bagProduct.quantity += 1
+                                if bagItem.quantity < 15 {
+                                    bagItem.quantity += 1
                                 }
                             } label: {
                                 Image(systemName: "plus.square")
@@ -70,7 +70,7 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 15 ? true : false)
+                            .disabled(bagItem.quantity == 15 ? true : false)
                         }
                     }
 
@@ -83,14 +83,14 @@ struct ProductRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(coffeeProduct.defaultPrice)))")
+                        Text("$\(String(Int(coffeeItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }
                 }
                 .frame(height: 80)
                 .padding(Spacing.xl)
-            } else if let musicProduct = bagProduct.product as? MusicProduct {
+            } else if let musicItem = bagItem.item as? MusicItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -105,10 +105,10 @@ struct ProductRow: View {
 //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(musicProduct.info.album)
+                        Text(musicItem.info.album)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(musicProduct.info.artist)
+                        Text(musicItem.info.artist)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -116,8 +116,8 @@ struct ProductRow: View {
 
                         HStack {
                             Button {
-                                if bagProduct.quantity > 1 {
-                                    bagProduct.quantity -= 1
+                                if bagItem.quantity > 1 {
+                                    bagItem.quantity -= 1
                                 }
                             } label: {
                                 Image(systemName: "minus.square")
@@ -125,15 +125,15 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 1 ? true : false)
+                            .disabled(bagItem.quantity == 1 ? true : false)
 
-                            Text(String(bagProduct.quantity))
+                            Text(String(bagItem.quantity))
                                 .font(Font.custom("Lato-Regular", size: 14))
                                 .frame(width: 30, height: 20)
 
                             Button {
-                                if bagProduct.quantity < 15 {
-                                    bagProduct.quantity += 1
+                                if bagItem.quantity < 15 {
+                                    bagItem.quantity += 1
                                 }
                             } label: {
                                 Image(systemName: "plus.square")
@@ -141,7 +141,7 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 15 ? true : false)
+                            .disabled(bagItem.quantity == 15 ? true : false)
                         }
                     }
 
@@ -154,14 +154,14 @@ struct ProductRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(musicProduct.defaultPrice)))")
+                        Text("$\(String(Int(musicItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }
                 }
                 .frame(height: 80)
                 .padding(Spacing.xl)
-            } else if let apparelProduct = bagProduct.product as? ApparelProduct {
+            } else if let apparelItem = bagItem.item as? ApparelItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -176,10 +176,10 @@ struct ProductRow: View {
                     //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(apparelProduct.info.name)
+                        Text(apparelItem.info.name)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(apparelProduct.info.brand)
+                        Text(apparelItem.info.brand)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -187,8 +187,8 @@ struct ProductRow: View {
 
                         HStack {
                             Button {
-                                if bagProduct.quantity > 1 {
-                                    bagProduct.quantity -= 1
+                                if bagItem.quantity > 1 {
+                                    bagItem.quantity -= 1
                                 }
                             } label: {
                                 Image(systemName: "minus.square")
@@ -196,15 +196,15 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 1 ? true : false)
+                            .disabled(bagItem.quantity == 1 ? true : false)
 
-                            Text(String(bagProduct.quantity))
+                            Text(String(bagItem.quantity))
                                 .font(Font.custom("Lato-Regular", size: 14))
                                 .frame(width: 30, height: 20)
 
                             Button {
-                                if bagProduct.quantity < 15 {
-                                    bagProduct.quantity += 1
+                                if bagItem.quantity < 15 {
+                                    bagItem.quantity += 1
                                 }
                             } label: {
                                 Image(systemName: "plus.square")
@@ -212,7 +212,7 @@ struct ProductRow: View {
                                     .frame(width: 20, height: 20)
                             }
                             .foregroundStyle(Color.Colors.Brand.accent)
-                            .disabled(bagProduct.quantity == 15 ? true : false)
+                            .disabled(bagItem.quantity == 15 ? true : false)
                         }
                     }
 
@@ -225,7 +225,7 @@ struct ProductRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(apparelProduct.defaultPrice)))")
+                        Text("$\(String(Int(apparelItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }
@@ -234,8 +234,8 @@ struct ProductRow: View {
                 .padding(Spacing.xl)
             }
         }
-        .task(id: bagProduct.product.defaultImageURL) {
-            imageURL = try? await imageRepository.imageURL(for: bagProduct.product.defaultImageURL)
+        .task(id: bagItem.item.defaultImageURL) {
+            imageURL = try? await imageRepository.imageURL(for: bagItem.item.defaultImageURL)
         }
     }
 }

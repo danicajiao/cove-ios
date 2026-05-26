@@ -6,15 +6,21 @@ on:
       - main
     paths:
       - 'services/cove-api/**'
+      - 'services/cove-image/**'
       - '.github/workflows/ci-services.yml'
   pull_request:
     paths:
       - 'services/cove-api/**'
+      - 'services/cove-image/**'
       - '.github/workflows/ci-services.yml'
   # Allows manually triggering a build+push from any branch.
   # Useful for bootstrapping GAR before the integration branch merges to main,
   # or for emergency re-deploys.
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ── cove-api ──────────────────────────────────────────────────────────────
@@ -76,3 +82,147 @@ jobs:
           context: services/cove-api
           push: false
           build-args: COMMIT_SHA=${{ github.sha }}
+
+  # ── cove-image ────────────────────────────────────────────────────────────
+  cove-image:
+    name: cove-image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/cove-image/go.mod
+          cache-dependency-path: services/cove-image/go.sum
+
+      - name: Install libvips
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libvips-dev
+
+      - name: Run tests
+        working-directory: services/cove-image
+        run: go test ./...
+
+      - name: Run vet
+        working-directory: services/cove-image
+        run: go vet ./...
+
+      # Authenticate to GCP using Workload Identity Federation.
+      # Runs on pushes to main and on manual workflow_dispatch triggers.
+      # Does not run on PRs — PRs only build the image to verify it compiles.
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build and push image (main / manual)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v6
+        with:
+          context: services/cove-image
+          push: true
+          tags: us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-${{ github.sha }}
+          build-args: COMMIT_SHA=${{ github.sha }}
+
+      # On PRs: build only (no push) to verify the Dockerfile and that the
+      # service still compiles. The image is not tagged or stored.
+      - name: Build image (PR)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: services/cove-image
+          push: false
+          build-args: COMMIT_SHA=${{ github.sha }}
+
+  # ── bump-overlay-tags ─────────────────────────────────────────────────────
+  bump-overlay-tags:
+    name: Open homelab PR — bump overlay tags
+    runs-on: ubuntu-latest
+    needs: [cove-api, cove-image]
+    # Only runs after a successful image push — same gate as the push steps above.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout homelab
+        uses: actions/checkout@v6
+        with:
+          repository: danicajiao/homelab
+          token: ${{ secrets.HOMELAB_PAT }}
+
+      - name: Bump overlay image tags and open PR
+        env:
+          GH_TOKEN: ${{ secrets.HOMELAB_PAT }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          GIT_REF: ${{ github.ref }}
+        run: |
+          SHORT_SHA="${COMMIT_SHA:0:8}"
+          NEW_TAG="sha-${COMMIT_SHA}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # On main: update both staging and prod overlays in one PR so they
+          # are always in sync after a release. On any other branch (e.g. an
+          # integration branch workflow_dispatch): staging only for validation.
+          if [ "$GIT_REF" = "refs/heads/main" ]; then
+            OVERLAYS="apps/cove/overlays/staging/kustomization.yaml apps/cove/overlays/prod/kustomization.yaml"
+            BRANCH="deploy/cove-prod-sha-${SHORT_SHA}"
+            ENV_LABEL="staging + prod"
+          else
+            OVERLAYS="apps/cove/overlays/staging/kustomization.yaml"
+            BRANCH="deploy/cove-staging-sha-${SHORT_SHA}"
+            ENV_LABEL="staging"
+          fi
+
+          for f in $OVERLAYS; do
+            sed -i "s|newTag: sha-[0-9a-f]*|newTag: ${NEW_TAG}|g" "$f"
+          done
+
+          git checkout -b "${BRANCH}"
+          git add $OVERLAYS
+          git commit -m "Bump cove services to sha-${SHORT_SHA} (${ENV_LABEL})"
+          git push origin "${BRANCH}"
+
+          {
+            echo "## Deploy — ${ENV_LABEL}"
+            echo ""
+            echo "Bumps all cove services to \`${NEW_TAG}\`."
+            echo ""
+            echo "| Overlay | Service | New tag |"
+            echo "|---|---|---|"
+            for f in $OVERLAYS; do
+              ENV=$(echo "$f" | grep -o 'staging\|prod')
+              echo "| \`${ENV}\` | \`cove-api\` | \`${NEW_TAG}\` |"
+              echo "| \`${ENV}\` | \`cove-image\` | \`${NEW_TAG}\` |"
+            done
+            echo ""
+            echo "**Source:** [danicajiao/cove@${SHORT_SHA}](https://github.com/danicajiao/cove/commit/${COMMIT_SHA})"
+            echo "**CI run:** https://github.com/danicajiao/cove/actions/runs/${RUN_ID}"
+            echo ""
+            echo "## Checklist"
+            echo "- [ ] CI green on source commit"
+            echo "- [ ] No unexpected manifest changes in diff"
+          } > /tmp/pr-body.md
+
+          gh pr create \
+            --repo danicajiao/homelab \
+            --title "Bump cove services to SHA \`${SHORT_SHA}\`" \
+            --body-file /tmp/pr-body.md \
+            --base main \
+            --head "${BRANCH}"

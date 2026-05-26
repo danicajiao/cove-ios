@@ -5,8 +5,6 @@
 //  Created by Daniel Cajiao on 2/16/22.
 //
 
-import FirebaseFirestore
-import FirebaseStorage
 import SwiftUI
 
 struct HomeView: View {
@@ -82,7 +80,7 @@ struct HomeView: View {
                             spacing: Spacing.xl
                         ) {
                             ForEach(viewModel.products, id: \.id) { product in
-                                ProductCardView(product: product)
+                                ProductCard(product: product)
                             }
                         }
                     }
@@ -104,15 +102,7 @@ struct HomeView: View {
                                         .stroke(Color.Colors.Strokes.primary, lineWidth: 1)
                                         .frame(width: 131, height: 131)
                                         .overlay {
-                                            AsyncImage(url: URL(string: brand.imageURL)) { image in
-                                                image
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: 91, height: 91)
-                                            } placeholder: {
-                                                ProgressView()
-                                            }
-                                            .padding(Spacing.xl)
+                                            BrandLogo(imageKey: brand.imageURL)
                                         }
 
                                     Text(brand.name)

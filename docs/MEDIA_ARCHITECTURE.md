@@ -1,6 +1,6 @@
 # Media Architecture
 
-> **Status:** Planned — built in Phase 2 alongside `cove-image`. v1 covers product images only; videos and documents are deferred. The bucket `cove-media` is already provisioned in Garage.
+> **Status:** Phase 2 complete. `cove-image` is deployed and handling image uploads and signed-URL delivery. The full variant-serving pipeline (imgproxy + Cloudflare CDN) and the Postgres `product.media` table are Phase 3 work — those sections document the target design. v1 covers product images only; videos and documents are deferred.
 
 ## Contents
 
@@ -31,6 +31,18 @@ Every product in Cove has at least one image, and most have a small gallery. Tho
 - Stay safe from URL abuse without breaking how `<img>` and `AsyncImage` work
 
 This doc describes the system that delivers all of that. For the broader data model — including the polymorphic `media` table and product/brand/storefront schema — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md).
+
+---
+
+## Phase 2 signed-URL endpoint — lifecycle
+
+`cove-image` exposes `GET /images/{filename}/url`, which returns a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL). This is the endpoint the iOS app calls today via `CoveAPIClient.imageURL(filename:width:height:)`.
+
+**Phase 2 role:** interim mechanism — lets the iOS app fetch images before `cove-product` exists to embed signed URLs in its responses.
+
+**Phase 3 onwards:** `cove-product` will generate and embed pre-signed variant URLs directly in product list and detail responses. iOS will stop calling `GET /images/{filename}/url` for day-to-day image loading; the signed URL will be available in the response payload alongside the product data.
+
+**Ongoing role:** the endpoint stays deployed and useful for vendor-facing preview flows — e.g., preview a just-uploaded image before it is associated with a product.
 
 ---
 
@@ -263,7 +275,7 @@ Vendors upload once; the server handles everything that needs to be identical ac
 | Minimum dimensions | 2000 × 2000 | Need clean downscale to `xl` (3200) without upscaling artifacts on retina displays |
 | Maximum dimensions | 8000 × 8000 | Cap imgproxy memory/CPU per transformation |
 | Maximum file size | 20 MB | Generous for high-quality phone or DSLR shots |
-| Accepted formats | JPEG, PNG, WebP, HEIC | HEIC is iPhone's default; accepting it removes friction for vendors |
+| Accepted formats | JPEG, PNG, WebP | HEIC support is deferred (see "What's deferred" below) |
 | Aspect ratio | Any (documented preference: square or 4:3 for catalog browsing) | Server `fill`-crops to square variants regardless |
 
 These are returned in a structured error response when violated so the client can show a useful message ("Image must be at least 2000×2000 pixels").
@@ -273,23 +285,23 @@ These are returned in a structured error response when violated so the client ca
 After accepting the upload, `cove-image` runs the bytes through libvips before writing to Garage:
 
 ```
-1. Decode source format            (handles HEIC, JPEG, PNG, WebP)
+1. Decode source format            (handles JPEG, PNG, WebP — govips/libvips)
 2. Auto-rotate from EXIF flag      (phone photos often have rotation set)
 3. Strip EXIF metadata             (privacy: removes GPS coordinates; size win)
-4. Convert color space to sRGB     (consistency across devices and imgproxy reads)
-5. Re-encode as WebP, quality 90   (high-fidelity, compact)
-6. Compute SHA-256 of resulting bytes
-7. Write to Garage as cove-media/<sha256>.webp
-8. Return { key, width, height } to the caller
+4. Re-encode as WebP, quality 90   (high-fidelity, compact)
+5. Compute SHA-256 of resulting bytes
+6. Write to Garage as images/<sha256>.webp  (bucket: cove-media)
+7. Return { key, width, height } to the caller
 ```
 
 Why each step matters:
 
 - **Strip EXIF** — phone photos embed GPS coordinates by default. Without this, every product image leaks the vendor's location.
 - **Auto-rotate** — phones store the image with the sensor's native orientation and a separate rotation flag. Without rotating during decode, half the uploads display sideways.
-- **sRGB color space** — Adobe RGB and P3 sources render with shifted colors when imgproxy converts them at delivery time. Normalizing once on upload avoids surprises.
 - **WebP quality 90** — visually lossless; ~40-60% smaller than the equivalent JPEG. Cheap storage win.
 - **Content-addressed key** — if a vendor uploads the same image twice (different products, same source photo), Garage stores one object. If a vendor mid-upload retries, we don't pollute storage with half-written objects.
+
+Note: sRGB color-space normalization and HEIC acceptance are deferred to a future iteration (see "What's deferred").
 
 ### Associating with a product
 
@@ -487,6 +499,8 @@ This stays out of the hot path entirely.
 
 These are real future requirements but explicitly out of scope for v1:
 
+- **HEIC input** — iPhone's default capture format. govips supports it when built with HEIC support; defer until vendor upload UX exists and we can test end-to-end.
+- **sRGB color-space normalization** — Adobe RGB and P3 sources render with shifted colors when imgproxy converts at delivery time. Normalizing on upload avoids surprises; deferred because most phone uploads are already sRGB.
 - **Videos** — would need a separate pipeline (HLS/DASH transcoding, manifest generation, per-bandwidth renditions). No imgproxy equivalent for video that fits this stack cleanly.
 - **Documents** (vendor certifications, ingredient lists as PDFs) — would use Option D (token-protected, no transformation, just signed-URL serving).
 - **Watermarking** — imgproxy supports it; not a v1 product requirement.

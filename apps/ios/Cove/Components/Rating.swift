@@ -1,5 +1,5 @@
 //
-//  RatingView.swift
+//  Rating.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 5/9/22.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RatingView: View {
+struct Rating: View {
     @State var rating: Int
 
     var label = ""
@@ -45,8 +45,8 @@ struct RatingView: View {
     }
 }
 
-struct RatingView_Previews: PreviewProvider {
+struct Rating_Previews: PreviewProvider {
     static var previews: some View {
-        RatingView(rating: 4)
+        Rating(rating: 4)
     }
 }

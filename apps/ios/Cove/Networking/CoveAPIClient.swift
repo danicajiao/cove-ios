@@ -51,7 +51,46 @@ final class CoveAPIClient: @unchecked Sendable {
         )
     }
 
-    // MARK: - Endpoints
+    // MARK: - Image
+
+    /// Returns a signed imgproxy URL for the image stored at `filename` in Garage.
+    ///
+    /// The URL is valid for 1 hour (configurable via `IMGPROXY_URL_TTL` on cove-image)
+    /// and can be passed directly to `AsyncImage(url:)`. imgproxy resizes the image to
+    /// the requested dimensions on first fetch; Cloudflare caches the transform at the edge.
+    ///
+    /// - Parameters:
+    ///   - filename: Filename segment of the Garage key — strip the `images/` prefix before
+    ///     passing (e.g. `"5069...webp"`, not `"images/5069...webp"`).
+    ///   - width: Output width in pixels (1–4096). Defaults to 800.
+    ///   - height: Output height in pixels (1–4096). Defaults to 800.
+    /// - Returns: A signed `URL` suitable for `AsyncImage(url:)`.
+    /// - Throws: `CoveAPIError.unexpectedStatus` for non-200 responses, or
+    ///   `CoveAPIError.invalidResponseBody` if the server returns a malformed URL string.
+    func imageURL(filename: String, width: Int = 800, height: Int = 800) async throws -> URL {
+        let response = try await client.getImageURL(
+            path: .init(filename: filename),
+            query: .init(w: width, h: height)
+        )
+        switch response {
+        case let .ok(okResponse):
+            let body = try okResponse.body.json
+            guard let url = URL(string: body.url) else {
+                throw CoveAPIError.invalidResponseBody("ImageURLResponse.url is not a valid URL: \(body.url)")
+            }
+            return url
+        case .badRequest:
+            throw CoveAPIError.unexpectedStatus(400)
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Health
 
     /// Calls `GET /health` and returns the gateway health payload.
     ///
@@ -113,6 +152,9 @@ private struct FirebaseAuthMiddleware: ClientMiddleware {
 enum CoveAPIError: Error {
     /// The server returned an HTTP status code not defined in `openapi.yaml`.
     case unexpectedStatus(Int)
+    /// The server returned a documented 2xx response whose body could not be interpreted.
+    /// The associated string describes what was wrong (e.g. a URL field that failed to parse).
+    case invalidResponseBody(String)
 }
 
 // MARK: - LocalizedError
@@ -122,6 +164,8 @@ extension CoveAPIError: LocalizedError {
         switch self {
         case let .unexpectedStatus(code):
             "Unexpected HTTP status code \(code) — not defined in the API contract."
+        case let .invalidResponseBody(detail):
+            "API response body could not be interpreted: \(detail)"
         }
     }
 }

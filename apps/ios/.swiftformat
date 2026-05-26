@@ -1,6 +1,6 @@
 --swiftversion 5.9
 
---exclude Pods,Cove.xcodeproj
+--exclude Pods,Cove.xcodeproj,vendor
 
 # Indentation
 --indent 4

@@ -174,7 +174,7 @@ jobs:
         run: |
           SHORT_SHA="${COMMIT_SHA:0:8}"
           NEW_TAG="sha-${COMMIT_SHA}"
-          BRANCH="chore/bump-cove-sha-${SHORT_SHA}"
+          BRANCH="deploy/cove-staging-sha-${SHORT_SHA}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

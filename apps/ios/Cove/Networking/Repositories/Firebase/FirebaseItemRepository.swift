@@ -25,7 +25,7 @@ final class FirebaseItemRepository: ItemRepository {
         return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProduct(id: String) async throws -> any Item {
+    func fetchItem(id: String) async throws -> any Item {
         let snapshot = try await firestore.collection("products").document(id).getDocument()
 
         guard snapshot.exists else {
@@ -60,7 +60,7 @@ final class FirebaseItemRepository: ItemRepository {
         }
     }
 
-    func fetchSimilarProducts(categoryId: String, limit: Int) async throws -> [any Item] {
+    func fetchSimilarItems(categoryId: String, limit: Int) async throws -> [any Item] {
         let snapshot = try await firestore
             .collection("products")
             .whereField("categoryId", isEqualTo: categoryId)
@@ -70,7 +70,7 @@ final class FirebaseItemRepository: ItemRepository {
         return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProducts(inCategories categoryIds: [String]) async throws -> [any Item] {
+    func fetchItems(inCategories categoryIds: [String]) async throws -> [any Item] {
         guard !categoryIds.isEmpty else { return [] }
 
         let snapshot = try await firestore
@@ -81,7 +81,7 @@ final class FirebaseItemRepository: ItemRepository {
         return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProducts(withIds ids: [String]) async throws -> [any Item] {
+    func fetchItems(withIds ids: [String]) async throws -> [any Item] {
         guard !ids.isEmpty else { return [] }
 
         var items: [any Item] = []
@@ -106,7 +106,7 @@ final class FirebaseItemRepository: ItemRepository {
 
     // MARK: - Private helpers
 
-    /// Decodes a Firestore document into the correct `Product` concrete type
+    /// Decodes a Firestore document into the correct `Item` concrete type
     /// based on its `categoryId` field. Returns `nil` for unrecognised categories.
     private func decodeItem(from snapshot: DocumentSnapshot) -> (any Item)? {
         let categoryId = snapshot["categoryId"] as? String

@@ -27,7 +27,7 @@ protocol ItemRepository {
     /// Fetches a single item by its unique ID.
     ///
     /// - Throws: `RepositoryError.notFound` when no item exists for the given ID.
-    func fetchProduct(id: String) async throws -> any Item
+    func fetchItem(id: String) async throws -> any Item
 
     /// Fetches the type-specific detail document for an item.
     ///
@@ -41,20 +41,20 @@ protocol ItemRepository {
     /// Used by `ItemDetailViewModel` to populate the "similar items" shelf.
     /// Results may include the source item itself — callers are responsible for
     /// filtering it out if needed.
-    func fetchSimilarProducts(categoryId: String, limit: Int) async throws -> [any Item]
+    func fetchSimilarItems(categoryId: String, limit: Int) async throws -> [any Item]
 
     /// Fetches items whose `categoryId` is in the provided set.
     ///
     /// Used by `BagViewModel` to populate the "you might also like" shelf alongside
     /// bag items. Implementations may cap the result set internally.
-    func fetchProducts(inCategories categoryIds: [String]) async throws -> [any Item]
+    func fetchItems(inCategories categoryIds: [String]) async throws -> [any Item]
 
     /// Fetches items whose document IDs are in the provided set.
     ///
     /// Used by `FavoritesViewModel` to hydrate the favourites list from persisted
     /// item IDs. Implementations must batch queries when `ids` exceeds 30 elements
     /// to stay within Firestore's `in` operator limit (or the equivalent backend limit).
-    func fetchProducts(withIds ids: [String]) async throws -> [any Item]
+    func fetchItems(withIds ids: [String]) async throws -> [any Item]
 
     /// Fetches all brands.
     func fetchBrands() async throws -> [Brand]

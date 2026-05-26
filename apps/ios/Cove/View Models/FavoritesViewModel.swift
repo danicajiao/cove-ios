@@ -42,7 +42,7 @@ class FavoritesViewModel: ObservableObject {
             return
         }
 
-        let fetchedItems = try await itemRepository.fetchProducts(withIds: itemIds)
+        let fetchedItems = try await itemRepository.fetchItems(withIds: itemIds)
         favorites = fetchedItems
         favoriteCount = fetchedItems.count
     }

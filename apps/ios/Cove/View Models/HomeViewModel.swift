@@ -23,7 +23,7 @@ class HomeViewModel: ObservableObject {
         self.itemRepository = itemRepository
     }
 
-    func fetchProducts(forceRefresh: Bool = false) async throws {
+    func fetchItems(forceRefresh: Bool = false) async throws {
         let cacheExpired = lastFetchTime.map { Date().timeIntervalSince($0) > cacheTimeout } ?? true
         guard items.isEmpty || forceRefresh || cacheExpired else { return }
 

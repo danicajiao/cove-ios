@@ -63,7 +63,7 @@ struct ItemDetailView: View {
     }
 }
 
-/// Extracted content view to handle the product display
+/// Extracted content view to handle the item display
 private struct ItemDetailContent: View {
     let item: any Item
     @ObservedObject var viewModel: ItemDetailViewModel
@@ -94,7 +94,7 @@ private struct ItemDetailContent: View {
 
     // MARK: - Computed properties
 
-    /// Computed properties for product-specific info
+    /// Computed properties for item-specific info
     var titleStr: String {
         if let coffeeItem = item as? CoffeeItem {
             return coffeeItem.info.name

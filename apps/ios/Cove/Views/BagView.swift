@@ -150,7 +150,7 @@ struct BagView: View {
                 bag.totalItems += bagItem.quantity
             }
             Task {
-                try await viewModel.fetchSimilarProducts(categories: bag.categories)
+                try await viewModel.fetchSimilarItems(categories: bag.categories)
             }
         }
     }

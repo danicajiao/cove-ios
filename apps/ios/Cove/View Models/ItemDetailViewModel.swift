@@ -49,7 +49,7 @@ class ItemDetailViewModel: ObservableObject {
     func fetchItem(_ id: String) async {
         print("Fetching item with id: \(id)")
         do {
-            let fetched = try await itemRepository.fetchProduct(id: id)
+            let fetched = try await itemRepository.fetchItem(id: id)
             await MainActor.run { self.item = fetched }
         } catch {
             print("Error fetching item: \(error)")
@@ -69,7 +69,7 @@ class ItemDetailViewModel: ObservableObject {
         guard let item else { return }
 
         print("Fetching similar items...")
-        let fetched = try await itemRepository.fetchSimilarProducts(categoryId: item.categoryId, limit: 5)
+        let fetched = try await itemRepository.fetchSimilarItems(categoryId: item.categoryId, limit: 5)
 
         if fetched.isEmpty {
             print("No items returned from request")

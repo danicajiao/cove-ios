@@ -23,7 +23,7 @@ class BagViewModel: ObservableObject {
     }
 
     /// Fetches similar items and populates the similarItems array used in BagView
-    func fetchSimilarProducts(categories: [String]) async throws {
+    func fetchSimilarItems(categories: [String]) async throws {
         if categories.isEmpty {
             await MainActor.run(body: { self.similarItems = [] })
             return
@@ -34,7 +34,7 @@ class BagViewModel: ObservableObject {
         print("Fetching similar items...")
         fetchedItemIds = [String]()
 
-        var items = try await itemRepository.fetchProducts(inCategories: categories)
+        var items = try await itemRepository.fetchItems(inCategories: categories)
         fetchedItemIds = items.compactMap(\.id)
 
         if items.isEmpty {

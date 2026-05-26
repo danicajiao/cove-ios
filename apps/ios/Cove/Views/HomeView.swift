@@ -124,13 +124,13 @@ struct HomeView: View {
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .refreshable {
-            try? await viewModel.fetchProducts(forceRefresh: true)
+            try? await viewModel.fetchItems(forceRefresh: true)
             try? await viewModel.fetchBrands()
         }
         .onAppear {
             print("homeView appeared")
             Task {
-                try await viewModel.fetchProducts()
+                try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
             }
         }

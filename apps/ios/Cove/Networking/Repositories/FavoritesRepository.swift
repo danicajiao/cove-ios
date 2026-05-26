@@ -18,7 +18,7 @@ import Foundation
 /// (most recently favorited last). Implementations should preserve this order
 /// where the backing store allows it.
 protocol FavoritesRepository {
-    /// Returns all favorited product references for the given user.
+    /// Returns all favorited item references for the given user.
     ///
     /// Returns an empty array when the user has no favorites — never throws
     /// for an empty list.
@@ -26,24 +26,24 @@ protocol FavoritesRepository {
     /// - Parameter uid: The Firebase Auth UID of the user whose favorites to fetch.
     func listFavorites(uid: String) async throws -> [FavoriteItem]
 
-    /// Records a product as a favourite for the given user.
+    /// Records an item as a favourite for the given user.
     ///
     /// Implementations should be idempotent — calling `add` for an already-favorited
-    /// product should succeed without creating a duplicate record.
+    /// item should succeed without creating a duplicate record.
     ///
     /// - Parameters:
-    ///   - itemId: The ID of the product to favourite.
-    ///   - categoryId: The category the product belongs to (required for hydration queries).
-    ///   - uid: The Firebase Auth UID of the user favouriting the product.
+    ///   - itemId: The ID of the item to favourite.
+    ///   - categoryId: The category the item belongs to (required for hydration queries).
+    ///   - uid: The Firebase Auth UID of the user favouriting the item.
     func add(itemId: String, categoryId: String, uid: String) async throws
 
-    /// Removes a product from the given user's favourites.
+    /// Removes an item from the given user's favourites.
     ///
-    /// Implementations should be idempotent — calling `remove` for a product that is
+    /// Implementations should be idempotent — calling `remove` for an item that is
     /// not currently favourited should succeed silently.
     ///
     /// - Parameters:
-    ///   - itemId: The ID of the product to un-favourite.
-    ///   - uid: The Firebase Auth UID of the user un-favouriting the product.
+    ///   - itemId: The ID of the item to un-favourite.
+    ///   - uid: The Firebase Auth UID of the user un-favouriting the item.
     func remove(itemId: String, uid: String) async throws
 }

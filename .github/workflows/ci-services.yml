@@ -18,6 +18,10 @@ on:
   # or for emergency re-deploys.
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ── cove-api ──────────────────────────────────────────────────────────────
   cove-api:

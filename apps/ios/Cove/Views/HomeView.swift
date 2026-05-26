@@ -73,14 +73,14 @@ struct HomeView: View {
                 VStack(spacing: Spacing.lg) {
                     SectionHeader(title: "Popular")
 
-                    if !viewModel.products.isEmpty {
+                    if !viewModel.items.isEmpty {
                         LazyVGrid(
                             columns: columns,
                             alignment: .center,
                             spacing: Spacing.xl
                         ) {
-                            ForEach(viewModel.products, id: \.id) { product in
-                                ProductCard(product: product)
+                            ForEach(viewModel.items, id: \.id) { item in
+                                ItemCard(item: item)
                             }
                         }
                     }

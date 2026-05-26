@@ -1,5 +1,5 @@
 //
-//  ProductDetailTabs.swift
+//  ItemDetailTabs.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 4/12/23.
@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-struct ProductDetailTabs: View {
-    @ObservedObject var viewModel: ProductDetailViewModel
+struct ItemDetailTabs: View {
+    @ObservedObject var viewModel: ItemDetailViewModel
     let stackSpacing = Spacing.lg
     let tabSpacing = Spacing.xs
 
     var body: some View {
-        if let musicProductDetails = viewModel.productDetails as? MusicProductDetails {
+        if let musicItemDetails = viewModel.itemDetails as? MusicItemDetails {
             VStack(spacing: stackSpacing) {
                 HStack(spacing: tabSpacing) {
                     tabPill("Description", selection: .description)
@@ -23,13 +23,13 @@ struct ProductDetailTabs: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
-                    Text(musicProductDetails.description)
+                    Text(musicItemDetails.description)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .tracklist {
                     VStack {
-                        ForEach(musicProductDetails.tracklist, id: \.self) { track in
+                        ForEach(musicItemDetails.tracklist, id: \.self) { track in
                             HStack {
                                 Text(track.title)
                                     .font(Font.custom("Lato-Regular", size: 16))
@@ -43,14 +43,14 @@ struct ProductDetailTabs: View {
                         }
                     }
                 } else if viewModel.detailSelection == .about {
-                    Text(musicProductDetails.about)
+                    Text(musicItemDetails.about)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
-        } else if let coffeeProductDetails = viewModel.productDetails as? CoffeeProductDetails {
+        } else if let coffeeItemDetails = viewModel.itemDetails as? CoffeeItemDetails {
             VStack(spacing: stackSpacing) {
                 HStack(spacing: tabSpacing) {
                     tabPill("Description", selection: .description)
@@ -60,13 +60,13 @@ struct ProductDetailTabs: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
-                    Text(coffeeProductDetails.description)
+                    Text(coffeeItemDetails.description)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .origin {
                     VStack {
-                        ForEach(coffeeProductDetails.origin, id: \.self) { originDetail in
+                        ForEach(coffeeItemDetails.origin, id: \.self) { originDetail in
                             HStack {
                                 Text(originDetail.title)
                                     .font(Font.custom("Lato-Bold", size: 16))
@@ -79,14 +79,14 @@ struct ProductDetailTabs: View {
                         }
                     }
                 } else if viewModel.detailSelection == .about {
-                    Text(coffeeProductDetails.about)
+                    Text(coffeeItemDetails.about)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
 
-        } else if let apparelProductDetails = viewModel.productDetails as? ApparelProductDetails {
+        } else if let apparelItemDetails = viewModel.itemDetails as? ApparelItemDetails {
             VStack(spacing: stackSpacing) {
                 HStack(spacing: tabSpacing) {
                     tabPill("Description", selection: .description)
@@ -96,13 +96,13 @@ struct ProductDetailTabs: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if viewModel.detailSelection == .description {
-                    Text(apparelProductDetails.description)
+                    Text(apparelItemDetails.description)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else if viewModel.detailSelection == .specifications {
                     VStack(spacing: Spacing.lg) {
-                        ForEach(apparelProductDetails.specifications, id: \.self) { spec in
+                        ForEach(apparelItemDetails.specifications, id: \.self) { spec in
                             VStack(alignment: .leading) {
                                 Text(spec.title)
                                     .font(Font.custom("Lato-Bold", size: 16))
@@ -117,7 +117,7 @@ struct ProductDetailTabs: View {
                         }
                     }
                 } else if viewModel.detailSelection == .about {
-                    Text(apparelProductDetails.about)
+                    Text(apparelItemDetails.about)
                         .font(Font.custom("Lato-Regular", size: 16))
                         .foregroundStyle(Color.Colors.Text.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -129,7 +129,7 @@ struct ProductDetailTabs: View {
     @ViewBuilder
     private func tabPill(
         _ label: String,
-        selection: ProductDetailViewModel.DetailSelection
+        selection: ItemDetailViewModel.DetailSelection
     ) -> some View {
         let isSelected = viewModel.detailSelection == selection
 

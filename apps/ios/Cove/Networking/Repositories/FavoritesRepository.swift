@@ -24,7 +24,7 @@ protocol FavoritesRepository {
     /// for an empty list.
     ///
     /// - Parameter uid: The Firebase Auth UID of the user whose favorites to fetch.
-    func listFavorites(uid: String) async throws -> [FavoriteProduct]
+    func listFavorites(uid: String) async throws -> [FavoriteItem]
 
     /// Records a product as a favourite for the given user.
     ///
@@ -32,10 +32,10 @@ protocol FavoritesRepository {
     /// product should succeed without creating a duplicate record.
     ///
     /// - Parameters:
-    ///   - productId: The ID of the product to favourite.
+    ///   - itemId: The ID of the product to favourite.
     ///   - categoryId: The category the product belongs to (required for hydration queries).
     ///   - uid: The Firebase Auth UID of the user favouriting the product.
-    func add(productId: String, categoryId: String, uid: String) async throws
+    func add(itemId: String, categoryId: String, uid: String) async throws
 
     /// Removes a product from the given user's favourites.
     ///
@@ -43,7 +43,7 @@ protocol FavoritesRepository {
     /// not currently favourited should succeed silently.
     ///
     /// - Parameters:
-    ///   - productId: The ID of the product to un-favourite.
+    ///   - itemId: The ID of the product to un-favourite.
     ///   - uid: The Firebase Auth UID of the user un-favouriting the product.
-    func remove(productId: String, uid: String) async throws
+    func remove(itemId: String, uid: String) async throws
 }

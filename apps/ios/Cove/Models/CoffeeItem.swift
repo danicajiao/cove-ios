@@ -1,5 +1,5 @@
 //
-//  CoffeeProduct.swift
+//  CoffeeItem.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/6/23.
@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct CoffeeProduct: Product {
+struct CoffeeItem: Product {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String
@@ -15,7 +15,7 @@ struct CoffeeProduct: Product {
     var defaultImageURL: String
     var info: CoffeeInfo
     var isFavorite: Bool?
-    var productDetailsId: String
+    var itemDetailsId: String
 
 //    internal enum CodingKeys : String, CodingKey {
 //        case id
@@ -41,7 +41,7 @@ struct CoffeeProduct: Product {
         hasher.combine(id)
     }
 
-    static func == (lhs: CoffeeProduct, rhs: CoffeeProduct) -> Bool {
+    static func == (lhs: CoffeeItem, rhs: CoffeeItem) -> Bool {
         lhs.id == rhs.id
     }
 

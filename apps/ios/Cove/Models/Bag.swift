@@ -8,17 +8,17 @@
 import Foundation
 
 class Bag: ObservableObject {
-    @Published var bagProducts = [BagProduct]()
+    @Published var bagItems = [BagItem]()
     @Published var total: Int = 0
     var categories = [String]()
     var totalItems: Int = 0
 }
 
-struct BagProduct: Equatable {
-    static func == (lhs: BagProduct, rhs: BagProduct) -> Bool {
-        lhs.product.id == rhs.product.id && lhs.quantity == rhs.quantity
+struct BagItem: Equatable {
+    static func == (lhs: BagItem, rhs: BagItem) -> Bool {
+        lhs.item.id == rhs.item.id && lhs.quantity == rhs.quantity
     }
 
-    var product: any Product
+    var item: any Item
     var quantity: Int = 0
 }

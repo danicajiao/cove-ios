@@ -45,8 +45,8 @@ struct FavoritesView: View {
                         alignment: .center,
                         spacing: Spacing.xl
                     ) {
-                        ForEach(viewModel.favorites, id: \.id) { product in
-                            ProductCard(product: product)
+                        ForEach(viewModel.favorites, id: \.id) { item in
+                            ItemCard(item: item)
                         }
                     }
                     .padding(.horizontal, Spacing.xl)

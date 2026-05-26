@@ -1,5 +1,5 @@
 //
-//  FirebaseProductRepository.swift
+//  FirebaseItemRepository.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 5/18/26.
@@ -7,70 +7,70 @@
 
 import FirebaseFirestore
 
-/// Firestore-backed implementation of `ProductRepository`.
+/// Firestore-backed implementation of `ItemRepository`.
 ///
 /// All Firestore reads that were previously scattered across `HomeViewModel`,
-/// `ProductDetailViewModel`, and `BagViewModel` are consolidated here.
+/// `ItemDetailViewModel`, and `BagViewModel` are consolidated here.
 /// ViewModels should not import `FirebaseFirestore` directly after the
 /// DI refactor lands in #226.
-final class FirebaseProductRepository: ProductRepository {
+final class FirebaseItemRepository: ItemRepository {
     // MARK: - Properties
 
     private let firestore = Firestore.firestore()
 
-    // MARK: - ProductRepository
+    // MARK: - ItemRepository
 
-    func fetchHome() async throws -> [any Product] {
+    func fetchHome() async throws -> [any Item] {
         let snapshot = try await firestore.collection("products").getDocuments()
-        return snapshot.documents.compactMap { decodeProduct(from: $0) }
+        return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProduct(id: String) async throws -> any Product {
+    func fetchProduct(id: String) async throws -> any Item {
         let snapshot = try await firestore.collection("products").document(id).getDocument()
 
         guard snapshot.exists else {
             throw RepositoryError.notFound
         }
 
-        guard let product = decodeProduct(from: snapshot) else {
+        guard let item = decodeItem(from: snapshot) else {
             throw RepositoryError.decodingFailed("Unrecognized product category for id \(id)")
         }
 
-        return product
+        return item
     }
 
-    func fetchDetails(for product: any Product) async throws -> any ProductDetails {
+    func fetchDetails(for item: any Item) async throws -> any ItemDetails {
         let snapshot = try await firestore
             .collection("product_details")
-            .document(product.productDetailsId)
+            .document(item.itemDetailsId)
             .getDocument()
 
         guard snapshot.exists else {
             throw RepositoryError.notFound
         }
 
-        if product is CoffeeProduct {
-            return try snapshot.data(as: CoffeeProductDetails.self)
-        } else if product is MusicProduct {
-            return try snapshot.data(as: MusicProductDetails.self)
-        } else if product is ApparelProduct {
-            return try snapshot.data(as: ApparelProductDetails.self)
+        if item is CoffeeItem {
+            return try snapshot.data(as: CoffeeItemDetails.self)
+        } else if item is MusicItem {
+            return try snapshot.data(as: MusicItemDetails.self)
+        } else if item is ApparelItem {
+            return try snapshot.data(as: ApparelItemDetails.self)
         } else {
             throw RepositoryError.decodingFailed("Unrecognized product type — cannot decode details")
         }
     }
 
-    func fetchSimilarProducts(categoryId: String, limit: Int) async throws -> [any Product] {
+    func fetchSimilarProducts(categoryId: String, limit: Int) async throws -> [any Item] {
         let snapshot = try await firestore
             .collection("products")
             .whereField("categoryId", isEqualTo: categoryId)
             .limit(to: limit)
             .getDocuments()
 
-        return snapshot.documents.compactMap { decodeProduct(from: $0) }
+        return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProducts(inCategories categoryIds: [String]) async throws -> [any Product] {
+    func fetchProducts(inCategories categoryIds: [String]) async throws -> [any Item] {
         guard !categoryIds.isEmpty else { return [] }
 
         let snapshot = try await firestore
@@ -78,13 +78,13 @@ final class FirebaseProductRepository: ProductRepository {
             .whereField("categoryId", in: categoryIds)
             .getDocuments()
 
-        return snapshot.documents.compactMap { decodeProduct(from: $0) }
+        return snapshot.documents.compactMap { decodeItem(from: $0) }
     }
 
-    func fetchProducts(withIds ids: [String]) async throws -> [any Product] {
+    func fetchProducts(withIds ids: [String]) async throws -> [any Item] {
         guard !ids.isEmpty else { return [] }
 
-        var products: [any Product] = []
+        var products: [any Item] = []
 
         // Firestore's `in` operator supports up to 30 values — batch if needed.
         for batchStart in stride(from: 0, to: ids.count, by: 30) {
@@ -93,7 +93,7 @@ final class FirebaseProductRepository: ProductRepository {
                 .collection("products")
                 .whereField(FieldPath.documentID(), in: batch)
                 .getDocuments()
-            products.append(contentsOf: snapshot.documents.compactMap { decodeProduct(from: $0) })
+            products.append(contentsOf: snapshot.documents.compactMap { decodeItem(from: $0) })
         }
 
         return products
@@ -108,21 +108,21 @@ final class FirebaseProductRepository: ProductRepository {
 
     /// Decodes a Firestore document into the correct `Product` concrete type
     /// based on its `categoryId` field. Returns `nil` for unrecognised categories.
-    private func decodeProduct(from snapshot: DocumentSnapshot) -> (any Product)? {
+    private func decodeItem(from snapshot: DocumentSnapshot) -> (any Item)? {
         let categoryId = snapshot["categoryId"] as? String
         do {
             switch categoryId {
-            case ProductTypes.coffee.rawValue:
-                return try snapshot.data(as: CoffeeProduct.self)
-            case ProductTypes.music.rawValue:
-                return try snapshot.data(as: MusicProduct.self)
-            case ProductTypes.apparel.rawValue:
-                return try snapshot.data(as: ApparelProduct.self)
+            case ItemTypes.coffee.rawValue:
+                return try snapshot.data(as: CoffeeItem.self)
+            case ItemTypes.music.rawValue:
+                return try snapshot.data(as: MusicItem.self)
+            case ItemTypes.apparel.rawValue:
+                return try snapshot.data(as: ApparelItem.self)
             default:
                 return nil
             }
         } catch {
-            print("FirebaseProductRepository: failed to decode product \(snapshot.documentID): \(error)")
+            print("FirebaseItemRepository: failed to decode product \(snapshot.documentID): \(error)")
             return nil
         }
     }

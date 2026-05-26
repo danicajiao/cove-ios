@@ -1,5 +1,5 @@
 //
-//  ProductDetailView.swift
+//  ItemDetailView.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 5/8/22.
@@ -14,21 +14,21 @@ struct ViewSizeKey: PreferenceKey {
     static func reduce(value: inout Value, nextValue: () -> Value) {}
 }
 
-struct ProductDetailView: View {
+struct ItemDetailView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject var bag: Bag
-    @StateObject var viewModel: ProductDetailViewModel
+    @StateObject var viewModel: ItemDetailViewModel
 
-    let productId: String
+    let itemId: String
 
     @State private var uiImage: UIImage?
     @State private var averageColor: Color = .Colors.Backgrounds.primary
 
     @State var count: Int = 1
 
-    init(productId: String) {
-        self.productId = productId
-        _viewModel = StateObject(wrappedValue: ProductDetailViewModel(productId: productId))
+    init(itemId: String) {
+        self.itemId = itemId
+        _viewModel = StateObject(wrappedValue: ItemDetailViewModel(itemId: itemId))
     }
 
 //    var rows: [GridItem] = [
@@ -37,10 +37,10 @@ struct ProductDetailView: View {
 
     var body: some View {
         Group {
-            if let product = viewModel.product {
-                // Product loaded, display the details
-                ProductDetailContent(
-                    product: product,
+            if let item = viewModel.item {
+                // Item loaded, display the details
+                ItemDetailContent(
+                    item: item,
                     viewModel: viewModel,
                     uiImage: $uiImage,
                     averageColor: $averageColor,
@@ -51,7 +51,7 @@ struct ProductDetailView: View {
                 VStack {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
-                    Text("Loading product...")
+                    Text("Loading item...")
                         .font(.caption)
                         .foregroundColor(.gray)
                         .padding(.top, Spacing.sm)
@@ -64,9 +64,9 @@ struct ProductDetailView: View {
 }
 
 /// Extracted content view to handle the product display
-private struct ProductDetailContent: View {
-    let product: any Product
-    @ObservedObject var viewModel: ProductDetailViewModel
+private struct ItemDetailContent: View {
+    let item: any Item
+    @ObservedObject var viewModel: ItemDetailViewModel
     @Binding var uiImage: UIImage?
     @Binding var averageColor: Color
     @Binding var count: Int
@@ -79,7 +79,7 @@ private struct ProductDetailContent: View {
 
     private func fetchImage() async {
         do {
-            let url = try await imageRepository.imageURL(for: product.defaultImageURL)
+            let url = try await imageRepository.imageURL(for: item.defaultImageURL)
             let (data, _) = try await URLSession.shared.data(from: url)
             if let image = UIImage(data: data) {
                 uiImage = image
@@ -96,29 +96,29 @@ private struct ProductDetailContent: View {
 
     /// Computed properties for product-specific info
     var titleStr: String {
-        if let coffeeProduct = product as? CoffeeProduct {
-            return coffeeProduct.info.name
-        } else if let musicProduct = product as? MusicProduct {
-            return musicProduct.info.album
-        } else if let apparelProduct = product as? ApparelProduct {
-            return apparelProduct.info.name
+        if let coffeeItem = item as? CoffeeItem {
+            return coffeeItem.info.name
+        } else if let musicItem = item as? MusicItem {
+            return musicItem.info.album
+        } else if let apparelItem = item as? ApparelItem {
+            return apparelItem.info.name
         }
         return "Title"
     }
 
     var subtitleStr: String {
-        if let coffeeProduct = product as? CoffeeProduct {
-            return coffeeProduct.info.roastery
-        } else if let musicProduct = product as? MusicProduct {
-            return musicProduct.info.artist
-        } else if let apparelProduct = product as? ApparelProduct {
-            return apparelProduct.info.brand
+        if let coffeeItem = item as? CoffeeItem {
+            return coffeeItem.info.roastery
+        } else if let musicItem = item as? MusicItem {
+            return musicItem.info.artist
+        } else if let apparelItem = item as? ApparelItem {
+            return apparelItem.info.brand
         }
         return "Subtitle"
     }
 
     var price: Float {
-        product.defaultPrice
+        item.defaultPrice
     }
 
     var body: some View {
@@ -190,7 +190,7 @@ private struct ProductDetailContent: View {
                         }
                         .buttonStyle(PlainButtonStyle())
 
-                        ProductDetailTabs(viewModel: viewModel)
+                        ItemDetailTabs(viewModel: viewModel)
                     }
                     .padding(.horizontal, Spacing.xl)
 
@@ -203,8 +203,8 @@ private struct ProductDetailContent: View {
 
                         ScrollView(.horizontal) {
                             HStack(spacing: Spacing.md) {
-                                ForEach(viewModel.similarProducts, id: \.id) { product in
-                                    ProductCard(product: product)
+                                ForEach(viewModel.similarItems, id: \.id) { item in
+                                    ItemCard(item: item)
                                 }
                             }
                         }
@@ -233,35 +233,35 @@ private struct ProductDetailContent: View {
                     .frame(height: 1)
                     .foregroundStyle(Color.Colors.Fills.quinary)
                 HStack(spacing: Spacing.lg) {
-//                    if let productId = product.id {
-//                        LikeButton(productId: productId, categoryId: product.categoryId, size: 40, outlined: true)
+//                    if let itemId = item.id {
+//                        LikeButton(itemId: itemId, categoryId: item.categoryId, size: 40, outlined: true)
 //                    }
 
                     Button {
-                        if !bag.bagProducts.contains(where: { bagProduct in
-                            bagProduct.product.id == product.id
+                        if !bag.bagItems.contains(where: { bagItem in
+                            bagItem.item.id == item.id
                         }) {
-                            bag.bagProducts.append(BagProduct(product: product, quantity: count))
+                            bag.bagItems.append(BagItem(item: item, quantity: count))
                             bag.totalItems += count
                         } else {
-                            let indexOfExisting = bag.bagProducts.firstIndex { bagProduct in
-                                bagProduct.product.id == product.id
+                            let indexOfExisting = bag.bagItems.firstIndex { bagItem in
+                                bagItem.item.id == item.id
                             }
                             guard let index = indexOfExisting else {
                                 print("Failed to get local index of existing product")
                                 return
                             }
-                            bag.bagProducts[index].quantity += count
+                            bag.bagItems[index].quantity += count
                             bag.totalItems += count
                         }
 
                         if !bag.categories.contains(where: { category in
-                            category == product.categoryId
+                            category == item.categoryId
                         }) {
-                            bag.categories.append(product.categoryId)
+                            bag.categories.append(item.categoryId)
                         }
 
-                        print(bag.bagProducts)
+                        print(bag.bagItems)
                     } label: {
                         Text("Add to visit list")
                     }

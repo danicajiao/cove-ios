@@ -1,10 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git pull*)",
+      "Bash(git fetch*)",
+      "Bash(git add*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git stash*)",
+      "Bash(git reset*)",
+      "Bash(git show*)",
+      "Bash(git rev-parse*)",
+      "Bash(git remote*)",
       "Bash(swiftformat *)",
       "Bash(swiftlint *)",
       "Bash(gh *)"
+    ],
+    "ask": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(gh pr merge*)"
     ]
   }
 }

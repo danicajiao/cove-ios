@@ -8,25 +8,25 @@
 import FirebaseAuth
 
 class BagViewModel: ObservableObject {
-    @Published var similarProducts = [any Product]()
+    @Published var similarItems = [any Item]()
     var tempCategories = [String]()
     var fetchedProductIds = [String]()
 
-    private let productRepository: ProductRepository
+    private let itemRepository: ItemRepository
     private let favoritesRepository: FavoritesRepository
 
     init(
-        productRepository: ProductRepository = FirebaseProductRepository(),
+        itemRepository: ItemRepository = FirebaseItemRepository(),
         favoritesRepository: FavoritesRepository = FirebaseFavoritesRepository()
     ) {
-        self.productRepository = productRepository
+        self.itemRepository = itemRepository
         self.favoritesRepository = favoritesRepository
     }
 
-    /// Fetches similar products and populates the similarProducts array used in BagView
+    /// Fetches similar products and populates the similarItems array used in BagView
     func fetchSimilarProducts(categories: [String]) async throws {
         if categories.isEmpty {
-            await MainActor.run(body: { self.similarProducts = [] })
+            await MainActor.run(body: { self.similarItems = [] })
             return
         }
 
@@ -35,7 +35,7 @@ class BagViewModel: ObservableObject {
         print("Fetching similar products...")
         fetchedProductIds = [String]()
 
-        var products = try await productRepository.fetchProducts(inCategories: categories)
+        var products = try await itemRepository.fetchProducts(inCategories: categories)
         fetchedProductIds = products.compactMap(\.id)
 
         if products.isEmpty {
@@ -49,7 +49,7 @@ class BagViewModel: ObservableObject {
         }
 
         let favorites = try await favoritesRepository.listFavorites(uid: user.uid)
-        let favoriteIds = Set(favorites.map(\.productId))
+        let favoriteIds = Set(favorites.map(\.itemId))
 
         for index in products.indices {
             if let id = products[index].id, favoriteIds.contains(id) {
@@ -59,6 +59,6 @@ class BagViewModel: ObservableObject {
 
         tempCategories = categories
         let sendableProducts = products
-        await MainActor.run(body: { self.similarProducts = sendableProducts })
+        await MainActor.run(body: { self.similarItems = sendableProducts })
     }
 }

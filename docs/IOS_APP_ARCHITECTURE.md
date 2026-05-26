@@ -11,7 +11,7 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [ViewModels](#viewmodels)
 - [Global State](#global-state)
 - [Networking](#networking)
-- [Product Type System](#product-type-system)
+- [Item Type System](#item-type-system)
 - [Firebase Data Model](#firebase-data-model)
 - [Key Data Flows](#key-data-flows)
 - [Not Yet Implemented](#not-yet-implemented)
@@ -33,15 +33,15 @@ The app talks to two separate backends:
 ```
 apps/ios/Cove/
 ├── Supporting Files/     # App entry point (CoveApp.swift), Info.plist
-├── Models/               # Data models and global state (AppState, VisitList, Product types)
+├── Models/               # Data models and global state (AppState, VisitList, Item types)
 │                         #   Also defines Path, AuthState, AuthMethod enums (in AppState.swift)
 ├── View Models/          # Business logic and Firestore access
 ├── Views/                # SwiftUI views organized by feature
 │   ├── Profile/          # ProfileHeaderView, StatsRowView, ProfileRowView
-│   └── ...               # HomeView, VisitListView, ProductDetailView, auth views
-├── Components/           # Reusable UI components (ProductCardView, LikeButton, etc.)
+│   └── ...               # HomeView, VisitListView, ItemDetailView, auth views
+├── Components/           # Reusable UI components (ItemCard, LikeButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
-├── Enums/                # ProductTypes
+├── Enums/                # ItemTypes
 ├── Constants/            # Design token constants (Spacing.swift, Radius.swift)
 └── Resources/            # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
@@ -88,7 +88,7 @@ enum AuthPath: Hashable {
 
 ```swift
 enum Path: Hashable {
-    case product(id: String)   // Product detail navigation within tabs
+    case item(id: String)   // Item detail navigation within tabs
 }
 ```
 
@@ -96,7 +96,7 @@ enum Path: Hashable {
 
 ## Tab Structure
 
-`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping a product from the Home tab pushes `ProductDetailView` without leaving the tab).
+`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping an item from the Home tab pushes `ItemDetailView` without leaving the tab).
 
 | Tab | View | Status |
 |-----|------|--------|
@@ -111,16 +111,16 @@ enum Path: Hashable {
 ## ViewModels
 
 ### HomeViewModel
-Serves `HomeView`. Fetches all products and brands from Firestore on first load. After fetching products, it queries the current user's favorites subcollection and marks matching products with `isFavorite = true`. Results are cached in-memory — `fetchProducts()` early-returns if `products` is already populated.
+Serves `HomeView`. Fetches all items and brands from Firestore on first load. After fetching items, it queries the current user's favorites subcollection and marks matching items with `isFavorite = true`. Results are cached in-memory — `fetchItems()` early-returns if `items` is already populated.
 
-### ProductDetailViewModel
-Serves `ProductDetailView`. Initialized with a `productId`, it runs three async fetches on init: the product itself, its type-specific details, and up to 5 similar products (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by product type.
+### ItemDetailViewModel
+Serves `ItemDetailView`. Initialized with an `itemId`, it runs three async fetches on init: the item itself, its type-specific details, and up to 5 similar items (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by item type.
 
 ### VisitListViewModel
-Serves `VisitListView`. Manages the user's Visit List — vendors and products they intend to visit in person. Tracks visit status (`pending`, `visited`) and whether a purchase was made. Fetches similar product recommendations based on the categories of items in the list.
+Serves `VisitListView`. Manages the user's Visit List — vendors and items they intend to visit in person. Tracks visit status (`pending`, `visited`) and whether a purchase was made. Fetches similar item recommendations based on the categories of items in the list.
 
 ### FavoritesViewModel
-Serves `FavoritesView`. Fetches the current user's favorited products from Firestore in batches of 30 (Firestore `in` query limit). Reads the `users/{uid}/favorites` subcollection to get product IDs, then fetches the corresponding product documents and decodes them by `categoryId` into the correct concrete type. Publishes `favorites: [any Product]` and `isLoading`.
+Serves `FavoritesView`. Fetches the current user's favorited items from Firestore in batches of 30 (Firestore `in` query limit). Reads the `users/{uid}/favorites` subcollection to get item IDs, then fetches the corresponding item documents and decodes them by `categoryId` into the correct concrete type. Publishes `favorites: [any Item]` and `isLoading`.
 
 ### ProfileViewModel
 Serves `ProfileView`. Lightweight — all data is derived from `Auth.auth().currentUser` (display name, initials, photo URL, member since date). No Firestore reads, no local state mutations.
@@ -136,12 +136,12 @@ Injected at the root via `.environmentObject`. Owns:
 
 ### VisitList
 Injected into `MainView` and its children via `.environmentObject`. Owns:
-- `items: [VisitListItem]` — vendors and products the user wants to visit in person
+- `items: [VisitListItem]` — vendors and items the user wants to visit in person
 - `categories: [String]` — categoryIds of items in the list, used to fetch recommendations
 
 ### FavoritesStore
 Injected at the root (`CoveApp`) via `.environmentObject` and available throughout the entire app. Owns:
-- `favoriteIds: Set<String>` — the set of favorited product IDs for the current user
+- `favoriteIds: Set<String>` — the set of favorited item IDs for the current user
 - `isTogglingFavorite: Bool` — prevents concurrent toggle operations
 - Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
 - `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
@@ -298,14 +298,14 @@ ContentView()
 
 ---
 
-## Product Type System
+## Item Type System
 
-Products in Firestore share a common `categoryId` field. The app uses this to decode into the correct Swift type at runtime.
+Items in Firestore share a common `categoryId` field. The app uses this to decode into the correct Swift type at runtime.
 
 ### Type Mapping
 
 ```swift
-enum ProductTypes: String {
+enum ItemTypes: String {
     case coffee  = "8JbKssVf2zw8ryq1pace"
     case music   = "JzzwWDRpp2B5zG4TNdWx"
     case apparel = "s97tOnvbfrNtoe2VaNRQ"
@@ -315,15 +315,15 @@ enum ProductTypes: String {
 ### Protocol Hierarchy
 
 ```
-Product (protocol)
-├── CoffeeProduct   → info: CoffeeInfo  { name, roastery }
-├── MusicProduct    → info: MusicInfo   { artist, album }
-└── ApparelProduct  → info: ApparelInfo { brand, name }
+Item (protocol)
+├── CoffeeItem   → info: CoffeeInfo  { name, roastery }
+├── MusicItem    → info: MusicInfo   { artist, album }
+└── ApparelItem  → info: ApparelInfo { brand, name }
 
-ProductDetails (protocol)
-├── CoffeeProductDetails   → description, about, origin: [OriginInfo]
-├── MusicProductDetails    → description, about, tracklist: [Track]
-└── ApparelProductDetails  → description, about, specifications: [Specification]
+ItemDetails (protocol)
+├── CoffeeItemDetails   → description, about, origin: [OriginInfo]
+├── MusicItemDetails    → description, about, tracklist: [Track]
+└── ApparelItemDetails  → description, about, specifications: [Specification]
 ```
 
 ### Decoding Strategy
@@ -332,14 +332,14 @@ ViewModels read the raw `categoryId` from each Firestore document before decodin
 
 ```swift
 let categoryId = document["categoryId"] as? String
-if categoryId == ProductTypes.coffee.rawValue {
-    let product = try document.data(as: CoffeeProduct.self)
-} else if categoryId == ProductTypes.music.rawValue {
-    let product = try document.data(as: MusicProduct.self)
+if categoryId == ItemTypes.coffee.rawValue {
+    let item = try document.data(as: CoffeeItem.self)
+} else if categoryId == ItemTypes.music.rawValue {
+    let item = try document.data(as: MusicItem.self)
 } // ...
 ```
 
-`ProductDetailView` and `ProductCardView` then type-cast `any Product` back to the concrete type to access type-specific fields (e.g., `(product as? CoffeeProduct)?.info.roastery`).
+`ItemDetailView` and `ItemCard` then type-cast `any Item` back to the concrete type to access type-specific fields (e.g., `(item as? CoffeeItem)?.info.roastery`).
 
 ---
 
@@ -349,19 +349,19 @@ if categoryId == ProductTypes.coffee.rawValue {
 
 | Collection | Purpose |
 |------------|---------|
-| `products` | All product listings |
-| `product_details` | Type-specific product details (keyed by `productDetailsId`) |
+| `products` | All item listings (Firestore collection name frozen until Phase 3 #324) |
+| `product_details` | Type-specific item details (keyed by `productDetailsId`, frozen until Phase 3 #324) |
 | `brands` | Brand/store info shown in the Home "Stores" section |
-| `users/{uid}/favorites` | Per-user favorited product IDs |
+| `users/{uid}/favorites` | Per-user favorited item IDs |
 
-### Product Document Structure
+### Item Document Structure
 
 ```
 products/{productId}
-  ├── categoryId: String          // Maps to ProductTypes enum
+  ├── categoryId: String          // Maps to ItemTypes enum
   ├── defaultPrice: Float
   ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
-  ├── productDetailsId: String    // Foreign key to product_details
+  ├── productDetailsId: String    // Foreign key to product_details (bridged to itemDetailsId via CodingKeys)
   ├── isFavorite: Bool?           // Set client-side after favorites query
   ├── createdAt: Timestamp
   └── info: { ... }              // Type-specific nested object
@@ -371,44 +371,44 @@ Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Ph
 
 ### Image Loading
 
-Product images are loaded via the `ImageRepository` protocol injected into the SwiftUI environment. All image-loading views (`ProductCardView`, `ProductRowView`, `ProductDetailView`, `HomeView` brand logos) call `imageRepository.imageURL(for:)` with the Garage object key from Firestore, then pass the resulting signed URL to `AsyncImage`. Firebase Storage is no longer used.
+Item images are loaded via the `ImageRepository` protocol injected into the SwiftUI environment. All image-loading views (`ItemCard`, `ItemRow`, `ItemDetailView`, `HomeView` brand logos) call `imageRepository.imageURL(for:)` with the Garage object key from Firestore, then pass the resulting signed URL to `AsyncImage`. Firebase Storage is no longer used.
 
 ---
 
 ## Key Data Flows
 
-### App Launch → Products Displayed
+### App Launch → Items Displayed
 
 ```
 1. CoveApp checks authState → .loggedIn
 2. MainView shown with HomeView in first tab
-3. HomeView.onAppear → viewModel.fetchProducts()
+3. HomeView.onAppear → viewModel.fetchItems()
 4. Firestore query: collection("products").getDocuments()
-5. Each doc decoded by categoryId → CoffeeProduct / MusicProduct / ApparelProduct
-6. Favorites query: users/{uid}/favorites where productId in fetchedIds
-7. Matching products marked isFavorite = true
-8. products array published → HomeView renders ProductCardView grid
+5. Each doc decoded by categoryId → CoffeeItem / MusicItem / ApparelItem
+6. Favorites query: users/{uid}/favorites where itemId in fetchedIds
+7. Matching items marked isFavorite = true
+8. items array published → HomeView renders ItemCard grid
 ```
 
-### Product Tap → Detail View
+### Item Tap → Detail View
 
 ```
-1. User taps ProductCardView
-2. NavigationLink(value: Path.product(id:)) fires
-3. TabNavigationStack routes to ProductDetailView(productId:)
-4. ViewModel init → async fetch: product + details + similar products
+1. User taps ItemCard
+2. NavigationLink(value: Path.item(id:)) fires
+3. TabNavigationStack routes to ItemDetailView(itemId:)
+4. ViewModel init → async fetch: item + details + similar items
 5. UI renders with type-specific tabs
 ```
 
 ### Add to Visit List
 
 ```
-1. User taps "Add to Visit List" in ProductDetailView or vendor page
+1. User taps "Add to Visit List" in ItemDetailView or vendor page
 2. Check if item already in visitList.items
    ├── Yes → no-op (already tracked)
    └── No  → append new VisitListItem with status = .pending
-3. visitList.categories updated with product's categoryId
-4. VisitListView onChange → VisitListViewModel.fetchSimilarProducts(categories:)
+3. visitList.categories updated with item's categoryId
+4. VisitListView onChange → VisitListViewModel.fetchSimilarItems(categories:)
 ```
 
 ### Sign Out
@@ -430,7 +430,7 @@ Product images are loaded via the `ImageRepository` protocol injected into the S
 | Browse tab | Placeholder `Text` in MainView |
 | Search | TextField in HomeView is present but not connected |
 | Visit status update | Mark a visit as completed / purchased in VisitListView |
-| Reviews | NavigationLink exists in ProductDetailView but no destination |
+| Reviews | NavigationLink exists in ItemDetailView but no destination |
 | Profile editing | ProfileRowView items are not wired up |
 | Notifications | Bell icon in HomeView has no action |
 | Apple Sign-In | Auth method referenced but not implemented |

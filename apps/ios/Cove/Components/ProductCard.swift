@@ -178,19 +178,17 @@ extension UIImage {
     }
 }
 
-struct ProductCard_Previews: PreviewProvider {
-    static let product = ApparelProduct(
-        id: "12345aaa",
-        createdAt: Timestamp(),
-        categoryId: "apparel category id",
-        defaultPrice: 23,
-        defaultImageURL: "some url",
-        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
-        isFavorite: true,
-        productDetailsId: "12345"
+#Preview {
+    ProductCard(
+        product: ApparelProduct(
+            id: "12345aaa",
+            createdAt: nil,
+            categoryId: "apparel category id",
+            defaultPrice: 23,
+            defaultImageURL: "some url",
+            info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
+            isFavorite: true,
+            productDetailsId: "12345"
+        )
     )
-
-    static var previews: some View {
-        ProductCard(product: product)
-    }
 }

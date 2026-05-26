@@ -7,7 +7,7 @@
 
 import FirebaseFirestore
 
-struct ApparelItem: Product {
+struct ApparelItem: Item {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String

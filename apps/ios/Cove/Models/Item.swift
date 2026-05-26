@@ -20,7 +20,7 @@ protocol Item: Codable, Identifiable, Hashable {
     var itemDetailsId: String { get }
 }
 
-struct ExampleItem: Product {
+struct ExampleItem: Item {
     @DocumentID var id: String?
     @ServerTimestamp var createdAt: Timestamp?
     var categoryId: String

@@ -369,7 +369,7 @@ CREATE INDEX ON directory.makers      (trust_score DESC);
 CREATE INDEX ON directory.storefronts (trust_score DESC);
 ```
 
-### `product` schema
+### `catalog` schema
 
 ```sql
 CREATE TABLE catalog.items (

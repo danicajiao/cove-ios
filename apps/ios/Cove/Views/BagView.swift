@@ -33,7 +33,7 @@ struct BagView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.Colors.Fills.inverse)
                         .overlay {
-                            Text("Products you add to your bag can be found here!")
+                            Text("Items you add to your bag can be found here!")
                                 .multilineTextAlignment(.center)
                                 .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Text.primary)
@@ -85,7 +85,7 @@ struct BagView: View {
                 }
 
                 if !bag.bagItems.isEmpty {
-                    Text("Other products you might like")
+                    Text("Other items you might like")
                         .font(Font.custom("Lato-Bold", size: 18))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.leading, .trailing], 20)
@@ -142,7 +142,7 @@ struct BagView: View {
             }
         }
         .onChange(of: bag.bagItems) {
-            print("Bag product changed!")
+            print("Bag item changed!")
             bag.total = 0
             bag.totalItems = 0
             for bagItem in bag.bagItems {

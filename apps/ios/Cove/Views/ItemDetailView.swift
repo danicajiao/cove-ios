@@ -248,7 +248,7 @@ private struct ItemDetailContent: View {
                                 bagItem.item.id == item.id
                             }
                             guard let index = indexOfExisting else {
-                                print("Failed to get local index of existing product")
+                                print("Failed to get local index of existing item")
                                 return
                             }
                             bag.bagItems[index].quantity += count

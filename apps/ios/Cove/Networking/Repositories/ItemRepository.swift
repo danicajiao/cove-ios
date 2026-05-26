@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Abstraction over all product-catalogue reads.
+/// Abstraction over all item-catalogue reads.
 ///
 /// ViewModels depend on this protocol rather than on a specific data source.
 /// Swap the injected implementation (Firebase, CoveAPI, mock) without touching any ViewModel.
@@ -17,42 +17,42 @@ import Foundation
 /// across implementations.
 ///
 /// **Polymorphism:** All methods that return `[any Item]` or `any Item` may
-/// return any concrete type conforming to `Product` (e.g. `CoffeeItem`, `MusicItem`,
+/// return any concrete type conforming to `Item` (e.g. `CoffeeItem`, `MusicItem`,
 /// `ApparelItem`). Callers should use `is` / `as?` casts or the `categoryId` field
 /// to dispatch to the correct concrete type.
 protocol ItemRepository {
-    /// Fetches the full product catalogue for the home feed.
+    /// Fetches the full item catalogue for the home feed.
     func fetchHome() async throws -> [any Item]
 
-    /// Fetches a single product by its unique ID.
+    /// Fetches a single item by its unique ID.
     ///
-    /// - Throws: `RepositoryError.notFound` when no product exists for the given ID.
+    /// - Throws: `RepositoryError.notFound` when no item exists for the given ID.
     func fetchProduct(id: String) async throws -> any Item
 
-    /// Fetches the type-specific detail document for a product.
+    /// Fetches the type-specific detail document for an item.
     ///
-    /// The returned `ItemDetails` concrete type is determined by the product's
+    /// The returned `ItemDetails` concrete type is determined by the item's
     /// `categoryId` — callers cast to `CoffeeItemDetails`, `MusicItemDetails`,
     /// or `ApparelItemDetails` as needed.
     func fetchDetails(for item: any Item) async throws -> any ItemDetails
 
-    /// Fetches products in the same category as `categoryId`, capped at `limit` results.
+    /// Fetches items in the same category as `categoryId`, capped at `limit` results.
     ///
-    /// Used by `ItemDetailViewModel` to populate the "similar products" shelf.
-    /// Results may include the source product itself — callers are responsible for
+    /// Used by `ItemDetailViewModel` to populate the "similar items" shelf.
+    /// Results may include the source item itself — callers are responsible for
     /// filtering it out if needed.
     func fetchSimilarProducts(categoryId: String, limit: Int) async throws -> [any Item]
 
-    /// Fetches products whose `categoryId` is in the provided set.
+    /// Fetches items whose `categoryId` is in the provided set.
     ///
     /// Used by `BagViewModel` to populate the "you might also like" shelf alongside
     /// bag items. Implementations may cap the result set internally.
     func fetchProducts(inCategories categoryIds: [String]) async throws -> [any Item]
 
-    /// Fetches products whose document IDs are in the provided set.
+    /// Fetches items whose document IDs are in the provided set.
     ///
     /// Used by `FavoritesViewModel` to hydrate the favourites list from persisted
-    /// product IDs. Implementations must batch queries when `ids` exceeds 30 elements
+    /// item IDs. Implementations must batch queries when `ids` exceeds 30 elements
     /// to stay within Firestore's `in` operator limit (or the equivalent backend limit).
     func fetchProducts(withIds ids: [String]) async throws -> [any Item]
 

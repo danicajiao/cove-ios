@@ -27,11 +27,11 @@ class HomeViewModel: ObservableObject {
         let cacheExpired = lastFetchTime.map { Date().timeIntervalSince($0) > cacheTimeout } ?? true
         guard items.isEmpty || forceRefresh || cacheExpired else { return }
 
-        print("Fetching products...")
+        print("Fetching items...")
         let fetched = try await itemRepository.fetchHome()
 
         if fetched.isEmpty {
-            print("No products returned from request")
+            print("No items returned from request")
             return
         }
 

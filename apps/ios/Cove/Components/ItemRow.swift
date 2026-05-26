@@ -16,7 +16,7 @@ struct ItemRow: View {
 
     var body: some View {
         Group {
-            if let coffeeProduct = bagItem.item as? CoffeeItem {
+            if let coffeeItem = bagItem.item as? CoffeeItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -34,10 +34,10 @@ struct ItemRow: View {
 //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(coffeeProduct.info.name)
+                        Text(coffeeItem.info.name)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(coffeeProduct.info.roastery)
+                        Text(coffeeItem.info.roastery)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -83,14 +83,14 @@ struct ItemRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(coffeeProduct.defaultPrice)))")
+                        Text("$\(String(Int(coffeeItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }
                 }
                 .frame(height: 80)
                 .padding(Spacing.xl)
-            } else if let musicProduct = bagItem.item as? MusicItem {
+            } else if let musicItem = bagItem.item as? MusicItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -105,10 +105,10 @@ struct ItemRow: View {
 //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(musicProduct.info.album)
+                        Text(musicItem.info.album)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(musicProduct.info.artist)
+                        Text(musicItem.info.artist)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -154,14 +154,14 @@ struct ItemRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(musicProduct.defaultPrice)))")
+                        Text("$\(String(Int(musicItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }
                 }
                 .frame(height: 80)
                 .padding(Spacing.xl)
-            } else if let apparelProduct = bagItem.item as? ApparelItem {
+            } else if let apparelItem = bagItem.item as? ApparelItem {
                 HStack {
                     AsyncImage(url: imageURL) { image in
                         image
@@ -176,10 +176,10 @@ struct ItemRow: View {
                     //                Spacer()
 
                     VStack(alignment: .leading) {
-                        Text(apparelProduct.info.name)
+                        Text(apparelItem.info.name)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.primary)
-                        Text(apparelProduct.info.brand)
+                        Text(apparelItem.info.brand)
                             .font(Font.custom("Lato-Regular", size: 12))
                             .foregroundStyle(Color.Colors.Text.tertiary)
 
@@ -225,7 +225,7 @@ struct ItemRow: View {
 //                        .foregroundStyle(.accent)
 //                        .frame(width: 20)
                         Spacer()
-                        Text("$\(String(Int(apparelProduct.defaultPrice)))")
+                        Text("$\(String(Int(apparelItem.defaultPrice)))")
                             .font(Font.custom("Lato-Bold", size: 16))
                             .foregroundStyle(Color.Colors.Text.primary)
                     }

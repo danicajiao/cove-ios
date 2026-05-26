@@ -10,8 +10,7 @@ import FirebaseAuth
 class BagViewModel: ObservableObject {
     @Published var similarItems = [any Item]()
     var tempCategories = [String]()
-    var fetchedProductIds = [String]()
-
+    var fetchedItemIds = [String]()
     private let itemRepository: ItemRepository
     private let favoritesRepository: FavoritesRepository
 
@@ -23,7 +22,7 @@ class BagViewModel: ObservableObject {
         self.favoritesRepository = favoritesRepository
     }
 
-    /// Fetches similar products and populates the similarItems array used in BagView
+    /// Fetches similar items and populates the similarItems array used in BagView
     func fetchSimilarProducts(categories: [String]) async throws {
         if categories.isEmpty {
             await MainActor.run(body: { self.similarItems = [] })
@@ -32,14 +31,14 @@ class BagViewModel: ObservableObject {
 
         if tempCategories == categories { return }
 
-        print("Fetching similar products...")
-        fetchedProductIds = [String]()
+        print("Fetching similar items...")
+        fetchedItemIds = [String]()
 
-        var products = try await itemRepository.fetchProducts(inCategories: categories)
-        fetchedProductIds = products.compactMap(\.id)
+        var items = try await itemRepository.fetchProducts(inCategories: categories)
+        fetchedItemIds = items.compactMap(\.id)
 
-        if products.isEmpty {
-            print("No products returned from request")
+        if items.isEmpty {
+            print("No items returned from request")
             return
         }
 
@@ -51,14 +50,14 @@ class BagViewModel: ObservableObject {
         let favorites = try await favoritesRepository.listFavorites(uid: user.uid)
         let favoriteIds = Set(favorites.map(\.itemId))
 
-        for index in products.indices {
-            if let id = products[index].id, favoriteIds.contains(id) {
-                products[index].isFavorite = true
+        for index in items.indices {
+            if let id = items[index].id, favoriteIds.contains(id) {
+                items[index].isFavorite = true
             }
         }
 
         tempCategories = categories
-        let sendableProducts = products
-        await MainActor.run(body: { self.similarItems = sendableProducts })
+        let sendableItems = items
+        await MainActor.run(body: { self.similarItems = sendableItems })
     }
 }

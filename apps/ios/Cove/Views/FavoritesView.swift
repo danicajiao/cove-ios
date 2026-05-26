@@ -30,7 +30,7 @@ struct FavoritesView: View {
                     RoundedRectangle(cornerRadius: Radius.lg)
                         .fill(Color.Colors.Fills.inverse)
                         .overlay {
-                            Text("Products you save will appear here")
+                            Text("Items you save will appear here")
                                 .multilineTextAlignment(.center)
                                 .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Text.primary)

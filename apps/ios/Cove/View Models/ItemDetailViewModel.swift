@@ -40,26 +40,26 @@ class ItemDetailViewModel: ObservableObject {
                     try await fetchItemDetails()
                     try await fetchSimilarItems()
                 } catch {
-                    print("Error fetching product details or similar products: \(error)")
+                    print("Error fetching item details or similar items: \(error)")
                 }
             }
         }
     }
 
     func fetchItem(_ id: String) async {
-        print("Fetching product with id: \(id)")
+        print("Fetching item with id: \(id)")
         do {
             let fetched = try await itemRepository.fetchProduct(id: id)
             await MainActor.run { self.item = fetched }
         } catch {
-            print("Error fetching product: \(error)")
+            print("Error fetching item: \(error)")
         }
     }
 
     func fetchItemDetails() async throws {
         guard let item else { return }
 
-        print("Fetching product details...")
+        print("Fetching item details...")
         let details = try await itemRepository.fetchDetails(for: item)
         await MainActor.run { self.itemDetails = details }
     }
@@ -68,11 +68,11 @@ class ItemDetailViewModel: ObservableObject {
         if !similarItems.isEmpty { return }
         guard let item else { return }
 
-        print("Fetching similar products...")
+        print("Fetching similar items...")
         let fetched = try await itemRepository.fetchSimilarProducts(categoryId: item.categoryId, limit: 5)
 
         if fetched.isEmpty {
-            print("No products returned from request")
+            print("No items returned from request")
             return
         }
 

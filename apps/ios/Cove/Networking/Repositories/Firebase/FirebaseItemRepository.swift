@@ -33,7 +33,7 @@ final class FirebaseItemRepository: ItemRepository {
         }
 
         guard let item = decodeItem(from: snapshot) else {
-            throw RepositoryError.decodingFailed("Unrecognized product category for id \(id)")
+            throw RepositoryError.decodingFailed("Unrecognized item category for id \(id)")
         }
 
         return item
@@ -56,7 +56,7 @@ final class FirebaseItemRepository: ItemRepository {
         } else if item is ApparelItem {
             return try snapshot.data(as: ApparelItemDetails.self)
         } else {
-            throw RepositoryError.decodingFailed("Unrecognized product type — cannot decode details")
+            throw RepositoryError.decodingFailed("Unrecognized item type — cannot decode details")
         }
     }
 
@@ -84,7 +84,7 @@ final class FirebaseItemRepository: ItemRepository {
     func fetchProducts(withIds ids: [String]) async throws -> [any Item] {
         guard !ids.isEmpty else { return [] }
 
-        var products: [any Item] = []
+        var items: [any Item] = []
 
         // Firestore's `in` operator supports up to 30 values — batch if needed.
         for batchStart in stride(from: 0, to: ids.count, by: 30) {
@@ -93,10 +93,10 @@ final class FirebaseItemRepository: ItemRepository {
                 .collection("products")
                 .whereField(FieldPath.documentID(), in: batch)
                 .getDocuments()
-            products.append(contentsOf: snapshot.documents.compactMap { decodeItem(from: $0) })
+            items.append(contentsOf: snapshot.documents.compactMap { decodeItem(from: $0) })
         }
 
-        return products
+        return items
     }
 
     func fetchBrands() async throws -> [Brand] {
@@ -122,7 +122,7 @@ final class FirebaseItemRepository: ItemRepository {
                 return nil
             }
         } catch {
-            print("FirebaseItemRepository: failed to decode product \(snapshot.documentID): \(error)")
+            print("FirebaseItemRepository: failed to decode item \(snapshot.documentID): \(error)")
             return nil
         }
     }

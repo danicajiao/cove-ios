@@ -42,6 +42,82 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
 
+  /images/{filename}/url:
+    get:
+      operationId: getImageURL
+      summary: Get a signed imgproxy URL for a stored image
+      description: |
+        Returns a short-lived signed URL the iOS client can pass directly to
+        AsyncImage. The URL routes through the /i/* reverse proxy to imgproxy,
+        which resizes and re-encodes the image on first request; Cloudflare
+        caches subsequent transforms at the edge.
+
+        The URL embeds an `exp:` imgproxy processing option and is only valid
+        until `expires_at` (default TTL: 1 hour, configurable via
+        IMGPROXY_URL_TTL on cove-image).
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: |
+            Filename segment of the Garage object key, e.g.
+            `5069715ed40e20d8736d6d48ef9f84da8b240e1ead5ba28fdeb110d3d534105c.webp`.
+            Callers strip the `images/` prefix from the stored key before
+            passing it here.
+          schema:
+            type: string
+        - name: w
+          in: query
+          required: true
+          description: Output width in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: h
+          in: query
+          required: true
+          description: Output height in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: fit
+          in: query
+          required: false
+          description: |
+            Resize mode. `cover` (default) crops to fill the exact dimensions.
+            `contain` fits within the dimensions preserving aspect ratio.
+          schema:
+            type: string
+            enum: [cover, contain]
+            default: cover
+      responses:
+        "200":
+          description: Signed imgproxy URL generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageURLResponse"
+        "400":
+          description: Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Image not found in Garage.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -53,6 +129,33 @@ components:
         Attach as "Authorization: Bearer <token>" on all requests except /health.
 
   schemas:
+    ImageURLResponse:
+      type: object
+      required:
+        - url
+        - expires_at
+      properties:
+        url:
+          type: string
+          description: |
+            Signed imgproxy URL valid until expires_at. Pass directly to
+            AsyncImage(url:) or URLSession — do not cache beyond expires_at.
+          example: "https://api.coveapp.dev/i/abc123.../exp:1748129400/rs:fill:800:800/plain/s3://cove-media/images/5069...webp@webp"
+        expires_at:
+          type: string
+          description: RFC 3339 timestamp after which imgproxy rejects the URL.
+          example: "2026-05-26T04:36:37Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable description of what went wrong.
+          example: "image not found"
+
     HealthResponse:
       type: object
       required:

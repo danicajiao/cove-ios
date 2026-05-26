@@ -13,6 +13,8 @@ You are a technical architect and project planner for an iOS/Swift app. You turn
 - **Always explore the codebase before drafting a plan**
 - **Link sub-issues one at a time, sequentially** — concurrent `addSubIssue` mutations return `422 "Priority has already been taken"`
 - **Use the issue's `node_id` (a string like `I_kwDO...`), not its `number` (integer), for the `addSubIssue` mutation** — fetch it with `gh api repos/danicajiao/cove/issues/<number> --jq '.node_id'`
+- **Every epic must end with a mandatory docs audit sub-issue** (see "Docs audit sub-issue" below)
+- **Wire blocked-by dependency links via the REST API after all sub-issues are created** (see "Dependency wiring" below)
 
 ---
 
@@ -107,6 +109,65 @@ Present the final plan — including which UI sub-issues have Figma links — an
      --head feature/$EPIC_NUMBER-<short-description> \
      --draft
    ```
+
+6. **Add the mandatory docs audit sub-issue** (see "Docs audit sub-issue" below) and link it to the epic.
+
+7. **Wire blocked-by dependency links** for all sub-issues (see "Dependency wiring" below).
+
+---
+
+## Docs audit sub-issue
+
+Every epic must end with a `documentation-maintainer` sub-issue labelled `docs`. This sub-issue is the last leaf in the dependency chain — it is blocked by all other leaf sub-issues and runs after they are merged.
+
+**Template:**
+
+```markdown
+Title: "Docs audit: sync documentation with <epic name>"
+
+Labels: docs
+
+## Description
+Review and update all documentation affected by this epic so it accurately reflects what shipped.
+
+## Acceptance Criteria
+- [ ] All docs files touched by this epic are accurate and up to date
+- [ ] `docs/README.md` index reflects any new or removed docs
+- [ ] No stale references remain (old file paths, retired services, renamed types)
+- [ ] Phase completion status updated in `docs/BACKEND_INFRASTRUCTURE.md` (if applicable)
+
+## Technical Notes
+- Handled by the `documentation-maintainer` agent
+- Integration branch: feature/<epic-id>-<description>
+- Review all docs listed in `docs/README.md` for claims affected by this epic
+
+## Dependencies
+- Blocked by #<all other leaf sub-issue numbers>
+```
+
+Add the `docs` label. Do **not** add `ui/ux`, `backend`, or other area labels to this sub-issue.
+
+---
+
+## Dependency wiring
+
+After all sub-issues (including the docs audit) are created, POST blocked-by links using the REST API so the "Blocked by" indicators appear in the GitHub issue sidebar.
+
+Always use the internal issue `id` (not the issue number) for `issue_id`:
+
+```bash
+# Mark issue #B as blocked by issue #A
+BLOCKING_ID=$(gh api repos/danicajiao/cove/issues/<A> --jq '.id')
+gh api repos/danicajiao/cove/issues/<B>/dependencies/blocked_by \
+  --method POST \
+  -F issue_id=$BLOCKING_ID
+```
+
+**Required wiring for every epic:**
+- Each sub-issue that has a prerequisite → POST a blocked-by link pointing at the prerequisite
+- The docs audit sub-issue → POST blocked-by links for **all leaf sub-issues** (i.e., sub-issues that nothing else in the epic depends on)
+
+Read the `## Dependencies` section of each sub-issue body to determine the correct relationships. Wire them all before the epic is handed off.
 
 ---
 

@@ -20,7 +20,7 @@ homelab/
 │   ├── gaming/
 │   │   └── minecraft/                    # separate tenant, not Cove
 │   └── cove/
-│       ├── base/                         # cove-api (Phase 1); cove-product, cove-user, cove-image land in Phases 2-3
+│       ├── base/                         # cove-api (Phase 1, deployed); cove-image + imgproxy (Phase 2, deployed); cove-product, cove-user in Phase 3
 │       └── overlays/
 │           ├── staging/                  # → cove-staging namespace
 │           └── prod/                     # → cove-prod namespace
@@ -57,12 +57,13 @@ Backend services live in the `danicajiao/cove` monorepo under `services/cove-<na
 
 | Service | Path in `danicajiao/cove` | Phase | Sub-issue |
 |---|---|---|---|
-| `cove-api` | `services/cove-api/` | 1 (shipped) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
-| `cove-image` | `services/cove-image/` | 2 | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
+| `cove-api` | `services/cove-api/` | 1 (deployed) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
+| `cove-image` | `services/cove-image/` | 2 (deployed) | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
+| `imgproxy` | cluster platform component (no source in this repo) | 2 (deployed) | — |
 | `cove-product` | `services/cove-product/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
 | `cove-user` | `services/cove-user/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
 
-`cove-api` shipped in Phase 1; the remaining services are added under the same convention as each phase begins.
+`cove-api` shipped in Phase 1. `cove-image` and `imgproxy` shipped in Phase 2. The remaining services are added under the same convention as each phase begins.
 
 ## Runbooks
 

@@ -178,7 +178,7 @@ jobs:
           # integration branch workflow_dispatch): staging only for validation.
           if [ "$GIT_REF" = "refs/heads/main" ]; then
             OVERLAYS="apps/cove/overlays/staging/kustomization.yaml apps/cove/overlays/prod/kustomization.yaml"
-            BRANCH="deploy/cove-sha-${SHORT_SHA}"
+            BRANCH="deploy/cove-prod-sha-${SHORT_SHA}"
             ENV_LABEL="staging + prod"
           else
             OVERLAYS="apps/cove/overlays/staging/kustomization.yaml"

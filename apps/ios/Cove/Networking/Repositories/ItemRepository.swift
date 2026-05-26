@@ -12,7 +12,7 @@ import Foundation
 /// ViewModels depend on this protocol rather than on a specific data source.
 /// Swap the injected implementation (Firebase, CoveAPI, mock) without touching any ViewModel.
 ///
-/// **Ordering:** `fetchHome()` and `fetchProducts(inCategories:)` return results in
+/// **Ordering:** `fetchHome()` and `fetchItems(inCategories:)` return results in
 /// insertion order as determined by the backing store. No stable sort is guaranteed
 /// across implementations.
 ///

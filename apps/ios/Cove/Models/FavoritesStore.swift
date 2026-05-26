@@ -7,7 +7,7 @@
 
 import FirebaseAuth
 
-/// Global store that tracks which products the signed-in user has favourited.
+/// Global store that tracks which items the signed-in user has favourited.
 ///
 /// `FavoritesStore` owns the in-memory `favoriteIds` set and handles optimistic
 /// UI updates (toggling the heart before the write completes). Durable reads and

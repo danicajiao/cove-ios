@@ -9,7 +9,7 @@ import Foundation
 
 class ItemDetailViewModel: ObservableObject {
     @Published var item: (any Item)?
-    @Published var itemDetails: ItemDetails?
+    @Published var itemDetails: (any ItemDetails)?
     @Published var detailSelection: DetailSelection
     @Published var similarItems: [any Item]
 
@@ -38,7 +38,7 @@ class ItemDetailViewModel: ObservableObject {
             if self.item != nil {
                 do {
                     try await fetchItemDetails()
-                    try await fetchSimilarProducts()
+                    try await fetchSimilarItems()
                 } catch {
                     print("Error fetching product details or similar products: \(error)")
                 }

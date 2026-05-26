@@ -218,7 +218,7 @@ jobs:
 
           gh pr create \
             --repo danicajiao/homelab \
-            --title "Bump cove services to ${NEW_TAG}" \
+            --title "Bump cove services to sha-${SHORT_SHA}" \
             --body-file /tmp/pr-body.md \
             --base main \
             --head "${BRANCH}"

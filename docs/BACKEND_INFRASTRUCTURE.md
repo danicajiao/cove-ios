@@ -1,6 +1,6 @@
 # Backend Infrastructure
 
-> **Status:** Phases 0 and 1 complete. The cluster is fully bootstrapped and running, and the `cove-api` gateway is deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes gateway calls through `CoveAPIClient` while still using Firebase directly for Auth, Firestore, and Storage — the remaining backend services come online in Phases 2–3 one at a time. Firebase Auth is kept throughout.
+> **Status:** Phases 0, 1, and 2 complete. The cluster is fully bootstrapped and running. `cove-api` and `cove-image` are deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes all image requests through `CoveAPIClient` → `cove-api` → `cove-image`; Firebase Storage has been retired. Firebase Auth and Firestore remain in use until Phase 3.
 
 ## Contents
 
@@ -42,7 +42,8 @@ cove-api  (K3s pod, cove-staging / cove-prod namespace)
     │  Validates Firebase ID Token via Firebase Admin SDK
     │  Routes to backend services by path prefix
     │
-    ├── /images/*  ──►  cove-image   (Phase 2)
+    ├── /images/*  ──►  cove-image   (Phase 2, deployed)
+    ├── /i/*       ──►  imgproxy     (Phase 2, deployed — image transforms)
     ├── /products/* ──►  cove-product (Phase 3)
     └── /users/*   ──►  cove-user    (Phase 3)
 ```
@@ -61,6 +62,7 @@ The cluster runs on a single-node K3s machine (AMD Ryzen 9600X, 64 GB RAM). Ever
 | External Secrets Operator | Syncs GCP Secret Manager → K8s Secrets | `external-secrets` |
 | CloudNativePG (CNPG) | Manages Postgres `Cluster` CRDs | `cnpg-system` |
 | Garage | S3-compatible object storage (`cove-media`, `postgres-backups`, `loki` buckets) | `garage` |
+| imgproxy | On-the-fly image resizing and re-encoding from Garage S3 sources | `cove-staging` / `cove-prod` |
 | kube-prometheus-stack | Prometheus + Grafana + Alertmanager | `monitoring` |
 | Loki + Alloy | Log aggregation (Alloy tails pod logs → Loki, 14d retention) | `monitoring` |
 | Cloudflare Tunnel | Exposes `api.coveapp.dev` → cluster without open ports | `cloudflare-tunnel` |
@@ -90,8 +92,8 @@ danicajiao/cove                 ← all source code and docs
 │   └── web/                    ← (planned)
 │
 ├── services/
-│   ├── cove-api/               ← cove-api gateway service (Phase 1)
-│   ├── cove-image/             ← cove-image service (Phase 2)
+│   ├── cove-api/               ← cove-api gateway service (Phase 1, deployed)
+│   ├── cove-image/             ← cove-image service (Phase 2, deployed)
 │   ├── cove-product/           ← cove-product service (Phase 3)
 │   └── cove-user/              ← cove-user service (Phase 3)
 │
@@ -137,10 +139,16 @@ build-cove-api: ## Build the cove-api Docker image
         -t cove-api:$(COMMIT_SHA) \
         services/cove-api/
 
-build-all: build-cove-api ## Build Docker images for all services
+build-cove-image: ## Build the cove-image Docker image
+    docker build \
+        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
+        -t cove-image:$(COMMIT_SHA) \
+        services/cove-image/
+
+build-all: build-cove-api build-cove-image ## Build Docker images for all services
 ```
 
-As `cove-image`, `cove-product`, and `cove-user` land in later phases, each gets its own `build-cove-<service>` target wired into `build-all`.
+As `cove-product` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`.
 
 This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
 
@@ -154,8 +162,8 @@ Services drop the `-svc` suffix. The pod, K8s Service, and image name are all th
 
 | Service | What it does | Phase |
 |---|---|---|
-| `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 |
-| `cove-image` | Image upload, resizing, CDN delivery via Garage | Phase 2 |
+| `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 (deployed) |
+| `cove-image` | Image upload (`POST /images`), signed-URL serving (`GET /images/{filename}/url`), normalization to WebP, content-addressed storage in Garage | Phase 2 (deployed) |
 | `cove-product` | Product catalog, categories, search | Phase 3 |
 | `cove-user` | User profiles, follows, producer accounts | Phase 3 |
 
@@ -338,12 +346,15 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 - iOS app routes all cove-api calls through `CoveAPIClient`; Firebase SDK still used directly for Auth, Firestore, and Storage
 - Smoke test: `CoveAPIClient.shared.health()` returns a `HealthResponse` with `status == "ok"`
 
-### Phase 2 — Image service
+### Phase 2 — Image service ✅ complete
 
-- Deploy `cove-image` to `cove-staging`
-- Handles image uploads, resizing, and delivery from Garage `cove-media` bucket
-- iOS app calls `api.coveapp.dev/images/*` instead of Firebase Storage
-- Firebase Storage retired for new uploads
+- `cove-image` deployed to `cove-staging` and `cove-prod`
+- `POST /images` — accepts JPEG/PNG/WebP, normalizes to WebP quality 90, strips EXIF (including GPS), stores content-addressed object in Garage `cove-media` bucket (`images/<sha256>.webp`)
+- `GET /images/{filename}/url` — generates a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL); interim mechanism until `cove-product` embeds pre-signed URLs in Phase 3
+- `cove-api` proxies `/images/*` to `cove-image` and `/i/*` to imgproxy
+- iOS app loads all images via `CoveAPIClient.imageURL(filename:width:height:)` through the `ImageRepository` protocol; `CoveAPIImageRepository` is the active implementation
+- Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
+- Firestore `products.defaultImageURL` and `brands.imageURL` now store Garage keys (`images/<sha256>.webp`) instead of `gs://` URLs
 
 ### Phase 3 — Data services
 

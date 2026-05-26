@@ -23,8 +23,8 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through a combination of `@StateObject`, `@EnvironmentObject`, and `@Published` properties.
 
 The app talks to two separate backends:
-- **Firebase** — Auth (sign-in), Firestore (structured data), Cloud Storage (images). Accessed directly through the Firebase iOS SDK.
-- **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec.
+- **Firebase** — Auth (sign-in) and Firestore (structured data). Accessed directly through the Firebase iOS SDK. Firebase Storage has been retired as of Phase 2.
+- **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec. Image loading now goes through this path via `CoveAPIImageRepository`.
 
 ---
 
@@ -158,11 +158,13 @@ Firebase SDK                        cove-api gateway
 (Google-managed infrastructure)     (K3s homelab, Cloudflare Tunnel)
 
 FirebaseAuth  ─────────────────►  Auth token issuance only
-FirebaseFirestore ─────────────►  Structured data (Phase 1–2 only; Firestore retired in Phase 3)
-FirebaseStorage ───────────────►  Images (Phase 1–2 only; retired in Phase 2)
+FirebaseFirestore ─────────────►  Structured data (Phase 2; Firestore retired in Phase 3)
+FirebaseStorage ───────────────►  (retired as of Phase 2 — unlinked from Xcode target)
 
                                   CoveAPIClient ──────────────────►  cove-api
-                                  (all new gateway calls go here)
+                                  (all gateway calls go here,
+                                   including image loading via
+                                   CoveAPIImageRepository)
 ```
 
 ### APIEnvironment
@@ -272,6 +274,30 @@ When a new route is added to cove-api:
 
 ---
 
+### ImageRepository — protocol and active implementation
+
+Image loading is abstracted behind the `ImageRepository` protocol. All views access it through the SwiftUI environment; `CoveApp` injects the concrete implementation at the root.
+
+```swift
+// Protocol — key-based: takes the Garage object key directly
+protocol ImageRepository {
+    func imageURL(for key: String) async throws -> URL
+}
+
+// Injection at the app root (CoveApp.swift)
+ContentView()
+    .environment(\.imageRepository, CoveAPIImageRepository())
+```
+
+**`CoveAPIImageRepository`** is the active implementation. It:
+1. Strips the `images/` prefix from the Garage key to get the bare filename
+2. Calls `CoveAPIClient.shared.imageURL(filename:width:height:)` — the `GET /images/{filename}/url` gateway endpoint
+3. Returns the signed imgproxy URL ready for `AsyncImage`
+
+`FirebaseImageRepository` was removed in Phase 2. There are no remaining references to Firebase Storage in the iOS codebase.
+
+---
+
 ## Product Type System
 
 Products in Firestore share a common `categoryId` field. The app uses this to decode into the correct Swift type at runtime.
@@ -334,16 +360,18 @@ if categoryId == ProductTypes.coffee.rawValue {
 products/{productId}
   ├── categoryId: String          // Maps to ProductTypes enum
   ├── defaultPrice: Float
-  ├── defaultImageURL: String     // Firebase Storage URL
+  ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
   ├── productDetailsId: String    // Foreign key to product_details
   ├── isFavorite: Bool?           // Set client-side after favorites query
   ├── createdAt: Timestamp
   └── info: { ... }              // Type-specific nested object
 ```
 
+Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Phase 2 it holds a Garage object key (`images/<sha256>.webp`). The same key format applies to `brands.imageURL`.
+
 ### Image Loading
 
-Product images are stored in Firebase Storage. `ProductCardView` fetches them asynchronously via `Storage.storage().reference(forURL:).getData(maxSize:)`, storing the result in a `@State var uiImage`. No caching library is used — images re-fetch on each view appearance.
+Product images are loaded via the `ImageRepository` protocol injected into the SwiftUI environment. All image-loading views (`ProductCardView`, `ProductRowView`, `ProductDetailView`, `HomeView` brand logos) call `imageRepository.imageURL(for:)` with the Garage object key from Firestore, then pass the resulting signed URL to `AsyncImage`. Firebase Storage is no longer used.
 
 ---
 

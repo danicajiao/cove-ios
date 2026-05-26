@@ -17,6 +17,13 @@ struct MusicItem: Item {
     var isFavorite: Bool?
     var itemDetailsId: String
 
+    /// Maps the renamed Swift property back to the existing Firestore field name.
+    /// Remove in Phase 3 when Firestore is decommissioned (#324).
+    private enum CodingKeys: String, CodingKey {
+        case createdAt, categoryId, defaultPrice, defaultImageURL, info, isFavorite
+        case itemDetailsId = "productDetailsId"
+    }
+
     struct MusicInfo: Codable {
         var artist: String
         var album: String

@@ -27,6 +27,13 @@ struct CoffeeItem: Item {
 //        case sku
 //    }
 
+    /// Maps the renamed Swift property back to the existing Firestore field name.
+    /// Remove in Phase 3 when Firestore is decommissioned (#324).
+    private enum CodingKeys: String, CodingKey {
+        case createdAt, categoryId, defaultPrice, defaultImageURL, info, isFavorite
+        case itemDetailsId = "productDetailsId"
+    }
+
     struct CoffeeInfo: Codable {
         var name: String
         var roastery: String

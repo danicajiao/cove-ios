@@ -5,36 +5,16 @@
 //  Created by Daniel Cajiao on 5/18/26.
 //
 
-import FirebaseFirestore
-import FirebaseStorage
+import Foundation
 
 /// Firebase Storage-backed implementation of `ImageRepository`.
 ///
-/// Fetches the product's `defaultImageURL` from Firestore, then resolves
-/// it to a fresh HTTPS download URL via Firebase Storage. In Phase 2 this
-/// implementation is replaced by `CoveAPIImageRepository`, which calls
-/// `cove-image` directly and avoids the double round-trip.
+/// > Important: Deprecated. Product and brand images have been migrated from
+/// > Firebase Storage to Garage object storage. This implementation always throws
+/// > `RepositoryError.notFound`. It will be removed in Phase 3 (danicajiao/cove#248).
+@available(*, deprecated, message: "Images have migrated to Garage. Use CoveAPIImageRepository. Removed in #248.")
 final class FirebaseImageRepository: ImageRepository {
-    // MARK: - Properties
-
-    private let firestore = Firestore.firestore()
-    private let storage = Storage.storage()
-
-    // MARK: - ImageRepository
-
-    func imageURL(for productId: String) async throws -> URL {
-        let snapshot = try await firestore
-            .collection("products")
-            .document(productId)
-            .getDocument()
-
-        guard snapshot.exists,
-              let urlString = snapshot["defaultImageURL"] as? String
-        else {
-            throw RepositoryError.notFound
-        }
-
-        let ref = storage.reference(forURL: urlString)
-        return try await ref.downloadURL()
+    func imageURL(for key: String) async throws -> URL {
+        throw RepositoryError.notFound
     }
 }

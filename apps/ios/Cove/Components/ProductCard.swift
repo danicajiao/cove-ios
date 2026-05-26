@@ -1,12 +1,10 @@
 //
-//  ProductCardView.swift
+//  ProductCard.swift
 //  Cove
 //
 //  Created by Daniel Cajiao on 3/6/22.
 //
 
-import FirebaseFirestore
-import FirebaseStorage
 import SwiftUI
 
 private struct RGBAComponents {
@@ -16,11 +14,13 @@ private struct RGBAComponents {
     let alpha: CGFloat
 }
 
-struct ProductCardView: View {
+struct ProductCard: View {
     var product: any Product
     var titleStr: String = "Title"
     var subtitleStr: String = "Subtitle"
     var price: Float = 9
+
+    @Environment(\.imageRepository) private var imageRepository
 
     @State private var uiImage: UIImage?
     @State private var averageColor: Color = .white // Default background color
@@ -72,8 +72,8 @@ struct ProductCardView: View {
             } else {
                 ProgressView()
                     .frame(maxHeight: .infinity)
-                    .onAppear {
-                        fetchImage()
+                    .task {
+                        await fetchImage()
                     }
             }
 
@@ -112,27 +112,21 @@ struct ProductCardView: View {
         .customShadow()
     }
 
-    private func fetchImage() {
-        guard let imageURL = URL(string: product.defaultImageURL) else { return }
-        let storageRef = Storage.storage().reference(forURL: imageURL.absoluteString)
-
-        storageRef.getData(maxSize: 10 * 1024 * 1024) { data, error in
-            if let error {
-                print("Error fetching image: \(error.localizedDescription)")
-                return
-            }
-
-            if let data, let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    uiImage = image
-                    if let uiColor = image.averageColor {
-                        print("✅ Got average color: \(uiColor)")
-                        averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
-                    } else {
-                        print("❌ averageColor returned nil")
-                    }
+    private func fetchImage() async {
+        do {
+            let url = try await imageRepository.imageURL(for: product.defaultImageURL)
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let image = UIImage(data: data) {
+                uiImage = image
+                if let uiColor = image.averageColor {
+                    print("✅ Got average color: \(uiColor)")
+                    averageColor = Color(uiColor)
+                } else {
+                    print("❌ averageColor returned nil")
                 }
             }
+        } catch {
+            print("Error fetching image: \(error.localizedDescription)")
         }
     }
 }
@@ -184,19 +178,17 @@ extension UIImage {
     }
 }
 
-struct ProductCardView_Previews: PreviewProvider {
-    static let product = ApparelProduct(
-        id: "12345aaa",
-        createdAt: Timestamp(),
-        categoryId: "apparel category id",
-        defaultPrice: 23,
-        defaultImageURL: "some url",
-        info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
-        isFavorite: true,
-        productDetailsId: "12345"
+#Preview {
+    ProductCard(
+        product: ApparelProduct(
+            id: "12345aaa",
+            createdAt: nil,
+            categoryId: "apparel category id",
+            defaultPrice: 23,
+            defaultImageURL: "some url",
+            info: ApparelProduct.ApparelInfo(brand: "Some brand", name: "Some name"),
+            isFavorite: true,
+            productDetailsId: "12345"
+        )
     )
-
-    static var previews: some View {
-        ProductCardView(product: product)
-    }
 }

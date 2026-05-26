@@ -74,6 +74,7 @@ struct CoveApp: App {
             Group {
                 if appState.authState == .loggedIn {
                     MainView()
+                        .environment(\.imageRepository, CoveAPIImageRepository())
                         .environmentObject(bag)
                 } else {
                     NavigationStack(path: $authPath) {

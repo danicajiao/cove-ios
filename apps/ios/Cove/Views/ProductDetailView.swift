@@ -5,8 +5,6 @@
 //  Created by Daniel Cajiao on 5/8/22.
 //
 
-import FirebaseFirestore
-import FirebaseStorage
 import SwiftUI
 
 /// A preference key to store a view's rect
@@ -37,28 +35,6 @@ struct ProductDetailView: View {
 //        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
 //    ]
 
-    private func fetchImage() {
-        guard let product = viewModel.product,
-              let imageURL = URL(string: product.defaultImageURL) else { return }
-        let storageRef = Storage.storage().reference(forURL: imageURL.absoluteString)
-
-        storageRef.getData(maxSize: 10 * 1024 * 1024) { data, error in
-            if let error {
-                print("Error fetching image: \(error.localizedDescription)")
-                return
-            }
-
-            if let data, let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    uiImage = image
-                    if let uiColor = image.averageColor {
-                        averageColor = Color(uiColor) // Convert UIColor to SwiftUI Color
-                    }
-                }
-            }
-        }
-    }
-
     var body: some View {
         Group {
             if let product = viewModel.product {
@@ -68,8 +44,7 @@ struct ProductDetailView: View {
                     viewModel: viewModel,
                     uiImage: $uiImage,
                     averageColor: $averageColor,
-                    count: $count,
-                    fetchImage: fetchImage
+                    count: $count
                 )
             } else {
                 // Loading state
@@ -95,10 +70,29 @@ private struct ProductDetailContent: View {
     @Binding var uiImage: UIImage?
     @Binding var averageColor: Color
     @Binding var count: Int
-    let fetchImage: () -> Void
 
+    @Environment(\.imageRepository) private var imageRepository
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject var bag: Bag
+
+    // MARK: - Image fetch
+
+    private func fetchImage() async {
+        do {
+            let url = try await imageRepository.imageURL(for: product.defaultImageURL)
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let image = UIImage(data: data) {
+                uiImage = image
+                if let uiColor = image.averageColor {
+                    averageColor = Color(uiColor)
+                }
+            }
+        } catch {
+            print("Error fetching image: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Computed properties
 
     /// Computed properties for product-specific info
     var titleStr: String {
@@ -142,8 +136,8 @@ private struct ProductDetailContent: View {
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity)
-                        .onAppear {
-                            fetchImage()
+                        .task {
+                            await fetchImage()
                         }
                         .background(
                             Color.Colors.Brand.blue
@@ -169,7 +163,7 @@ private struct ProductDetailContent: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: Spacing.sm) {
                                     HStack(spacing: Spacing.md) {
-                                        RatingView(rating: 4)
+                                        Rating(rating: 4)
                                         Text("4.3")
                                             .font(Font.custom("Lato-Regular", size: 14))
                                     }
@@ -210,7 +204,7 @@ private struct ProductDetailContent: View {
                         ScrollView(.horizontal) {
                             HStack(spacing: Spacing.md) {
                                 ForEach(viewModel.similarProducts, id: \.id) { product in
-                                    ProductCardView(product: product)
+                                    ProductCard(product: product)
                                 }
                             }
                         }

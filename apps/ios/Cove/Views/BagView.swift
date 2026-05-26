@@ -95,7 +95,7 @@ struct BagView: View {
                     ScrollView(.horizontal) {
                         HStack(spacing: 20) {
                             ForEach(viewModel.similarProducts, id: \.id) { product in
-                                ProductCardView(product: product)
+                                ProductCard(product: product)
                             }
                         }
                         .padding(50)

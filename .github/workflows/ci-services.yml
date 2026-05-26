@@ -195,26 +195,26 @@ jobs:
           git commit -m "Bump cove services to sha-${SHORT_SHA} (${ENV_LABEL})"
           git push origin "${BRANCH}"
 
-          cat > /tmp/pr-body.md << EOF
-          ## Deploy — ${ENV_LABEL}
-
-          Bumps all cove services to \`${NEW_TAG}\`.
-
-          | Overlay | Service | New tag |
-          |---|---|---|
-          $(for f in $OVERLAYS; do
-            ENV=$(echo "$f" | grep -o 'staging\|prod')
-            echo "          | \`${ENV}\` | \`cove-api\` | \`${NEW_TAG}\` |"
-            echo "          | \`${ENV}\` | \`cove-image\` | \`${NEW_TAG}\` |"
-          done)
-
-          **Source:** [danicajiao/cove@${SHORT_SHA}](https://github.com/danicajiao/cove/commit/${COMMIT_SHA})
-          **CI run:** https://github.com/danicajiao/cove/actions/runs/${RUN_ID}
-
-          ## Checklist
-          - [ ] CI green on source commit
-          - [ ] No unexpected manifest changes in diff
-          EOF
+          {
+            echo "## Deploy — ${ENV_LABEL}"
+            echo ""
+            echo "Bumps all cove services to \`${NEW_TAG}\`."
+            echo ""
+            echo "| Overlay | Service | New tag |"
+            echo "|---|---|---|"
+            for f in $OVERLAYS; do
+              ENV=$(echo "$f" | grep -o 'staging\|prod')
+              echo "| \`${ENV}\` | \`cove-api\` | \`${NEW_TAG}\` |"
+              echo "| \`${ENV}\` | \`cove-image\` | \`${NEW_TAG}\` |"
+            done
+            echo ""
+            echo "**Source:** [danicajiao/cove@${SHORT_SHA}](https://github.com/danicajiao/cove/commit/${COMMIT_SHA})"
+            echo "**CI run:** https://github.com/danicajiao/cove/actions/runs/${RUN_ID}"
+            echo ""
+            echo "## Checklist"
+            echo "- [ ] CI green on source commit"
+            echo "- [ ] No unexpected manifest changes in diff"
+          } > /tmp/pr-body.md
 
           gh pr create \
             --repo danicajiao/homelab \

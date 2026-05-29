@@ -75,19 +75,21 @@ kubectl get secret -n cove-prod cove-db-app \
 
 Run from the root of the `cove` repo with the port-forward active.
 
+Each service uses its own tracking table via `x-migrations-table` — both services write to the same `cove` database, so without this flag they would share one `schema_migrations` table and conflict when migration versions don't align.
+
 ### Apply all pending migrations
 
 ```bash
 # 1. cove-item (directory + catalog schemas)
 migrate \
   -path services/cove-item/migrations \
-  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable" \
+  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable&x-migrations-table=schema_migrations_cove_item" \
   up
 
 # 2. cove-user (profile schema) — run after cove-item
 migrate \
   -path services/cove-user/migrations \
-  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable" \
+  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable&x-migrations-table=schema_migrations_cove_user" \
   up
 ```
 
@@ -96,7 +98,7 @@ migrate \
 ```bash
 migrate \
   -path services/cove-item/migrations \
-  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable" \
+  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable&x-migrations-table=schema_migrations_cove_item" \
   down 1
 ```
 
@@ -105,7 +107,7 @@ migrate \
 ```bash
 migrate \
   -path services/cove-item/migrations \
-  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable" \
+  -database "postgres://app:<password>@localhost:5432/cove?sslmode=disable&x-migrations-table=schema_migrations_cove_item" \
   version
 ```
 
@@ -192,10 +194,15 @@ If a migration fails partway through, golang-migrate marks the version as `dirty
 error: Dirty database version 1. Fix and force version.
 ```
 
-**Check the state:**
+**Check the state** (use the service-specific table name):
 ```bash
+# cove-item
 kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -d cove \
-  -c "SELECT * FROM schema_migrations;"
+  -c "SELECT * FROM schema_migrations_cove_item;"
+
+# cove-user
+kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -d cove \
+  -c "SELECT * FROM schema_migrations_cove_user;"
 ```
 
 **Fix options:**
@@ -205,16 +212,18 @@ If the migration failed cleanly (Postgres rolled back the transaction — most D
 ```bash
 # Clear the dirty record (safe if the transaction rolled back)
 kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -d cove \
-  -c "DELETE FROM schema_migrations;"
+  -c "DELETE FROM schema_migrations_cove_item;"  # or schema_migrations_cove_user
 
 # Then rerun
-migrate -path services/cove-item/migrations -database "..." up
+migrate -path services/cove-item/migrations \
+  -database "...&x-migrations-table=schema_migrations_cove_item" up
 ```
 
 If the migration partially applied (some statements committed before the failure), use `migrate force <version>` to mark the version as clean, then manually fix the inconsistency before rerunning:
 
 ```bash
-migrate -path services/cove-item/migrations -database "..." force 1
+migrate -path services/cove-item/migrations \
+  -database "...&x-migrations-table=schema_migrations_cove_item" force 1
 ```
 
 ### Permission denied errors

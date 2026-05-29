@@ -128,11 +128,24 @@ The `<REPO>` prefix is ALL CAPS and identifies the issue tracker — always `COV
 |---|---|
 | `feature/` | New screens or user-facing functionality |
 | `enhancement/` | Improvements to existing features |
-| `bug/` | Bug fixes |
+| `bugfix/` | Bug fixes |
 | `docs/` | Documentation-only changes |
-| `chore/` | Maintenance, config, tooling |
+| `chore/` | Refactoring, cleanup, config, tooling |
 
-Examples: `feature/COVE-21-favorites-view`, `bug/COVE-3-fix-login-crash`, `docs/update-readme`
+Examples: `feature/COVE-21-favorites-view`, `bugfix/COVE-3-fix-login-crash`, `docs/update-readme`
+
+### Issue Labels
+
+Every issue gets a **type** label and most get one or more **area** labels. Area labels drive which agent picks the issue up.
+
+| Area label | Scope |
+|---|---|
+| `ios` | Any work on the iOS platform — views, view models, components, networking, repositories (everything under `apps/ios/`) |
+| `backend` | Go services, APIs, data persistence (everything under `services/`) |
+| `ui/ux` | Front-end design work — visual layouts or motion/animation. Marks that a design governs the work; an iOS screen or animation with a design is `ios` + `ui/ux` |
+| `testing` | Unit, integration, or test-suite work |
+
+An `ios` + `ui/ux` issue is the signal for the `swiftui-engineer` agent. The `ui/ux` label is design-tool-agnostic — there are no tool-specific labels (no `figma`, no `rive`); the specific design asset goes in the issue's Technical Notes. See `.claude/agents/github-project-planner.md` for the full taxonomy (type and meta labels).
 
 ### Pull Requests
 

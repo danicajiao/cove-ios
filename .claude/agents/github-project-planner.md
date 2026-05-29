@@ -43,7 +43,7 @@ Sub-Issues:
 1. "<Title>" [labels: feature, backend]
    - What: ...
    - Why this is a separate task: ...
-2. "<Title>" [labels: feature, ui/ux]
+2. "<Title>" [labels: feature, ios, ui/ux]
    ...
 
 Codebase Notes:
@@ -56,8 +56,8 @@ Before asking for final confirmation, check whether any sub-issues are tagged `u
 
 > "Is there an existing Figma design for **[sub-issue title]**? If so, share the frame link and it will be embedded in the issue for the UI implementer."
 
-- If the user provides a link → add the `figma` label to that sub-issue and record the URL
-- If the user says no design exists yet → create the issue without the `figma` label; it can be added later when a design is ready
+- If the user provides a link → keep the `ui/ux` label and record the frame URL in the issue's Technical Notes
+- If the user says no design exists yet → keep `ui/ux` to mark that a design governs this work, and note in the body that the design is pending; the URL is added later when ready
 - If the user provides a link for some but not all UI sub-issues → handle each independently
 
 ### 5. Confirm
@@ -145,7 +145,7 @@ Review and update all documentation affected by this epic so it accurately refle
 - Blocked by #<all other leaf sub-issue numbers>
 ```
 
-Add the `docs` label. Do **not** add `ui/ux`, `backend`, or other area labels to this sub-issue.
+Add the `docs` label. Do **not** add `ios`, `backend`, `ui/ux`, or other area labels to this sub-issue.
 
 ---
 
@@ -236,20 +236,27 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 | Category | Labels |
 |----------|--------|
 | Epic (required on epics) | `epic` |
-| Type (pick one) | `feature`, `enhancement`, `bug`, `maintenance`, `docs`, `security` |
-| Area (pick 1+) | `ui/ux`, `backend`, `testing` |
-| Asset (optional) | `figma`, `rive` |
+| Type (pick one) | `feature`, `enhancement`, `bugfix`, `chore`, `docs`, `security` |
+| Area (pick 1+) | `ios`, `backend`, `ui/ux`, `testing` |
 | Meta (sparingly) | `good first issue`, `help wanted`, `question`, `wontfix` |
 
-**Rules**: Never combine `feature` + `enhancement`. Add `figma` to a `ui/ux` sub-issue only when the user has provided a Figma frame link — it signals the design exists and the issue is ready for the `swiftui-engineer` agent. Do not add `figma` speculatively. Add `rive` when a Rive animation asset is required.
+**Area labels:**
+
+- `ios` — any and all work on the iOS platform: views, view models, components, networking, repositories, anything under `apps/ios/`
+- `backend` — Go services, APIs, data persistence, business logic under `services/`
+- `ui/ux` — front-end design work, whether visual layouts or motion/animation. Signals that a design exists or is needed and governs the implementation. An iOS screen or animation with a design is tagged `ios, ui/ux`; iOS work with no design surface (networking, repositories) is just `ios`.
+- `testing` — unit, integration, or test-suite work
+
+**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` to a sub-issue when a front-end design governs the work — record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work). An `ios + ui/ux` sub-issue is the signal the `swiftui-engineer` agent is ready to pick it up. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. If the design tool ever changes, no labels go stale.
 
 **Examples**:
 - Epic: Auth System → `epic, feature, security`
-- Implement Firebase Auth → `feature, backend, security`
-- Build checkout UI → `feature, ui/ux, figma`
-- Fix cart total bug → `bug, backend`
-- Add ViewModel unit tests → `maintenance, testing`
-- Payment confirmation animation → `feature, ui/ux, rive`
+- Implement Firebase Auth (iOS) → `feature, ios, security`
+- Implement cove-item discovery endpoint → `feature, backend`
+- Build checkout UI → `feature, ios, ui/ux`
+- Fix cart total bug (iOS) → `bugfix, ios`
+- Add ViewModel unit tests → `chore, ios, testing`
+- Payment confirmation animation → `feature, ios, ui/ux`
 
 ---
 
@@ -278,7 +285,7 @@ The issues you create are the top of a multi-agent pipeline. Once an issue is cr
 
 **How sub-issues flow downstream:**
 
-- `ui/ux + figma` sub-issues → picked up by the `swiftui-engineer` agent, which reads the issue body as its spec, implements the view in a worktree, and creates a PR that closes the issue
+- `ios + ui/ux` sub-issues → picked up by the `swiftui-engineer` agent, which reads the issue body (and the design frame URL in its Technical Notes) as its spec, implements the view in a worktree, and creates a PR that closes the issue
 - The branch the agent works on is named after the issue: `feature/<issue-id>-<short-description>`
 - Sub-issue PRs target the **integration branch** (`feature/<epic-id>-<description>`), not `main` — include the integration branch name in each sub-issue's Technical Notes so agents know where to target
 - The PR description contains `Closes #<issue-id>`, which auto-closes the issue on merge
@@ -289,7 +296,7 @@ The issues you create are the top of a multi-agent pipeline. Once an issue is cr
 The issue body is the agent's only spec inside the worktree. Write it accordingly:
 
 - **Acceptance Criteria** must be complete and checkable — the agent ticks these off before creating the PR
-- **Technical Notes** must include the Figma frame URL (for `ui/ux + figma` issues), relevant file paths, and patterns to follow
+- **Technical Notes** must include the Figma frame URL (for `ui/ux` issues), relevant file paths, and patterns to follow
 - **Dependencies** must name the blocking issue number — the agent uses this to know whether to stub data or wait
 
 Vague issues produce vague implementations. The more precise the issue, the better the agent's output.

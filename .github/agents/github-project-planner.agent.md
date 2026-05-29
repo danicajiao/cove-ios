@@ -45,7 +45,7 @@ Sub-Issues:
 1. "<Title>" [labels: feature, backend]
    - What: ...
    - Why this is a separate task: ...
-2. "<Title>" [labels: feature, ui/ux]
+2. "<Title>" [labels: feature, ios, ui/ux]
    ...
 
 Codebase Notes:
@@ -93,7 +93,7 @@ Review and update all documentation affected by this epic so it accurately refle
 - Blocked by #<all other leaf sub-issue numbers>
 ```
 
-Add the `docs` label. Do **not** add `ui/ux`, `backend`, or other area labels to this sub-issue.
+Add the `docs` label. Do **not** add `ios`, `backend`, `ui/ux`, or other area labels to this sub-issue.
 
 ---
 
@@ -173,12 +173,18 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 | Category | Labels |
 |----------|--------|
 | Epic (required on epics) | `epic` |
-| Type (pick one) | `feature`, `enhancement`, `bug`, `maintenance`, `docs`, `security` |
-| Area (pick 1+) | `ui/ux`, `backend`, `testing` |
-| Asset (optional) | `figma`, `rive` |
+| Type (pick one) | `feature`, `enhancement`, `bugfix`, `chore`, `docs`, `security` |
+| Area (pick 1+) | `ios`, `backend`, `ui/ux`, `testing` |
 | Meta (sparingly) | `good first issue`, `help wanted`, `question`, `wontfix` |
 
-**Rules**: Never combine `feature` + `enhancement`. If design or animation assets are needed before implementation can start, add `figma` or `rive` to signal the dependency. Verify unfamiliar labels exist with `github/get_label` before using them.
+**Area labels:**
+
+- `ios` — any and all work on the iOS platform: views, view models, components, networking, repositories, anything under `apps/ios/`
+- `backend` — Go services, APIs, data persistence, business logic under `services/`
+- `ui/ux` — front-end design work, whether visual layouts or motion/animation. Signals a design exists or is needed and governs the implementation. An iOS screen or animation with a design is tagged `ios, ui/ux`; iOS work with no design surface (networking, repositories) is just `ios`.
+- `testing` — unit, integration, or test-suite work
+
+**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` when a front-end design governs the work, and record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work) — an `ios + ui/ux` sub-issue is the signal the `swiftui-engineer` agent is ready to pick it up. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. Verify unfamiliar labels exist with `github/get_label` before using them.
 
 ---
 

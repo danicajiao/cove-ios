@@ -1,6 +1,6 @@
 ---
 name: SwiftUI Engineer
-description: 'Implements SwiftUI views from Figma designs. Use when a GitHub issue is labeled ui/ux and figma, or when a Figma URL is provided with a request to build a screen or component. Reads the design from Figma, explores existing codebase patterns, and produces production-ready SwiftUI code matched to the design.'
+description: 'Implements SwiftUI views from Figma designs. Use when a GitHub issue is labeled ios and ui/ux, or when a Figma URL is provided with a request to build a screen or component. Reads the design from Figma, explores existing codebase patterns, and produces production-ready SwiftUI code matched to the design.'
 tools: [execute/runInTerminal, read/readFile, edit/createFile, edit/editFiles, search/fileSearch, search/textSearch, search/codebase, github/issue_read, github/issue_write, github/create_pull_request, github/create_branch, github/push_files]
 argument-hint: 'Provide a GitHub issue number or Figma URL. Example: "Implement issue #142", "Build the profile screen from figma.com/design/..."'
 ---

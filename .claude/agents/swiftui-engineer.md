@@ -1,6 +1,6 @@
 ---
 name: swiftui-engineer
-description: Implements SwiftUI views from Figma designs. Use when a GitHub issue is labeled ui/ux and figma, or when a Figma URL is provided with a request to build a screen or component. Reads the design from Figma, explores existing codebase patterns, and produces production-ready SwiftUI code matched to the design.
+description: Implements SwiftUI views from Figma designs. Use when a GitHub issue is labeled ios and ui/ux, or when a Figma URL is provided with a request to build a screen or component. Reads the design from Figma, explores existing codebase patterns, and produces production-ready SwiftUI code matched to the design.
 ---
 
 # SwiftUI Engineer

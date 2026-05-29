@@ -64,14 +64,14 @@ The `<REPO>` prefix is always ALL CAPS and identifies which repo's issue tracker
 |---|---|
 | `feature/` | New screens or user-facing functionality |
 | `enhancement/` | Improvements to existing features |
-| `bug/` | Bug fixes |
+| `bugfix/` | Bug fixes |
 | `docs/` | Documentation-only changes |
-| `chore/` | Maintenance, config, tooling |
+| `chore/` | Refactoring, cleanup, config, tooling |
 
 Examples — with issue:
 - `feature/COVE-137-profile-view-model`
 - `enhancement/COVE-66-improve-tab-navigation`
-- `bug/COVE-3-fix-login-crash`
+- `bugfix/COVE-3-fix-login-crash`
 
 Examples — no issue (off-cycle fixes):
 - `docs/update-readme`
@@ -324,6 +324,6 @@ The `github-project-planner` agent should wire these after creating sub-issues, 
 
 | Sub-issue labels | Handled by |
 |---|---|
-| `ui/ux` + `figma` | `swiftui-engineer` |
+| `ios` + `ui/ux` | `swiftui-engineer` |
 | `docs` | `documentation-maintainer` |
 | planning / epics | `github-project-planner` |

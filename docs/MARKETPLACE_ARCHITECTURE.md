@@ -617,6 +617,34 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 - **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the item↔storefront link in v1, schedule metadata comes later
 - **Reviews, ratings, social feed** — out of scope
 - **Multi-currency, historical pricing** — `price_cents` is informational USD
+- **Maker/storefront admin roles** — v1 data is seeded manually; self-serve ownership and role management ships with `cove-directory`. See below.
+
+### Maker/storefront ownership and admin roles (future: `cove-directory`)
+
+In mature marketplaces (DoorDash for Merchants, Etsy seller portal, Airbnb host dashboard), the supply side is managed by the makers and storefront operators themselves — not by the platform team. A restaurant owner logs into a merchant portal and manages their own menu, photos, and hours. Cove follows the same model: `cove-directory` is the maker/storefront management portal.
+
+In v1, `directory` data is seeded once via migrations and managed by Cove internally. When `cove-directory` ships, the following additive migration lands:
+
+```sql
+-- Links a platform user to a maker or storefront with a named role.
+-- Exclusive arc: a membership is to either a maker or a storefront, not both.
+CREATE TABLE profile.memberships (
+    uid           text        NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)                      ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)                 ON DELETE CASCADE,
+    role          text        NOT NULL, -- 'owner' | 'admin' | 'staff'
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    CHECK (num_nonnulls(maker_id, storefront_id) = 1)
+);
+
+CREATE INDEX ON profile.memberships (uid);
+CREATE INDEX ON profile.memberships (maker_id);
+CREATE INDEX ON profile.memberships (storefront_id);
+```
+
+This is additive — no existing tables change. `cove-directory` gets `SELECT, INSERT, UPDATE, DELETE` on `profile.memberships` and write access to `directory` (the permissions flip described in the services table above).
+
+Platform-level admin (Cove internal staff who can manage any listing) is handled separately via a `is_platform_admin` flag on `profile.users` or a dedicated internal tooling layer — not via `profile.memberships`.
 
 ---
 

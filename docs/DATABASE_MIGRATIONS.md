@@ -168,9 +168,14 @@ ALTER ROLE cove_user  SET search_path = profile, public;
 "
 ```
 
-Verify:
+Verify roles exist and `search_path` defaults are set:
 ```bash
+# Lists roles and attributes (does not show search_path)
 kubectl exec -n <namespace> cove-db-1 -- psql -U postgres -c "\du"
+
+# Confirms search_path is set — search_path lives in pg_db_role_setting, not \du
+kubectl exec -n <namespace> cove-db-1 -- psql -U postgres -d cove -c \
+  "SELECT rolname, setconfig FROM pg_roles r LEFT JOIN pg_db_role_setting s ON r.oid = s.setrole WHERE rolname IN ('cove_item', 'cove_user');"
 ```
 
 Role passwords are managed via ESO → GCP Secret Manager and set with `ALTER ROLE` — they are never stored in migration files.

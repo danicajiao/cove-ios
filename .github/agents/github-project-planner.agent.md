@@ -184,7 +184,7 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 - `ui/ux` — front-end design work, whether visual layouts or motion/animation. Signals a design exists or is needed and governs the implementation. An iOS screen or animation with a design is tagged `ios, ui/ux`; iOS work with no design surface (networking, repositories) is just `ios`.
 - `testing` — unit, integration, or test-suite work
 
-**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` when a front-end design governs the work, and record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work) — an `ios + ui/ux` sub-issue is the signal the `swiftui-engineer` agent is ready to pick it up. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. Verify unfamiliar labels exist with `github/get_label` before using them.
+**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` when a front-end design governs the work, and record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work) — the `swiftui-engineer` agent picks up `ios` sub-issues, and when one also carries `ui/ux` it matches the implementation to that design. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. Verify unfamiliar labels exist with `github/get_label` before using them.
 
 ---
 

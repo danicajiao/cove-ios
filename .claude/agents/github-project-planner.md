@@ -247,7 +247,7 @@ Every issue needs a **type label**. Most sub-issues need an **area label**. Epic
 - `ui/ux` — front-end design work, whether visual layouts or motion/animation. Signals that a design exists or is needed and governs the implementation. An iOS screen or animation with a design is tagged `ios, ui/ux`; iOS work with no design surface (networking, repositories) is just `ios`.
 - `testing` — unit, integration, or test-suite work
 
-**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` to a sub-issue when a front-end design governs the work — record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work). An `ios + ui/ux` sub-issue is the signal the `swiftui-engineer` agent is ready to pick it up. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. If the design tool ever changes, no labels go stale.
+**Rules**: Never combine `feature` + `enhancement`. Apply `ui/ux` to a sub-issue when a front-end design governs the work — record the design asset in the issue's Technical Notes (a Figma frame URL for visual work, the Rive animation spec for motion work). The `swiftui-engineer` agent picks up `ios` sub-issues; when one also carries `ui/ux`, it matches the implementation to that design. **The `ui/ux` label is design-tool-agnostic by design — there is no separate `figma` or `rive` label.** Naming a tool in a label couples the taxonomy to a vendor; the tool belongs in Technical Notes, not the label. If the design tool ever changes, no labels go stale.
 
 **Examples**:
 - Epic: Auth System → `epic, feature, security`
@@ -285,7 +285,7 @@ The issues you create are the top of a multi-agent pipeline. Once an issue is cr
 
 **How sub-issues flow downstream:**
 
-- `ios + ui/ux` sub-issues → picked up by the `swiftui-engineer` agent, which reads the issue body (and the design frame URL in its Technical Notes) as its spec, implements the view in a worktree, and creates a PR that closes the issue
+- `ios` sub-issues → picked up by the `swiftui-engineer` agent, which reads the issue body as its spec (and, when the issue carries `ui/ux`, the design frame URL in its Technical Notes), implements the work in a worktree, and creates a PR that closes the issue
 - The branch the agent works on is named after the issue: `feature/<issue-id>-<short-description>`
 - Sub-issue PRs target the **integration branch** (`feature/<epic-id>-<description>`), not `main` — include the integration branch name in each sub-issue's Technical Notes so agents know where to target
 - The PR description contains `Closes #<issue-id>`, which auto-closes the issue on merge

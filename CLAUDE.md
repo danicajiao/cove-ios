@@ -324,6 +324,6 @@ The `github-project-planner` agent should wire these after creating sub-issues, 
 
 | Sub-issue labels | Handled by |
 |---|---|
-| `ios` + `ui/ux` | `swiftui-engineer` |
+| `ios` (matches a Figma design when also `ui/ux`) | `swiftui-engineer` |
 | `docs` | `documentation-maintainer` |
 | planning / epics | `github-project-planner` |

@@ -145,7 +145,7 @@ Every issue gets a **type** label and most get one or more **area** labels. Area
 | `ui/ux` | Front-end design work — visual layouts or motion/animation. Marks that a design governs the work; an iOS screen or animation with a design is `ios` + `ui/ux` |
 | `testing` | Unit, integration, or test-suite work |
 
-An `ios` + `ui/ux` issue is the signal for the `swiftui-engineer` agent. The `ui/ux` label is design-tool-agnostic — there are no tool-specific labels (no `figma`, no `rive`); the specific design asset goes in the issue's Technical Notes. See `.claude/agents/github-project-planner.md` for the full taxonomy (type and meta labels).
+The `swiftui-engineer` agent picks up any `ios` issue; when one also carries `ui/ux`, it matches the implementation to the design. The `ui/ux` label is design-tool-agnostic — there are no tool-specific labels (no `figma`, no `rive`); the specific design asset goes in the issue's Technical Notes. See `.claude/agents/github-project-planner.md` for the full taxonomy (type and meta labels).
 
 ### Pull Requests
 

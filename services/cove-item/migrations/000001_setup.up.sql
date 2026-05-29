@@ -6,15 +6,12 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE SCHEMA IF NOT EXISTS directory;
 CREATE SCHEMA IF NOT EXISTS catalog;
 
--- Roles (cove_item, cove_user) are created in the CNPG cluster bootstrap
--- via postInitApplicationSQL. They exist before migrations run.
+-- Roles and their search_path defaults are managed in the CNPG cluster
+-- bootstrap (postInitApplicationSQL) — both CREATE ROLE and ALTER ROLE
+-- require superuser, which the app user does not have.
 
--- Schema-level grants
+-- Schema-level grants — app owns the schemas it creates, so GRANT is permitted.
 GRANT USAGE ON SCHEMA catalog   TO cove_item;
 GRANT USAGE ON SCHEMA directory TO cove_item;
 
 GRANT USAGE ON SCHEMA catalog, directory TO cove_user;
-
--- Default search paths
-ALTER ROLE cove_item SET search_path = catalog, directory, public;
-ALTER ROLE cove_user  SET search_path = profile, public;

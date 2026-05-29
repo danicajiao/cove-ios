@@ -151,20 +151,31 @@ CNPG's `postgres` superuser uses **peer authentication** inside the pod — no p
 kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -d cove
 ```
 
+### Superuser-only operations
+
+Both `CREATE ROLE` and `ALTER ROLE` require superuser privileges. Neither can run in migrations (the `app` user has neither `CREATEROLE` nor `ADMIN` on the service roles). Both live in `postInitApplicationSQL` in the homelab cluster.yaml.
+
 ### Manually provisioning roles (existing clusters)
 
-`postInitApplicationSQL` only runs at cluster creation time. For existing clusters, roles must be created once manually:
+`postInitApplicationSQL` only runs at cluster creation time. For existing clusters, roles and search paths must be created once manually:
 
 ```bash
-kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -d cove -c "
+kubectl exec -n <namespace> cove-db-1 -- psql -U postgres -d cove -c "
 DO \$\$ BEGIN CREATE ROLE cove_item WITH LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END \$\$;
 DO \$\$ BEGIN CREATE ROLE cove_user WITH LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END \$\$;
+ALTER ROLE cove_item SET search_path = catalog, directory, public;
+ALTER ROLE cove_user  SET search_path = profile, public;
 "
 ```
 
-Verify:
+Verify roles exist and `search_path` defaults are set:
 ```bash
-kubectl exec -n cove-staging cove-db-1 -- psql -U postgres -c "\du"
+# Lists roles and attributes (does not show search_path)
+kubectl exec -n <namespace> cove-db-1 -- psql -U postgres -c "\du"
+
+# Confirms search_path is set — search_path lives in pg_db_role_setting, not \du
+kubectl exec -n <namespace> cove-db-1 -- psql -U postgres -d cove -c \
+  "SELECT rolname, setconfig FROM pg_roles r LEFT JOIN pg_db_role_setting s ON r.oid = s.setrole WHERE rolname IN ('cove_item', 'cove_user');"
 ```
 
 Role passwords are managed via ESO → GCP Secret Manager and set with `ALTER ROLE` — they are never stored in migration files.

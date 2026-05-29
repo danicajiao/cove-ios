@@ -297,6 +297,24 @@ WHERE category_id = (SELECT id FROM catalog.categories WHERE path = 'apparel.clo
 
 > **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose item traits that only filter (gender, season) live in `attributes`.
 
+### v1 attribute limitations and future path
+
+The v1 `attributes` JSONB column is **free-form** — there is no enforcement that beer items carry an `abv` key, or that `abv` is a number rather than a string tag like `"medium"`. This is intentional for launch speed, but it creates two real constraints:
+
+1. **No numeric range filtering.** A query like "beer between 4–6% ABV" requires `abv` to be stored as a number. If different items store it as `"5.2"`, `"medium"`, or omit it entirely, range filtering breaks. Until attributes are typed and validated per category, range queries are not reliable.
+
+2. **No attribute schema per category.** A mature marketplace enforces which attributes are required or optional for a given category (beer must have `style` and `abv`; candles must have `scent` and `burn_time`). Without this, discovery quality degrades as the catalog grows — inconsistent keys mean inconsistent filter results.
+
+**The natural language query this blocks:** `"amber local beer near me between 4 and 6 ABV"` — proximity and FTS work today, but the ABV range filter requires typed numeric attributes. The `style` tag (`"amber_lager"`) can be stored as a string and filtered with `@>`, but ABV as a range cannot.
+
+**Future path (post-v1):**
+
+- Introduce a `catalog.category_attributes` table defining the attribute schema per category (key, type, required, allowed values).
+- Migrate `attributes` from free-form JSONB to validated-at-write JSONB, or promote high-cardinality numeric attributes (like `abv`) to typed columns on `catalog.items`.
+- The discovery API can then accept structured filter params (`abv_min`, `abv_max`) and push the range predicate into Postgres rather than handling it in application code.
+
+This does not require a schema redesign — it is an additive migration on top of the v1 structure.
+
 ---
 
 ## Database schema

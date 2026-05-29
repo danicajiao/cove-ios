@@ -116,7 +116,7 @@ All v1 services share one CNPG `Cluster` (`cove-db`) and one database (`cove`), 
 |---|---|---|
 | `directory` | `cove-directory` (future); read-only from `cove-item` in v1 | `makers`, `storefronts` |
 | `catalog` | `cove-item` | `categories`, `items`, `availability`, `media`, `signals`, `entity_signals` |
-| `user` | `cove-user` | `users`, `favorites`, `follows` |
+| `profile` | `cove-user` | `users`, `favorites`, `follows` |
 
 ### Why one cluster, not one per service
 
@@ -132,8 +132,8 @@ catalog.availability.item_id             ──►  catalog.items(id)
 catalog.availability.storefront_id       ──►  directory.storefronts(id)
 directory.storefronts.operated_by_maker_id  ──►  directory.makers(id)
 catalog.entity_signals.{maker_id|storefront_id|item_id}  ──►  the referenced entity
-user.favorites.item_id                   ──►  catalog.items(id)
-user.follows.{maker_id|storefront_id}    ──►  the referenced entity
+profile.favorites.item_id                   ──►  catalog.items(id)
+profile.follows.{maker_id|storefront_id}    ──►  the referenced entity
 ```
 
 ---
@@ -275,8 +275,8 @@ Labels must be `[A-Za-z0-9_]+`, so a display name like "Cheese & Dairy" maps to 
 
 The homepage surfaces **category cards** — browse-mode entry points into the discovery surface. Cards are personalized per user via a two-phase model:
 
-1. **Onboarding (explicit signal):** the user picks interest categories during first launch. Stored as `user.interests` rows. Cards are seeded from these picks.
-2. **Behavioral (implicit signal):** as the user browses, attention events (taps, product views, dwell time) are recorded in `user.events`. The recommendation query blends explicit interests + engagement count to reorder cards over time.
+1. **Onboarding (explicit signal):** the user picks interest categories during first launch. Stored as `profile.interests` rows. Cards are seeded from these picks.
+2. **Behavioral (implicit signal):** as the user browses, attention events (taps, product views, dwell time) are recorded in `profile.events`. The recommendation query blends explicit interests + engagement count to reorder cards over time.
 
 The iOS app fetches cards from `GET /recommendations/categories` (owned by `cove-user`). The endpoint returns the same shape regardless of phase — the ranking logic evolves without any iOS changes. Category-scoped discovery is triggered by tapping a card: `GET /discovery?category=food.coffee&lat=...`.
 
@@ -297,6 +297,24 @@ WHERE category_id = (SELECT id FROM catalog.categories WHERE path = 'apparel.clo
 
 > **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose item traits that only filter (gender, season) live in `attributes`.
 
+### v1 attribute limitations and future path
+
+The v1 `attributes` JSONB column is **free-form** — there is no enforcement that beer items carry an `abv` key, or that `abv` is a number rather than a string tag like `"medium"`. This is intentional for launch speed, but it creates two real constraints:
+
+1. **No numeric range filtering.** A query like "beer between 4–6% ABV" requires `abv` to be stored as a number. If different items store it as `"5.2"`, `"medium"`, or omit it entirely, range filtering breaks. Until attributes are typed and validated per category, range queries are not reliable.
+
+2. **No attribute schema per category.** A mature marketplace enforces which attributes are required or optional for a given category (beer must have `style` and `abv`; candles must have `scent` and `burn_time`). Without this, discovery quality degrades as the catalog grows — inconsistent keys mean inconsistent filter results.
+
+**The natural language query this blocks:** `"amber local beer near me between 4 and 6 ABV"` — proximity and FTS work today, but the ABV range filter requires typed numeric attributes. The `style` tag (`"amber_lager"`) can be stored as a string and filtered with `@>`, but ABV as a range cannot.
+
+**Future path (post-v1):**
+
+- Introduce a `catalog.category_attributes` table defining the attribute schema per category (key, type, required, allowed values).
+- Migrate `attributes` from free-form JSONB to validated-at-write JSONB, or promote high-cardinality numeric attributes (like `abv`) to typed columns on `catalog.items`.
+- The discovery API can then accept structured filter params (`abv_min`, `abv_max`) and push the range predicate into Postgres rather than handling it in application code.
+
+This does not require a schema redesign — it is an additive migration on top of the v1 structure.
+
 ---
 
 ## Database schema
@@ -311,7 +329,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE SCHEMA directory;
 CREATE SCHEMA catalog;
-CREATE SCHEMA "user";   -- quoted: reserved word in some contexts
+CREATE SCHEMA profile;   -- quoted: reserved word in some contexts
 
 -- v1 service roles. cove_directory is NOT created yet — the directory schema
 -- exists but cove-item reads it until cove-directory ships.
@@ -319,7 +337,7 @@ CREATE ROLE cove_item LOGIN PASSWORD :'product_password';
 CREATE ROLE cove_user    LOGIN PASSWORD :'user_password';
 
 GRANT USAGE ON SCHEMA catalog  TO cove_item;
-GRANT USAGE ON SCHEMA "user"   TO cove_user;
+GRANT USAGE ON SCHEMA profile   TO cove_user;
 
 -- cove_item reads + references the directory graph for discovery
 GRANT USAGE      ON SCHEMA directory                          TO cove_item;
@@ -334,7 +352,7 @@ GRANT REFERENCES ON catalog.items                          TO cove_user;
 GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_user;
 
 ALTER ROLE cove_item SET search_path = catalog, directory, public;
-ALTER ROLE cove_user    SET search_path = "user", public;
+ALTER ROLE cove_user    SET search_path = profile, public;
 ```
 
 ### `directory` schema
@@ -428,51 +446,51 @@ CREATE INDEX ON catalog.media (storefront_id);
 CREATE INDEX ON catalog.media (maker_id);
 ```
 
-### `user` schema
+### `profile` schema
 
 ```sql
-CREATE TABLE "user".users (
+CREATE TABLE profile.users (
     uid        text        PRIMARY KEY,             -- Firebase Auth UID
     username   text        NOT NULL,
     email      text        NOT NULL UNIQUE,
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE "user".favorites (
-    uid        text        NOT NULL REFERENCES "user".users(uid)    ON DELETE CASCADE,
+CREATE TABLE profile.favorites (
+    uid        text        NOT NULL REFERENCES profile.users(uid)    ON DELETE CASCADE,
     item_id    uuid        NOT NULL REFERENCES catalog.items(id) ON DELETE CASCADE,
     created_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (uid, item_id)
 );
 
-CREATE INDEX ON "user".favorites (uid, created_at DESC);
+CREATE INDEX ON profile.favorites (uid, created_at DESC);
 
 -- Follows can target a maker OR a storefront (exclusive arc).
-CREATE TABLE "user".follows (
-    uid           text        NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
+CREATE TABLE profile.follows (
+    uid           text        NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
     maker_id      uuid REFERENCES directory.makers(id)       ON DELETE CASCADE,
     storefront_id uuid REFERENCES directory.storefronts(id)  ON DELETE CASCADE,
     created_at    timestamptz NOT NULL DEFAULT now(),
     CHECK (num_nonnulls(maker_id, storefront_id) = 1)
 );
 
-CREATE INDEX ON "user".follows (uid, created_at DESC);
+CREATE INDEX ON profile.follows (uid, created_at DESC);
 
 -- Onboarding interest picks — explicit category preferences, editable later in settings.
-CREATE TABLE "user".interests (
-    uid         text NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
+CREATE TABLE profile.interests (
+    uid         text NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
     category_id uuid NOT NULL REFERENCES catalog.categories(id),
     created_at  timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (uid, category_id)
 );
 
-CREATE INDEX ON "user".interests (uid);
+CREATE INDEX ON profile.interests (uid);
 
 -- Attention events — implicit behavioral signals for recommendation ranking.
 -- event_type: 'category_tap' | 'item_view' | 'result_dwell' | 'search'
-CREATE TABLE "user".events (
+CREATE TABLE profile.events (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    uid         text        NOT NULL REFERENCES "user".users(uid) ON DELETE CASCADE,
+    uid         text        NOT NULL REFERENCES profile.users(uid) ON DELETE CASCADE,
     event_type  text        NOT NULL,
     category_id uuid REFERENCES catalog.categories(id),
     item_id     uuid REFERENCES catalog.items(id),
@@ -480,9 +498,9 @@ CREATE TABLE "user".events (
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON "user".events (uid, created_at DESC);
-CREATE INDEX ON "user".events (uid, category_id) WHERE category_id IS NOT NULL;
-CREATE INDEX ON "user".events (uid, item_id) WHERE item_id IS NOT NULL;
+CREATE INDEX ON profile.events (uid, created_at DESC);
+CREATE INDEX ON profile.events (uid, category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX ON profile.events (uid, item_id) WHERE item_id IS NOT NULL;
 ```
 
 ---
@@ -599,6 +617,34 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 - **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the item↔storefront link in v1, schedule metadata comes later
 - **Reviews, ratings, social feed** — out of scope
 - **Multi-currency, historical pricing** — `price_cents` is informational USD
+- **Maker/storefront admin roles** — v1 data is seeded manually; self-serve ownership and role management ships with `cove-directory`. See below.
+
+### Maker/storefront ownership and admin roles (future: `cove-directory`)
+
+In mature marketplaces (DoorDash for Merchants, Etsy seller portal, Airbnb host dashboard), the supply side is managed by the makers and storefront operators themselves — not by the platform team. A restaurant owner logs into a merchant portal and manages their own menu, photos, and hours. Cove follows the same model: `cove-directory` is the maker/storefront management portal.
+
+In v1, `directory` data is seeded once via migrations and managed by Cove internally. When `cove-directory` ships, the following additive migration lands:
+
+```sql
+-- Links a platform user to a maker or storefront with a named role.
+-- Exclusive arc: a membership is to either a maker or a storefront, not both.
+CREATE TABLE profile.memberships (
+    uid           text        NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)                      ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)                 ON DELETE CASCADE,
+    role          text        NOT NULL, -- 'owner' | 'admin' | 'staff'
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    CHECK (num_nonnulls(maker_id, storefront_id) = 1)
+);
+
+CREATE INDEX ON profile.memberships (uid);
+CREATE INDEX ON profile.memberships (maker_id);
+CREATE INDEX ON profile.memberships (storefront_id);
+```
+
+This is additive — no existing tables change. `cove-directory` gets `SELECT, INSERT, UPDATE, DELETE` on `profile.memberships` and write access to `directory` (the permissions flip described in the services table above).
+
+Platform-level admin (Cove internal staff who can manage any listing) is handled separately via a `is_platform_admin` flag on `profile.users` or a dedicated internal tooling layer — not via `profile.memberships`.
 
 ---
 
@@ -635,5 +681,5 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 3.3** (May 2026) — Item media split into a `item_media` child table.
 - **Version 4.0** (May 2026) — **Trust-layer reframe.** Split the old `vendor` into a maker + place graph; the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `item_variants` (no transactions). Folded `item_details` into a `details` column and `item_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_ITEM_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on items with a many-to-many `availability` join so one maker's item can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
-- **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `user.interests` and `user.events` tables to the `user` schema. Documented `ItemTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
-- **Version 4.3** (May 2026) — **item rename.** `product` → `item` throughout: entity name, `product` Postgres schema → `catalog`, `product.products` → `catalog.items`, `cove-product` service → `cove-item`, iOS types (`Product` protocol → `Item`, `ProductRepository` → `ItemRepository`, etc.). Column renames: `product_id` → `item_id` in `catalog.entity_signals`, `catalog.media`, `catalog.availability`, `user.favorites`, `user.events`.
+- **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `profile.interests` and `profile.events` tables to the `profile` schema. Documented `ItemTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
+- **Version 4.3** (May 2026) — **item rename.** `product` → `item` throughout: entity name, `product` Postgres schema → `catalog`, `product.products` → `catalog.items`, `cove-product` service → `cove-item`, iOS types (`Product` protocol → `Item`, `ProductRepository` → `ItemRepository`, etc.). Column renames: `product_id` → `item_id` in `catalog.entity_signals`, `catalog.media`, `catalog.availability`, `profile.favorites`, `profile.events`.

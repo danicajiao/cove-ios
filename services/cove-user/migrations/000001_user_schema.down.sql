@@ -1,8 +1,8 @@
 -- Drop in reverse FK dependency order.
-DROP TABLE IF EXISTS "user".events    CASCADE;
-DROP TABLE IF EXISTS "user".interests CASCADE;
-DROP TABLE IF EXISTS "user".follows   CASCADE;
-DROP TABLE IF EXISTS "user".favorites CASCADE;
-DROP TABLE IF EXISTS "user".users     CASCADE;
+DROP TABLE IF EXISTS profile.events    CASCADE;
+DROP TABLE IF EXISTS profile.interests CASCADE;
+DROP TABLE IF EXISTS profile.follows   CASCADE;
+DROP TABLE IF EXISTS profile.favorites CASCADE;
+DROP TABLE IF EXISTS profile.users     CASCADE;
 
-DROP SCHEMA IF EXISTS "user";
+DROP SCHEMA IF EXISTS profile;

@@ -28,4 +28,4 @@ GRANT USAGE ON SCHEMA catalog, directory TO cove_user;
 
 -- Default search paths
 ALTER ROLE cove_item SET search_path = catalog, directory, public;
-ALTER ROLE cove_user  SET search_path = "user", public;
+ALTER ROLE cove_user  SET search_path = profile, public;

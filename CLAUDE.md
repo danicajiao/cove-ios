@@ -287,6 +287,72 @@ This rule applies to every agent **and** to the main session. If the MCP propaga
 - Open a PR targeting the epic's integration branch (provided in your task prompt) or `main` if there is no epic
 - Include `Closes #<issue-id>` in the PR description
 
+### Pull request body format
+
+Every PR body written to a `--body-file` must follow this layout. The `## Issue` section is required whenever the branch name contains `<REPO>-<ISSUE-NO>`; omit it for off-cycle branches with no associated issue.
+
+```bash
+cat > /tmp/pr-body.md << 'EOF'
+## Issue
+
+* <owner>/<repo>#<issue-number>
+
+## Summary
+
+<!-- What changed and why -->
+
+## Test plan
+
+- [ ] ...
+
+Closes #<issue-number>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+
+gh pr create --title "..." --body-file /tmp/pr-body.md
+```
+
+**Off-cycle PR (no issue)** — omit `## Issue` and `Closes #N`:
+
+```bash
+cat > /tmp/pr-body.md << 'EOF'
+## Summary
+
+<!-- What changed and why -->
+
+## Test plan
+
+- [ ] ...
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+```
+
+### Pre-review AC check
+
+Before opening a PR, fetch the associated issue and verify every Acceptance Criteria item is satisfied by the changes. Determine the issue number from the branch name (`<REPO>-<ISSUE-NO>`).
+
+```bash
+gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
+```
+
+Do not open the PR if any AC item is unmet — finish the work first. Skip this step for off-cycle branches that have no associated issue.
+
+### Post-merge AC comment
+
+After the user confirms a PR is merged, fetch the issue's AC, verify each item against the work that was done, and post a comment on the issue summarizing the result.
+
+```bash
+# Fetch AC
+gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
+
+# Post the comment
+gh issue comment <issue-number> --repo danicajiao/cove --body-file /tmp/ac-comment.md
+```
+
+The comment should list each AC item with ✅ or ❌ and a brief note on how it was verified. Skip for off-cycle PRs with no associated issue.
+
 ### Pull request and issue linking
 
 GitHub's `Closes #<issue-id>` keyword in the PR body is the standard linking mechanism. When the PR targets `main` it auto-closes the issue and populates the Development sidebar automatically. When targeting an integration branch, the keyword is documentation only — the formal Development sidebar link requires a manual step in the GitHub UI (gear icon in the Development section of the PR).

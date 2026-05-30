@@ -295,7 +295,7 @@ Every PR body written to a `--body-file` must follow this layout. The `## Issue`
 cat > /tmp/pr-body.md << 'EOF'
 ## Issue
 
-* danicajiao/cove#318
+* <owner>/<repo>#<issue-number>
 
 ## Summary
 
@@ -305,7 +305,7 @@ cat > /tmp/pr-body.md << 'EOF'
 
 - [ ] ...
 
-Closes #318
+Closes #<issue-number>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF

@@ -6,7 +6,7 @@
 
 ## Issue
 
-* danicajiao/cove#N
+* <owner>/<repo>#N
 
 ## Summary
 

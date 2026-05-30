@@ -287,26 +287,46 @@ This rule applies to every agent **and** to the main session. If the MCP propaga
 - Open a PR targeting the epic's integration branch (provided in your task prompt) or `main` if there is no epic
 - Include `Closes #<issue-id>` in the PR description
 
-### Pull request format
+### Pull request body format
 
-**Standard sections (in order):**
+Every PR body written to a `--body-file` must follow this layout. The `## Issue` section is required whenever the branch name contains `<REPO>-<ISSUE-NO>`; omit it for off-cycle branches with no associated issue.
 
-```markdown
-## Issue        ← link to related issue; omit for off-cycle PRs (no issue number in branch)
-## Summary      ← what changed and why
-## Test plan    ← verification checklist
-
-Closes #N       ← at the bottom; omit for off-cycle PRs
-```
-
-**Issue link — required when the branch name contains `<REPO>-<ISSUE-NO>`:**
-
-Parse the issue number from the branch name and include an `## Issue` section at the very top of the PR body. Off-cycle branches (no issue number) omit this section entirely.
-
-```markdown
+```bash
+cat > /tmp/pr-body.md << 'EOF'
 ## Issue
 
 * danicajiao/cove#318
+
+## Summary
+
+<!-- What changed and why -->
+
+## Test plan
+
+- [ ] ...
+
+Closes #318
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+
+gh pr create --title "..." --body-file /tmp/pr-body.md
+```
+
+**Off-cycle PR (no issue)** — omit `## Issue` and `Closes #N`:
+
+```bash
+cat > /tmp/pr-body.md << 'EOF'
+## Summary
+
+<!-- What changed and why -->
+
+## Test plan
+
+- [ ] ...
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
 ```
 
 ### Pre-review AC check

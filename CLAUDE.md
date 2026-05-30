@@ -306,7 +306,7 @@ Parse the issue number from the branch name and include an `## Issue` section at
 ```markdown
 ## Issue
 
-[COVE-318](https://github.com/danicajiao/cove/issues/318)
+* danicajiao/cove#318
 ```
 
 ### Pre-review AC check

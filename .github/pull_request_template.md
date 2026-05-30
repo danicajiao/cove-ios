@@ -6,7 +6,7 @@
 
 ## Issue
 
-[COVE-N](https://github.com/danicajiao/cove/issues/N)
+* danicajiao/cove#N
 
 ## Summary
 

@@ -260,9 +260,10 @@ Categories nest arbitrarily deep (`food.produce.vegetables`) and need fast "ever
 
 ```sql
 CREATE TABLE catalog.categories (
-    id   uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
-    name text  NOT NULL,
-    path ltree NOT NULL UNIQUE                       -- e.g. 'food.produce.vegetables'
+    id      uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    name    text    NOT NULL,
+    path    ltree   NOT NULL UNIQUE,                  -- e.g. 'food.produce.vegetables'
+    is_leaf boolean NOT NULL DEFAULT true             -- false when category has children; maintained by trigger
 );
 
 CREATE INDEX ON catalog.categories USING GIST  (path);
@@ -270,6 +271,25 @@ CREATE INDEX ON catalog.categories USING BTREE (path);
 ```
 
 Labels must be `[A-Za-z0-9_]+`, so a display name like "Cheese & Dairy" maps to `cheese_and_dairy` for the path while the user-facing label lives in `name`. `ltree` gives one column the work of a `parent_id`/`ancestors`/`level` denormalization, with built-in operators for every traversal (`<@` descendants, `@>` ancestors, `~` lquery patterns). See [Postgres Primer](POSTGRES_PRIMER.md) for the operator reference.
+
+### Leaf enforcement
+
+Items may only be assigned to **leaf categories** — nodes with no children. This is enforced at three layers:
+
+| Layer | Mechanism | What it catches |
+|---|---|---|
+| `catalog.items.category_id` FK | `REFERENCES catalog.categories(id)` (default `RESTRICT`) | Deletion of a category that has items |
+| `items_enforce_leaf_category` trigger | `BEFORE INSERT OR UPDATE` on `catalog.items` | Assignment to a non-leaf category |
+| `categories_prevent_non_leaf_delete` trigger | `BEFORE DELETE` on `catalog.categories` | Deletion of a category that still has children |
+
+Two maintenance triggers keep `is_leaf` accurate automatically:
+
+- **`categories_mark_parent_non_leaf`** (`AFTER INSERT`) — when a new category is inserted, its direct parent is marked `is_leaf = false`.
+- **`categories_recheck_parent_leaf`** (`AFTER DELETE`) — when a leaf category is deleted, its parent is re-evaluated; if no siblings remain it flips back to `is_leaf = true`.
+
+These are defined in migrations `000005` and `000006`. The v1 seed (`000004`) inserts all 242 nodes; the backfill in `000005` sets `is_leaf = false` on all non-leaf nodes so the column is consistent from the start.
+
+See [Category Taxonomy](CATEGORY_TAXONOMY.md) for the full v1 tree and operational runbook.
 
 ### Category cards and personalization
 
@@ -667,6 +687,7 @@ To reconcile before the Phase 3 epic is re-planned:
 - [Postgres Primer](POSTGRES_PRIMER.md) — indexes (B-tree, GIN, GiST), JSONB, FTS, ltree, PostGIS
 - [Media Architecture](MEDIA_ARCHITECTURE.md) — image storage, transformation, serving, signed URLs
 - [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — iOS app structure, ViewModels, repository layer
+- [Category Taxonomy](CATEGORY_TAXONOMY.md) — full v1 tree, design principles, add/remove runbook
 - Product Brief v1.0 — the trust layer, the wedge, the signal taxonomy
 
 ---
@@ -683,3 +704,4 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on items with a many-to-many `availability` join so one maker's item can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
 - **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `profile.interests` and `profile.events` tables to the `profile` schema. Documented `ItemTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
 - **Version 4.3** (May 2026) — **item rename.** `product` → `item` throughout: entity name, `product` Postgres schema → `catalog`, `product.products` → `catalog.items`, `cove-product` service → `cove-item`, iOS types (`Product` protocol → `Item`, `ProductRepository` → `ItemRepository`, etc.). Column renames: `product_id` → `item_id` in `catalog.entity_signals`, `catalog.media`, `catalog.availability`, `profile.favorites`, `profile.events`.
+- **Version 4.4** (May 2026) — **Category leaf enforcement.** Added `is_leaf boolean` to `catalog.categories`; four triggers enforce that items only reference leaf nodes and keep `is_leaf` accurate on insert/delete. v1 seed (242 nodes across 9 top-level categories) landed in migrations 004–006. Added [Category Taxonomy](CATEGORY_TAXONOMY.md) reference doc.

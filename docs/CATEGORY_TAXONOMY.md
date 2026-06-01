@@ -60,254 +60,254 @@ Alcohol has distinct regulatory, cultural, and discovery contexts. Grouping `foo
 ```
 food
 ├── coffee
-│   ├── whole_bean
-│   ├── ground
-│   └── cold_brew
+│   ├── whole_bean       — single-origin bags, local roaster blends
+│   ├── ground           — house blend, espresso roast, drip grind
+│   └── cold_brew        — concentrate, ready-to-drink bottles
 ├── tea
-│   ├── loose_leaf
-│   ├── blends
-│   └── herbal
+│   ├── loose_leaf       — oolong, darjeeling, green tea
+│   ├── blends           — chai, wellness blends, house blends
+│   └── herbal           — chamomile, mint, rooibos, hibiscus
 ├── beverages
-│   ├── kombucha
-│   ├── juice
-│   └── soda
+│   ├── kombucha         — seasonal flavors, raw kombucha
+│   ├── juice            — cold-pressed, fresh-squeezed
+│   └── soda             — craft sodas, ginger beer, shrubs
 ├── baked_goods
-│   ├── breads
-│   ├── pastries
-│   ├── cakes
-│   ├── pies
-│   └── cookies
+│   ├── breads           — sourdough, focaccia, rye loaves
+│   ├── pastries         — croissants, danishes, scones
+│   ├── cakes            — layer cakes, bundt cakes, celebration cakes
+│   ├── pies             — fruit pies, savory hand pies
+│   └── cookies          — chocolate chip, sandwich cookies, shortbread
 ├── confections
-│   ├── chocolate
-│   ├── caramels
-│   ├── fudge
-│   ├── taffy
-│   └── candy
+│   ├── chocolate        — bars, truffles, bark, bonbons
+│   ├── caramels         — soft caramels, sea salt caramels
+│   ├── fudge            — classic, flavored fudge
+│   ├── taffy            — pulled taffy, saltwater taffy
+│   └── candy            — hard candy, gummies, lollipops
 ├── preserves
-│   ├── jams
-│   ├── jellies
-│   ├── fruit_butters
-│   ├── chutneys
-│   └── pickles
+│   ├── jams             — strawberry, mixed berry, stone fruit
+│   ├── jellies          — grape, pepper jelly, herb jelly
+│   ├── fruit_butters    — apple butter, pumpkin butter
+│   ├── chutneys         — mango chutney, onion chutney
+│   └── pickles          — dill pickles, bread and butter, fermented veg
 ├── snacks
-│   ├── granola
-│   ├── jerky
-│   ├── popcorn
-│   ├── nuts
-│   ├── chips
-│   └── trail_mix
+│   ├── granola          — clusters, granola bars, loose granola
+│   ├── jerky            — beef jerky, turkey jerky, bison jerky
+│   ├── popcorn          — kettle corn, flavored popcorn
+│   ├── nuts             — roasted almonds, spiced mixed nuts
+│   ├── chips            — potato chips, veggie chips, plantain chips
+│   └── trail_mix        — custom blends, fruit and nut mixes
 ├── condiments
-│   ├── hot_sauce
-│   ├── salsa
-│   ├── mustard
-│   ├── vinegar
-│   ├── spices
-│   └── oils
+│   ├── hot_sauce        — fermented hot sauce, pepper mash
+│   ├── salsa            — fresh pico, roasted salsa, verde
+│   ├── mustard          — whole grain, honey mustard, spicy brown
+│   ├── vinegar          — apple cider vinegar, infused balsamic
+│   ├── spices           — spice blends, single-origin spices, rubs
+│   └── oils             — infused olive oil, chili oil, herb oil
 ├── fresh
-│   ├── pasta
-│   ├── sauces
-│   └── dips
+│   ├── pasta            — handmade pasta, filled pasta, gnocchi
+│   ├── sauces           — marinara, pesto, cream sauce, bolognese
+│   └── dips             — hummus, baba ganoush, tzatziki, queso
 ├── produce
-│   ├── vegetables
-│   ├── fruits
-│   ├── mushrooms
-│   ├── herbs
-│   └── eggs
+│   ├── vegetables       — seasonal farm vegetables
+│   ├── fruits           — local seasonal fruit
+│   ├── mushrooms        — oyster, shiitake, lion's mane, foraged
+│   ├── herbs            — fresh cut herbs, herb bundles
+│   └── eggs             — farm eggs, duck eggs, quail eggs
 ├── proteins
-│   ├── beef
-│   ├── poultry
-│   ├── pork
-│   ├── fish
-│   └── game
+│   ├── beef             — local ranch beef, ground beef, steaks
+│   ├── poultry          — whole chickens, heritage breed, duck
+│   ├── pork             — heritage pork, charcuterie, bacon
+│   ├── fish             — local trout, smoked salmon, cured fish
+│   └── game             — elk, bison, venison, rabbit
 ├── dairy
-│   ├── cheese
-│   ├── milk
-│   ├── butter
-│   ├── ice_cream
-│   └── yogurt
+│   ├── cheese           — artisan cheese, aged varieties, fresh chèvre
+│   ├── milk             — whole milk, A2 milk, oat milk
+│   ├── butter           — cultured butter, compound butters
+│   ├── ice_cream        — small-batch ice cream, gelato, sorbet
+│   └── yogurt           — whole milk yogurt, Greek-style, labneh
 └── pantry
-    ├── syrups
-    ├── sweeteners
-    ├── honey
-    ├── baking
-    └── grains
+    ├── syrups           — simple syrups, flavored coffee syrups
+    ├── sweeteners       — coconut sugar, monk fruit, date syrup
+    ├── honey            — raw honey, varietal honey, honeycomb
+    ├── baking           — specialty flour, baking mixes, extracts
+    └── grains           — heirloom grains, ancient grains, rice
 
 alcohol
 ├── beer
-│   ├── ipa
-│   ├── stout
-│   ├── lager
-│   ├── wheat
-│   ├── sour
-│   ├── amber
-│   └── specialty
+│   ├── ipa              — West Coast IPA, hazy IPA, session IPA
+│   ├── stout            — oatmeal stout, milk stout, imperial stout
+│   ├── lager            — Czech-style pilsner, helles, märzen
+│   ├── wheat            — hefeweizen, American wheat, witbier
+│   ├── sour             — Berliner Weisse, gose, lambic-style
+│   ├── amber            — amber ale, red ale, Scottish ale
+│   └── specialty        — barrel-aged, fruit beers, experimental
 ├── cider
-│   ├── apple
-│   └── specialty
+│   ├── apple            — traditional dry cider, semi-sweet, ice cider
+│   └── specialty        — pear, cherry, hopped, botanical cider
 ├── wine
-│   ├── red
-│   ├── white
-│   ├── rose
-│   ├── sparkling
-│   └── specialty
+│   ├── red              — Pinot Noir, Cabernet, Malbec, Tempranillo
+│   ├── white            — Chardonnay, Sauvignon Blanc, Riesling
+│   ├── rose             — dry rosé, Provence-style
+│   ├── sparkling        — Pét Nat, traditional method, Prosecco-style
+│   └── specialty        — orange wine, ice wine, dessert wine
 └── spirits
-    ├── whiskey
-    ├── gin
-    ├── vodka
-    ├── rum
-    ├── tequila
-    └── specialty
+    ├── whiskey          — bourbon, rye, single malt, blended
+    ├── gin              — London dry, botanical, navy strength
+    ├── vodka            — craft vodka, flavored, potato
+    ├── rum              — aged rum, white rum, spiced
+    ├── tequila          — blanco, reposado, mezcal, añejo
+    └── specialty        — aquavit, amaro, absinthe, grappa
 
 apparel
 ├── mens
-│   ├── tops
-│   ├── bottoms
-│   └── outerwear
+│   ├── tops             — t-shirts, flannels, henleys, button-downs
+│   ├── bottoms          — jeans, chinos, shorts, trousers
+│   └── outerwear        — jackets, coats, vests, parkas
 ├── womens
-│   ├── tops
-│   ├── bottoms
-│   ├── dresses
-│   └── outerwear
+│   ├── tops             — blouses, tees, tanks, sweaters
+│   ├── bottoms          — jeans, skirts, trousers, shorts
+│   ├── dresses          — sundresses, wrap dresses, midi dresses
+│   └── outerwear        — jackets, coats, cardigans, blazers
 ├── unisex
-│   ├── tops
-│   ├── bottoms
-│   └── outerwear
+│   ├── tops             — sweatshirts, tees, hoodies
+│   ├── bottoms          — joggers, sweatpants, linen trousers
+│   └── outerwear        — puffer jackets, fleece, raincoats
 ├── accessories
-│   ├── hats
-│   ├── belts
-│   ├── bags
-│   ├── scarves
-│   ├── gloves
-│   └── shoes
+│   ├── hats             — beanies, baseball caps, wide-brim hats
+│   ├── belts            — leather belts, woven belts, braided
+│   ├── bags             — tote bags, crossbody bags, backpacks
+│   ├── scarves          — wool scarves, silk scarves, wraps
+│   ├── gloves           — knit gloves, leather gloves, mittens
+│   └── shoes            — handmade leather shoes, boots, sandals
 └── jewelry
-    ├── necklaces
-    ├── earrings
-    ├── rings
-    └── bracelets
+    ├── necklaces        — pendants, chains, chokers, lariats
+    ├── earrings         — studs, hoops, dangles, ear cuffs
+    ├── rings            — bands, statement rings, stacking rings
+    └── bracelets        — cuffs, beaded bracelets, chain
 
 home
 ├── decor
-│   ├── candles
-│   └── ceramics
+│   ├── candles          — soy candles, beeswax pillars, tapers
+│   └── ceramics         — vases, decorative bowls, figurines
 ├── kitchen
-│   ├── ceramics
-│   ├── cutting_boards
-│   ├── utensils
-│   └── linens
+│   ├── ceramics         — mugs, plates, bowls, serving dishes
+│   ├── cutting_boards   — wood cutting boards, charcuterie boards
+│   ├── utensils         — wooden spoons, handmade knives, spatulas
+│   └── linens           — dish towels, napkins, aprons
 ├── textiles
-│   ├── blankets
-│   ├── pillows
-│   └── throws
+│   ├── blankets         — wool blankets, quilts, weighted blankets
+│   ├── pillows          — throw pillows, lumbar pillows, floor cushions
+│   └── throws           — knit throws, woven throws, sherpa throws
 └── furniture
-    ├── tables
-    ├── seating
-    └── shelving
+    ├── tables           — coffee tables, side tables, dining tables
+    ├── seating          — chairs, stools, benches, ottomans
+    └── shelving         — floating shelves, bookshelves, ladder shelves
 
 plants
 ├── indoor
-│   ├── succulents
-│   ├── tropicals
-│   └── herbs
+│   ├── succulents       — echeveria, aloe, haworthia, cactus
+│   ├── tropicals        — pothos, monstera, ferns, philodendron
+│   └── herbs            — potted basil, mint, rosemary, thyme
 ├── outdoor
-│   ├── perennials
-│   ├── annuals
-│   └── shrubs
+│   ├── perennials       — lavender, coneflower, black-eyed Susan
+│   ├── annuals          — petunias, marigolds, zinnias, impatiens
+│   └── shrubs           — rosemary, boxwood, hydrangea, lilac
 ├── seeds
-│   ├── vegetable
-│   ├── flower
-│   ├── fruit
-│   └── herb
+│   ├── vegetable        — tomato, pepper, kale, squash seeds
+│   ├── flower           — wildflower mixes, sunflower, cosmos
+│   ├── fruit            — strawberry, melon, pumpkin seeds
+│   └── herb             — basil, dill, cilantro, chive seeds
 ├── dried
-│   ├── bouquets
-│   ├── wreaths
-│   └── arrangements
+│   ├── bouquets         — dried wildflowers, lavender bundles
+│   ├── wreaths          — dried floral wreaths, herb wreaths
+│   └── arrangements     — preserved floral arrangements, terrariums
 └── plantcare
-    ├── soil
-    ├── fertilizer
-    ├── pots
-    └── tools
+    ├── soil             — potting mix, cactus mix, worm castings
+    ├── fertilizer       — liquid fertilizer, compost, slow-release
+    ├── pots             — handmade ceramic pots, terracotta, hanging
+    └── tools            — pruning shears, trowels, watering cans
 
 beauty
 ├── cosmetics
-│   ├── face
-│   ├── eyes
-│   ├── lips
-│   └── nails
+│   ├── face             — foundation, blush, bronzer, highlighter
+│   ├── eyes             — eyeshadow, mascara, eyeliner, brow gel
+│   ├── lips             — lipstick, lip gloss, lip liner, balm
+│   └── nails            — nail polish, nail art, strengtheners
 ├── skincare
-│   ├── cleansers
-│   ├── moisturizers
-│   ├── serums
-│   ├── oils
-│   └── spf
+│   ├── cleansers        — face wash, cleansing balms, micellar water
+│   ├── moisturizers     — face cream, gel moisturizer, night cream
+│   ├── serums           — vitamin C, hyaluronic acid, retinol
+│   ├── oils             — rosehip oil, face oils, dry oils
+│   └── spf              — SPF moisturizer, mineral sunscreen
 ├── bodycare
-│   ├── soap
-│   ├── bath_bombs
-│   ├── scrubs
-│   ├── bath_salts
-│   └── lotion
+│   ├── soap             — bar soap, liquid soap, castile soap
+│   ├── bath_bombs       — fizzy bath bombs, CBD bath bombs
+│   ├── scrubs           — sugar scrubs, salt scrubs, coffee scrubs
+│   ├── bath_salts       — epsom salts, mineral bath salts, soaking salts
+│   └── lotion           — body lotion, body butter, body oil
 ├── haircare
-│   ├── shampoo
-│   ├── conditioner
-│   ├── masks
-│   ├── oils
-│   └── styling
+│   ├── shampoo          — clarifying, moisturizing, dry shampoo
+│   ├── conditioner      — deep conditioner, leave-in, co-wash
+│   ├── masks            — hair masks, scalp treatments, protein packs
+│   ├── oils             — argan oil, jojoba oil, hair serums
+│   └── styling          — pomade, curl cream, hair wax, mousse
 ├── fragrance
-│   ├── perfume
-│   ├── cologne
-│   ├── body_spray
-│   └── solid
+│   ├── perfume          — eau de parfum, floral, woody, gourmand
+│   ├── cologne          — eau de cologne, fresh, citrus, fougère
+│   ├── body_spray       — light fragrance mists, deodorant spray
+│   └── solid            — solid perfume, fragrance balm, wax melts
 └── supplements
-    ├── vitamins
-    └── herbal
+    ├── vitamins         — multivitamins, vitamin C, D3, B12
+    └── herbal           — echinacea, ashwagandha, elderberry, adaptogen blends
 
 art
-├── paintings           ← leaf at level 2
-├── prints              ← leaf at level 2
-├── sculptures          ← leaf at level 2
-├── photography         ← leaf at level 2
-├── drawings            ← leaf at level 2
+├── paintings            — oil, acrylic, watercolor originals  ← leaf at level 2
+├── prints               — limited edition prints, giclée, screen prints  ← leaf at level 2
+├── sculptures           — ceramic, wood, metal, mixed media  ← leaf at level 2
+├── photography          — fine art prints, framed photos, editions  ← leaf at level 2
+├── drawings             — charcoal, pencil, ink, pastel originals  ← leaf at level 2
 └── materials
-    ├── paint
-    ├── brushes
-    ├── canvas
-    ├── paper
-    └── ink
+    ├── paint            — acrylic, oil, watercolor, gouache
+    ├── brushes          — natural hair, synthetic, fan, detail
+    ├── canvas           — stretched canvas, canvas pads, boards
+    ├── paper            — watercolor paper, sketch pads, printmaking
+    └── ink              — India ink, calligraphy inks, screen printing ink
 
 pets
 ├── dogs
-│   ├── food
-│   ├── accessories
-│   ├── grooming
-│   └── toys
+│   ├── food             — homemade treats, raw food, baked biscuits
+│   ├── accessories      — collars, leashes, bandanas, harnesses
+│   ├── grooming         — shampoo, conditioner, grooming kits
+│   └── toys             — rope toys, chew toys, puzzle feeders
 ├── cats
-│   ├── food
-│   ├── accessories
-│   ├── grooming
-│   └── toys
+│   ├── food             — homemade treats, freeze-dried, raw toppers
+│   ├── accessories      — collars, harnesses, beds, scratchers
+│   ├── grooming         — brushes, deshedding tools, nail trimmers
+│   └── toys             — feather wands, catnip toys, crinkle balls
 ├── birds
-│   ├── food
-│   ├── accessories
-│   └── toys
+│   ├── food             — seed mixes, pellets, dried fruit treat sticks
+│   ├── accessories      — perches, cage covers, foraging cups
+│   └── toys             — foraging toys, swings, foot toys, bells
 └── exotic
-    ├── food
-    └── accessories
+    ├── food             — specialized diets, freeze-dried, live feeders
+    └── accessories      — tanks, hides, enclosure decor, heat mats
 
 music
 ├── instruments
-│   ├── guitars
-│   ├── violins
-│   ├── drums
-│   ├── keyboards
-│   ├── bass
-│   └── trumpet
+│   ├── guitars          — acoustic, electric, classical, resonator
+│   ├── violins          — full-size, fractional, handmade, folk fiddles
+│   ├── drums            — snare drums, hand drums, cajóns, frame drums
+│   ├── keyboards        — digital pianos, MIDI controllers, melodicas
+│   ├── bass             — electric bass, upright bass, bass ukulele
+│   └── trumpet          — Bb trumpet, flugelhorn, cornet, pocket trumpet
 ├── recorded
-│   ├── vinyl
-│   ├── cd
-│   └── cassette
+│   ├── vinyl            — LPs, EPs, 45s, picture discs, local artists
+│   ├── cd               — albums, EPs, local band CDs, live recordings
+│   └── cassette         — lo-fi releases, mixtapes, zine-style releases
 └── accessories
-    ├── cases
-    ├── string_sets
-    └── picks
+    ├── cases            — guitar cases, gig bags, instrument pouches
+    ├── string_sets      — acoustic strings, electric strings, bass strings
+    └── picks            — celluloid picks, nylon picks, thumb picks
 ```
 
 ---

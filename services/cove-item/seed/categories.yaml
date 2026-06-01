@@ -1,0 +1,562 @@
+# Cove v1 category taxonomy
+#
+# Each node has:
+#   name: Human-readable display name
+#   path: ltree path (dot-separated, lowercase, underscores for spaces)
+#   children: (optional) nested subcategories
+#
+# To add or rename categories: edit this file and re-run the seed script.
+# The seed is idempotent — re-running updates names without changing IDs.
+#
+# Style/attribute refinement (beer ABV, wine varietal, clothing color, etc.)
+# is handled via catalog.items.attributes JSONB, not the category tree.
+#
+# cannabis is intentionally excluded from v1.
+
+categories:
+  - name: Food
+    path: food
+    children:
+      - name: Coffee
+        path: food.coffee
+        children:
+          - name: Whole Bean
+            path: food.coffee.whole_bean
+          - name: Ground
+            path: food.coffee.ground
+          - name: Cold Brew
+            path: food.coffee.cold_brew
+      - name: Tea
+        path: food.tea
+        children:
+          - name: Loose Leaf
+            path: food.tea.loose_leaf
+          - name: Blends
+            path: food.tea.blends
+          - name: Herbal
+            path: food.tea.herbal
+      - name: Beverages
+        path: food.beverages
+        children:
+          - name: Kombucha
+            path: food.beverages.kombucha
+          - name: Juice
+            path: food.beverages.juice
+          - name: Soda
+            path: food.beverages.soda
+      - name: Baked Goods
+        path: food.baked_goods
+        children:
+          - name: Breads
+            path: food.baked_goods.breads
+          - name: Pastries
+            path: food.baked_goods.pastries
+          - name: Cakes
+            path: food.baked_goods.cakes
+          - name: Pies
+            path: food.baked_goods.pies
+          - name: Cookies
+            path: food.baked_goods.cookies
+      - name: Confections
+        path: food.confections
+        children:
+          - name: Chocolate
+            path: food.confections.chocolate
+          - name: Caramels
+            path: food.confections.caramels
+          - name: Fudge
+            path: food.confections.fudge
+          - name: Taffy
+            path: food.confections.taffy
+          - name: Candy
+            path: food.confections.candy
+      - name: Preserves
+        path: food.preserves
+        children:
+          - name: Jams
+            path: food.preserves.jams
+          - name: Jellies
+            path: food.preserves.jellies
+          - name: Fruit Butters
+            path: food.preserves.fruit_butters
+          - name: Chutneys
+            path: food.preserves.chutneys
+          - name: Pickles
+            path: food.preserves.pickles
+      - name: Snacks
+        path: food.snacks
+        children:
+          - name: Granola
+            path: food.snacks.granola
+          - name: Jerky
+            path: food.snacks.jerky
+          - name: Popcorn
+            path: food.snacks.popcorn
+          - name: Nuts
+            path: food.snacks.nuts
+          - name: Chips
+            path: food.snacks.chips
+          - name: Trail Mix
+            path: food.snacks.trail_mix
+      - name: Condiments
+        path: food.condiments
+        children:
+          - name: Hot Sauce
+            path: food.condiments.hot_sauce
+          - name: Salsa
+            path: food.condiments.salsa
+          - name: Mustard
+            path: food.condiments.mustard
+          - name: Vinegar
+            path: food.condiments.vinegar
+          - name: Spices
+            path: food.condiments.spices
+          - name: Oils
+            path: food.condiments.oils
+      - name: Fresh
+        path: food.fresh
+        children:
+          - name: Pasta
+            path: food.fresh.pasta
+          - name: Sauces
+            path: food.fresh.sauces
+          - name: Dips
+            path: food.fresh.dips
+      - name: Produce
+        path: food.produce
+        children:
+          - name: Vegetables
+            path: food.produce.vegetables
+          - name: Fruits
+            path: food.produce.fruits
+          - name: Mushrooms
+            path: food.produce.mushrooms
+          - name: Herbs
+            path: food.produce.herbs
+          - name: Eggs
+            path: food.produce.eggs
+      - name: Proteins
+        path: food.proteins
+        children:
+          - name: Beef
+            path: food.proteins.beef
+          - name: Poultry
+            path: food.proteins.poultry
+          - name: Pork
+            path: food.proteins.pork
+          - name: Fish
+            path: food.proteins.fish
+          - name: Game
+            path: food.proteins.game
+      - name: Dairy
+        path: food.dairy
+        children:
+          - name: Cheese
+            path: food.dairy.cheese
+          - name: Milk
+            path: food.dairy.milk
+          - name: Butter
+            path: food.dairy.butter
+          - name: Ice Cream
+            path: food.dairy.ice_cream
+          - name: Yogurt
+            path: food.dairy.yogurt
+      - name: Pantry
+        path: food.pantry
+        children:
+          - name: Syrups
+            path: food.pantry.syrups
+          - name: Sweeteners
+            path: food.pantry.sweeteners
+          - name: Honey
+            path: food.pantry.honey
+          - name: Baking
+            path: food.pantry.baking
+          - name: Grains
+            path: food.pantry.grains
+
+  - name: Alcohol
+    path: alcohol
+    children:
+      - name: Beer
+        path: alcohol.beer
+        children:
+          - name: IPA
+            path: alcohol.beer.ipa
+          - name: Stout
+            path: alcohol.beer.stout
+          - name: Lager
+            path: alcohol.beer.lager
+          - name: Wheat
+            path: alcohol.beer.wheat
+          - name: Sour
+            path: alcohol.beer.sour
+          - name: Amber
+            path: alcohol.beer.amber
+          - name: Specialty
+            path: alcohol.beer.specialty
+      - name: Cider
+        path: alcohol.cider
+        children:
+          - name: Apple
+            path: alcohol.cider.apple
+          - name: Specialty
+            path: alcohol.cider.specialty
+      - name: Wine
+        path: alcohol.wine
+        children:
+          - name: Red
+            path: alcohol.wine.red
+          - name: White
+            path: alcohol.wine.white
+          - name: Rosé
+            path: alcohol.wine.rose
+          - name: Sparkling
+            path: alcohol.wine.sparkling
+          - name: Specialty
+            path: alcohol.wine.specialty
+      - name: Spirits
+        path: alcohol.spirits
+        children:
+          - name: Whiskey
+            path: alcohol.spirits.whiskey
+          - name: Gin
+            path: alcohol.spirits.gin
+          - name: Vodka
+            path: alcohol.spirits.vodka
+          - name: Rum
+            path: alcohol.spirits.rum
+          - name: Tequila
+            path: alcohol.spirits.tequila
+          - name: Specialty
+            path: alcohol.spirits.specialty
+
+  - name: Apparel
+    path: apparel
+    children:
+      - name: Men's
+        path: apparel.mens
+        children:
+          - name: Tops
+            path: apparel.mens.tops
+          - name: Bottoms
+            path: apparel.mens.bottoms
+          - name: Outerwear
+            path: apparel.mens.outerwear
+      - name: Women's
+        path: apparel.womens
+        children:
+          - name: Tops
+            path: apparel.womens.tops
+          - name: Bottoms
+            path: apparel.womens.bottoms
+          - name: Dresses
+            path: apparel.womens.dresses
+          - name: Outerwear
+            path: apparel.womens.outerwear
+      - name: Unisex
+        path: apparel.unisex
+        children:
+          - name: Tops
+            path: apparel.unisex.tops
+          - name: Bottoms
+            path: apparel.unisex.bottoms
+          - name: Outerwear
+            path: apparel.unisex.outerwear
+      - name: Accessories
+        path: apparel.accessories
+        children:
+          - name: Hats
+            path: apparel.accessories.hats
+          - name: Belts
+            path: apparel.accessories.belts
+          - name: Bags
+            path: apparel.accessories.bags
+          - name: Scarves
+            path: apparel.accessories.scarves
+          - name: Gloves
+            path: apparel.accessories.gloves
+          - name: Shoes
+            path: apparel.accessories.shoes
+      - name: Jewelry
+        path: apparel.jewelry
+        children:
+          - name: Necklaces
+            path: apparel.jewelry.necklaces
+          - name: Earrings
+            path: apparel.jewelry.earrings
+          - name: Rings
+            path: apparel.jewelry.rings
+          - name: Bracelets
+            path: apparel.jewelry.bracelets
+
+  - name: Home
+    path: home
+    children:
+      - name: Decor
+        path: home.decor
+        children:
+          - name: Candles
+            path: home.decor.candles
+          - name: Ceramics
+            path: home.decor.ceramics
+      - name: Kitchen
+        path: home.kitchen
+        children:
+          - name: Ceramics
+            path: home.kitchen.ceramics
+          - name: Cutting Boards
+            path: home.kitchen.cutting_boards
+          - name: Utensils
+            path: home.kitchen.utensils
+          - name: Linens
+            path: home.kitchen.linens
+      - name: Textiles
+        path: home.textiles
+        children:
+          - name: Blankets
+            path: home.textiles.blankets
+          - name: Pillows
+            path: home.textiles.pillows
+          - name: Throws
+            path: home.textiles.throws
+      - name: Furniture
+        path: home.furniture
+        children:
+          - name: Tables
+            path: home.furniture.tables
+          - name: Seating
+            path: home.furniture.seating
+          - name: Shelving
+            path: home.furniture.shelving
+
+  - name: Plants
+    path: plants
+    children:
+      - name: Indoor
+        path: plants.indoor
+        children:
+          - name: Succulents
+            path: plants.indoor.succulents
+          - name: Tropicals
+            path: plants.indoor.tropicals
+          - name: Herbs
+            path: plants.indoor.herbs
+      - name: Outdoor
+        path: plants.outdoor
+        children:
+          - name: Perennials
+            path: plants.outdoor.perennials
+          - name: Annuals
+            path: plants.outdoor.annuals
+          - name: Shrubs
+            path: plants.outdoor.shrubs
+      - name: Seeds
+        path: plants.seeds
+        children:
+          - name: Vegetable
+            path: plants.seeds.vegetable
+          - name: Flower
+            path: plants.seeds.flower
+          - name: Fruit
+            path: plants.seeds.fruit
+          - name: Herb
+            path: plants.seeds.herb
+      - name: Dried
+        path: plants.dried
+        children:
+          - name: Bouquets
+            path: plants.dried.bouquets
+          - name: Wreaths
+            path: plants.dried.wreaths
+          - name: Arrangements
+            path: plants.dried.arrangements
+      - name: Plant Care
+        path: plants.plantcare
+        children:
+          - name: Soil
+            path: plants.plantcare.soil
+          - name: Fertilizer
+            path: plants.plantcare.fertilizer
+          - name: Pots
+            path: plants.plantcare.pots
+          - name: Tools
+            path: plants.plantcare.tools
+
+  - name: Beauty
+    path: beauty
+    children:
+      - name: Cosmetics
+        path: beauty.cosmetics
+        children:
+          - name: Face
+            path: beauty.cosmetics.face
+          - name: Eyes
+            path: beauty.cosmetics.eyes
+          - name: Lips
+            path: beauty.cosmetics.lips
+          - name: Nails
+            path: beauty.cosmetics.nails
+      - name: Skincare
+        path: beauty.skincare
+        children:
+          - name: Cleansers
+            path: beauty.skincare.cleansers
+          - name: Moisturizers
+            path: beauty.skincare.moisturizers
+          - name: Serums
+            path: beauty.skincare.serums
+          - name: Oils
+            path: beauty.skincare.oils
+          - name: SPF
+            path: beauty.skincare.spf
+      - name: Body Care
+        path: beauty.bodycare
+        children:
+          - name: Soap
+            path: beauty.bodycare.soap
+          - name: Bath Bombs
+            path: beauty.bodycare.bath_bombs
+          - name: Scrubs
+            path: beauty.bodycare.scrubs
+          - name: Bath Salts
+            path: beauty.bodycare.bath_salts
+          - name: Lotion
+            path: beauty.bodycare.lotion
+      - name: Hair Care
+        path: beauty.haircare
+        children:
+          - name: Shampoo
+            path: beauty.haircare.shampoo
+          - name: Conditioner
+            path: beauty.haircare.conditioner
+          - name: Masks
+            path: beauty.haircare.masks
+          - name: Oils
+            path: beauty.haircare.oils
+          - name: Styling
+            path: beauty.haircare.styling
+      - name: Fragrance
+        path: beauty.fragrance
+        children:
+          - name: Perfume
+            path: beauty.fragrance.perfume
+          - name: Cologne
+            path: beauty.fragrance.cologne
+          - name: Body Spray
+            path: beauty.fragrance.body_spray
+          - name: Solid Fragrance
+            path: beauty.fragrance.solid
+      - name: Supplements
+        path: beauty.supplements
+        children:
+          - name: Vitamins
+            path: beauty.supplements.vitamins
+          - name: Herbal
+            path: beauty.supplements.herbal
+
+  - name: Art
+    path: art
+    children:
+      - name: Paintings
+        path: art.paintings
+      - name: Prints
+        path: art.prints
+      - name: Sculptures
+        path: art.sculptures
+      - name: Photography
+        path: art.photography
+      - name: Drawings
+        path: art.drawings
+      - name: Materials
+        path: art.materials
+        children:
+          - name: Paint
+            path: art.materials.paint
+          - name: Brushes
+            path: art.materials.brushes
+          - name: Canvas
+            path: art.materials.canvas
+          - name: Paper
+            path: art.materials.paper
+          - name: Ink
+            path: art.materials.ink
+
+  - name: Pets
+    path: pets
+    children:
+      - name: Dogs
+        path: pets.dogs
+        children:
+          - name: Food
+            path: pets.dogs.food
+          - name: Accessories
+            path: pets.dogs.accessories
+          - name: Grooming
+            path: pets.dogs.grooming
+          - name: Toys
+            path: pets.dogs.toys
+      - name: Cats
+        path: pets.cats
+        children:
+          - name: Food
+            path: pets.cats.food
+          - name: Accessories
+            path: pets.cats.accessories
+          - name: Grooming
+            path: pets.cats.grooming
+          - name: Toys
+            path: pets.cats.toys
+      - name: Birds
+        path: pets.birds
+        children:
+          - name: Food
+            path: pets.birds.food
+          - name: Accessories
+            path: pets.birds.accessories
+          - name: Toys
+            path: pets.birds.toys
+      - name: Exotic
+        path: pets.exotic
+        children:
+          - name: Food
+            path: pets.exotic.food
+          - name: Accessories
+            path: pets.exotic.accessories
+
+  - name: Music
+    path: music
+    children:
+      - name: Instruments
+        path: music.instruments
+        children:
+          - name: Guitars
+            path: music.instruments.guitars
+          - name: Violins
+            path: music.instruments.violins
+          - name: Drums
+            path: music.instruments.drums
+          - name: Keyboards
+            path: music.instruments.keyboards
+          - name: Bass
+            path: music.instruments.bass
+          - name: Trumpet
+            path: music.instruments.trumpet
+      - name: Recorded Music
+        path: music.recorded
+        children:
+          - name: Vinyl
+            path: music.recorded.vinyl
+          - name: CD
+            path: music.recorded.cd
+          - name: Cassette
+            path: music.recorded.cassette
+      - name: Accessories
+        path: music.accessories
+        children:
+          - name: Cases
+            path: music.accessories.cases
+          - name: String Sets
+            path: music.accessories.string_sets
+          - name: Picks
+            path: music.accessories.picks

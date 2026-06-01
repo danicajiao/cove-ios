@@ -1,6 +1,6 @@
 # Category Taxonomy
 
-> **Source of truth:** `services/cove-item/migrations/000004_seed_categories.up.sql`. This document reflects the v1 taxonomy. When the migration changes, update this doc in the same PR.
+> **Keep this doc in sync:** The authoritative runtime state is the live database. The audit trail is the migration files. This document is the human-readable snapshot — update it in the same PR as any migration that adds, removes, or renames a category node.
 
 ## Contents
 

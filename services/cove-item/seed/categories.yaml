@@ -11,8 +11,6 @@
 # Style/attribute refinement (beer ABV, wine varietal, clothing color, etc.)
 # is handled via catalog.items.attributes JSONB, not the category tree.
 #
-# cannabis is intentionally excluded from v1.
-
 categories:
   - name: Food
     path: food

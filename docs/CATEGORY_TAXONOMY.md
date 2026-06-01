@@ -19,7 +19,7 @@ Cove's category taxonomy is a **3-level tree** stored in Postgres using the `ltr
 
 Items may only be assigned to **leaf nodes** — the deepest node in a given branch. Non-leaf categories are browse/navigation nodes only; they cannot be set as an item's `category_id`.
 
-The v1 taxonomy has **9 top-level categories** and ~140 nodes total, seeded via migration `000004`. Leaf enforcement is added by migrations `000005` and `000006`.
+The v1 taxonomy has **9 top-level categories** and 242 nodes total, seeded via migration `000004`. Leaf enforcement is added by migrations `000005` and `000006`.
 
 ---
 

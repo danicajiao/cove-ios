@@ -107,11 +107,11 @@ INSERT INTO catalog.categories (id, name, path) VALUES
 
   -- apparel
   (gen_random_uuid(), 'Apparel',          'apparel'),
-  (gen_random_uuid(), 'Mens',             'apparel.mens'),
+  (gen_random_uuid(), 'Men''s',           'apparel.mens'),
   (gen_random_uuid(), 'Tops',             'apparel.mens.tops'),
   (gen_random_uuid(), 'Bottoms',          'apparel.mens.bottoms'),
   (gen_random_uuid(), 'Outerwear',        'apparel.mens.outerwear'),
-  (gen_random_uuid(), 'Womens',           'apparel.womens'),
+  (gen_random_uuid(), 'Women''s',         'apparel.womens'),
   (gen_random_uuid(), 'Tops',             'apparel.womens.tops'),
   (gen_random_uuid(), 'Bottoms',          'apparel.womens.bottoms'),
   (gen_random_uuid(), 'Dresses',          'apparel.womens.dresses'),

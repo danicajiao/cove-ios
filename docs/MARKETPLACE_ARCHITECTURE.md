@@ -11,6 +11,7 @@
 - [Single Postgres cluster, schemas per service](#single-postgres-cluster-schemas-per-service)
 - [The trust signal system](#the-trust-signal-system)
 - [Composite trust scoring](#composite-trust-scoring)
+- [Personalized ranking via signal-preference alignment](#personalized-ranking-via-signal-preference-alignment)
 - [Geospatial: the local availability gate](#geospatial-the-local-availability-gate)
 - [Categories and facets](#categories-and-facets)
 - [Database schema](#database-schema)
@@ -225,6 +226,107 @@ result_trust_score(product, maker, storefront) =
 **Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the product's own signals live.
 
 The brief's "rewards breadth and diversity of trust signals rather than any single credential" is a refinement of *how* the sum works — diminishing returns on stacking similar signals, a bonus for spanning categories — and the `maker.tier` (Individual Lister vs Verified Business) shifts the weighting (Individual Listers lean more on community vouching). **Start with flat additive weights**; tune the function later. This does not block the schema.
+
+---
+
+## Personalized ranking via signal-preference alignment
+
+> **Status: post-v1 ideation.** The schema scaffolding (`profile.interests`, `catalog.signals.weight`) is already in place. The preference→signal mapping and the boosted scoring formula are not yet implemented.
+
+### The problem
+
+Two users search for the same thing — "specialty coffee near me." One cares deeply about ethical supply chains; the other cares about environmental certifications. The flat trust score returns the same ranked list for both. Personalized ranking amplifies signals that match a user's stated values, surfacing more relevant results without changing the underlying verification system.
+
+### Signal dimensions
+
+B Corp is a holistic cert — it covers Workers, Community, Environment, Customers, and Governance. It is **not** an "ethical trading" signal specifically. Fair Trade is the most direct signal for ethical supply chains (fair prices to producers, no exploitative sourcing). Mapping user preferences to signals requires understanding what each signal actually certifies:
+
+| User preference | Most relevant signals | Partially relevant |
+|---|---|---|
+| Ethical trading / fair sourcing | `fair_trade` | `b_corp` (community/customers dimension) |
+| Environmental | `usda_organic`, `one_pct_planet` | `b_corp` (environment dimension) |
+| Supports workers / living wages | `living_wage` | `b_corp` (workers dimension) |
+| Community / local impact | `colorado_proud` | `b_corp` (community dimension), `one_pct_planet` |
+
+B Corp overlaps with many preferences because it is multi-dimensional. A user who says "I care about everything" gets the same boost from B Corp as someone who says "I care about environment" — until the mapping is made preference-specific.
+
+### Approach A — Preference → signal relevance table (recommended for v1 personalization)
+
+A lookup table maps each user preference tag to signal codes with a relevance weight (0–1). The personalized score replaces the flat `signal.weight` with `signal.weight × relevance`:
+
+```sql
+CREATE TABLE catalog.preference_signal_weights (
+    preference_tag  text    NOT NULL,  -- matches values in profile.interests
+    signal_code     text    NOT NULL REFERENCES catalog.signals(code),
+    relevance       numeric NOT NULL CHECK (relevance BETWEEN 0 AND 1),
+    PRIMARY KEY (preference_tag, signal_code)
+);
+
+-- Example rows
+INSERT INTO catalog.preference_signal_weights VALUES
+    ('ethical_trading', 'fair_trade',   1.0),
+    ('ethical_trading', 'b_corp',       0.7),
+    ('ethical_trading', 'one_pct_planet', 0.4),
+    ('environmental',   'usda_organic', 1.0),
+    ('environmental',   'one_pct_planet', 0.9),
+    ('environmental',   'b_corp',       0.8),
+    ('supports_workers','living_wage',  1.0),
+    ('supports_workers','b_corp',       0.6);
+```
+
+Scoring formula at query time:
+
+```sql
+-- Personalized trust score for a maker, given a user's preference tags
+SELECT
+    m.name,
+    SUM(s.weight * COALESCE(psw.relevance, 0)) AS personalized_score
+FROM directory.makers m
+JOIN catalog.entity_signals es ON es.maker_id = m.id AND es.status = 'verified'
+JOIN catalog.signals s ON s.id = es.signal_id
+LEFT JOIN catalog.preference_signal_weights psw
+    ON psw.signal_code = s.code
+    AND psw.preference_tag = ANY($user_preference_tags)
+WHERE m.id = $maker_id
+GROUP BY m.id;
+```
+
+Onyx Coffee Lab example with user preference `ethical_trading`:
+- B Corp (weight 3) × relevance 0.7 = **2.1** personalized score
+- If Onyx also had Fair Trade (weight 2) × relevance 1.0 = +2.0 → **4.1 total**
+
+### Approach B — Signal dimensions array (more scalable, no per-pair maintenance)
+
+Tag each signal with the values dimensions it covers. User preferences select dimensions; scoring is the overlap between user-selected dimensions and signal dimensions. New signals automatically fit when tagged correctly — no mapping table update needed.
+
+```sql
+ALTER TABLE catalog.signals ADD COLUMN dimensions text[] NOT NULL DEFAULT '{}';
+
+-- B Corp covers all five dimensions
+UPDATE catalog.signals SET dimensions = '{environmental, labor, community, governance, ethical_trading}' WHERE code = 'b_corp';
+UPDATE catalog.signals SET dimensions = '{ethical_trading, labor}' WHERE code = 'fair_trade';
+UPDATE catalog.signals SET dimensions = '{labor}'                   WHERE code = 'living_wage';
+UPDATE catalog.signals SET dimensions = '{environmental}'          WHERE code = 'usda_organic';
+UPDATE catalog.signals SET dimensions = '{environmental, community}' WHERE code = 'one_pct_planet';
+UPDATE catalog.signals SET dimensions = '{community}'              WHERE code = 'colorado_proud';
+```
+
+Tradeoff vs. Approach A: simpler to maintain, but loses the per-pair relevance granularity (you can't say "fair_trade is more directly 'ethical trading' than b_corp is").
+
+### How other companies handle this
+
+- **Good On You** (fashion sustainability app — closest analog to Cove): Rates brands on Labor, Environment, and Animal. Users can filter or sort by dimension. Simple tag-overlap scoring at small catalog scale — no ML.
+- **Etsy**: Tag matching + engagement signals. Personalization is additive on top of a base relevance score; explicit preferences seed it, behavior refines it.
+- **Spotify/Netflix**: Collaborative filtering — "users like you also liked X." Only meaningful once behavioral data exists (what makers users viewed, saved, purchased from). Overkill until Cove has that data.
+
+### Evolution path
+
+1. **Now (v1):** flat additive trust score — `SUM(signal.weight)` for verified signals. No preference amplification.
+2. **v1 personalization:** add `catalog.preference_signal_weights`; score the discovery query with `signal.weight × relevance` against `profile.interests`. The discovery query gains a `$user_preference_tags` param.
+3. **Behavioral blend:** add `profile.events` attention signals (item views, dwell time, saves) as implicit preference data. Blend explicit `profile.interests` weight + implicit engagement count.
+4. **Eventually:** ML ranking layer — collaborative filtering on the blended signal. Only worthwhile when the catalog and user base are large enough to produce meaningful co-engagement data.
+
+Steps 2–4 are additive — no existing tables change.
 
 ---
 
@@ -704,4 +806,5 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on items with a many-to-many `availability` join so one maker's item can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
 - **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `profile.interests` and `profile.events` tables to the `profile` schema. Documented `ItemTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
 - **Version 4.3** (May 2026) — **item rename.** `product` → `item` throughout: entity name, `product` Postgres schema → `catalog`, `product.products` → `catalog.items`, `cove-product` service → `cove-item`, iOS types (`Product` protocol → `Item`, `ProductRepository` → `ItemRepository`, etc.). Column renames: `product_id` → `item_id` in `catalog.entity_signals`, `catalog.media`, `catalog.availability`, `profile.favorites`, `profile.events`.
+- **Version 4.5** (Jun 2026) — **Personalized ranking ideation.** Added "Personalized ranking via signal-preference alignment" section documenting the preference→signal mapping design (Approach A: `preference_signal_weights` table; Approach B: `signal_dimensions[]` on signals), the personalized scoring formula, signal dimension breakdown per preference tag, and the four-phase evolution path from flat additive scoring to collaborative filtering.
 - **Version 4.4** (May 2026) — **Category leaf enforcement.** Added `is_leaf boolean` to `catalog.categories`; four triggers enforce that items only reference leaf nodes and keep `is_leaf` accurate on insert/delete. v1 seed (242 nodes across 9 top-level categories) landed in migrations 004–006. Added [Category Taxonomy](CATEGORY_TAXONOMY.md) reference doc.

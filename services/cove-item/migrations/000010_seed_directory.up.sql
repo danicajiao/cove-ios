@@ -5,7 +5,7 @@
 --   Colombia Familia Montano  — Ritual Coffee Roasters  — food.coffee.whole_bean
 --   Southern Weather Blend    — Onyx Coffee Lab          — food.coffee.whole_bean
 --   Balloon Cargo Pant        — iets franz…              — apparel.unisex.bottoms
---   Under The Weather         — HOMESHAKE                — music.recorded.vinyl
+--   Under The Weather         — HOMESHAKE                — music.recorded
 --
 -- width/height on catalog.media are 0 — to be backfilled by the image pipeline.
 -- Dollar-quote tags: $d$ = description text, $j$ = jsonb literals.

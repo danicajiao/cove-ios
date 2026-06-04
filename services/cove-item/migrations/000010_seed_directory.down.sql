@@ -1,6 +1,18 @@
 -- Remove in reverse FK dependency order.
--- catalog.availability and catalog.media both have ON DELETE CASCADE from catalog.items,
--- so deleting items cleans those up automatically.
+-- catalog.availability.item_id is ON DELETE RESTRICT (changed in 000007), so
+-- availability rows must be deleted before items. catalog.media.item_id is
+-- ON DELETE CASCADE so media is cleaned up automatically when items are deleted.
+
+DELETE FROM catalog.availability
+WHERE item_id IN (
+    SELECT id FROM catalog.items
+    WHERE name IN (
+        'Colombia Familia Montano',
+        'Southern Weather Blend',
+        'Balloon Cargo Pant',
+        'Under The Weather'
+    )
+);
 
 DELETE FROM catalog.items
 WHERE name IN (

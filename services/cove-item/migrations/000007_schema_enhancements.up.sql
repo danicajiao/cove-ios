@@ -1,12 +1,13 @@
 -- Enhance directory.makers: url-friendly slug, location, soft-delete, audit timestamp
 ALTER TABLE directory.makers
-    ADD COLUMN slug       text UNIQUE,
-    ADD COLUMN city       text,
-    ADD COLUMN state      text,
-    ADD COLUMN zip        text,
-    ADD COLUMN location   geography(Point, 4326),
-    ADD COLUMN is_active  boolean     NOT NULL DEFAULT true,
-    ADD COLUMN updated_at timestamptz NOT NULL DEFAULT now();
+    ADD COLUMN slug        text UNIQUE,
+    ADD COLUMN city        text,
+    ADD COLUMN state       text,
+    ADD COLUMN zip         text,
+    ADD COLUMN location    geography(Point, 4326),
+    ADD COLUMN website_url text,
+    ADD COLUMN is_active   boolean     NOT NULL DEFAULT true,
+    ADD COLUMN updated_at  timestamptz NOT NULL DEFAULT now();
 
 CREATE INDEX ON directory.makers (slug);
 CREATE INDEX ON directory.makers USING GIST (location);

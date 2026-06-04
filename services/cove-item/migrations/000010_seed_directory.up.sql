@@ -15,7 +15,7 @@ WITH
 -- ─── Makers ──────────────────────────────────────────────────────────────────
 
 maker_ritual AS (
-    INSERT INTO directory.makers (id, name, slug, description, tier, city, state, location)
+    INSERT INTO directory.makers (id, name, slug, description, tier, city, state, location, website_url)
     VALUES (
         gen_random_uuid(),
         'Ritual Coffee Roasters',
@@ -24,13 +24,14 @@ maker_ritual AS (
         'verified_business',
         'San Francisco',
         'CA',
-        ST_Point(-122.4213, 37.7582)::geography
+        ST_Point(-122.4213, 37.7582)::geography,
+        'https://ritualcoffee.com'
     )
     RETURNING id
 ),
 
 maker_onyx AS (
-    INSERT INTO directory.makers (id, name, slug, description, tier, city, state, location)
+    INSERT INTO directory.makers (id, name, slug, description, tier, city, state, location, website_url)
     VALUES (
         gen_random_uuid(),
         'Onyx Coffee Lab',
@@ -39,31 +40,34 @@ maker_onyx AS (
         'verified_business',
         'Springdale',
         'AR',
-        ST_Point(-94.1288, 36.1867)::geography
+        ST_Point(-94.1288, 36.1867)::geography,
+        'https://onyxcoffeelab.com'
     )
     RETURNING id
 ),
 
 maker_iets AS (
-    INSERT INTO directory.makers (id, name, slug, description, tier)
+    INSERT INTO directory.makers (id, name, slug, description, tier, website_url)
     VALUES (
         gen_random_uuid(),
         'iets franz…',
         'iets-franz',
         $d$Modern athleisure label crafting elevated sportswear basics, fresh silhouettes, and technical fabrications.$d$,
-        'verified_business'
+        'verified_business',
+        'https://www.urbanoutfitters.com/brands/iets-frans'
     )
     RETURNING id
 ),
 
 maker_homeshake AS (
-    INSERT INTO directory.makers (id, name, slug, description, tier)
+    INSERT INTO directory.makers (id, name, slug, description, tier, website_url)
     VALUES (
         gen_random_uuid(),
         'HOMESHAKE',
         'homeshake',
         $d$Peter Sagar, known as HOMESHAKE, is a Montreal-based musician making dreamy, lo-fi R&B.$d$,
-        'individual_lister'
+        'individual_lister',
+        'https://homeshake.bandcamp.com'
     )
     RETURNING id
 ),

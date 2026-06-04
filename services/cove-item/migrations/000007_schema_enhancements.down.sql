@@ -46,6 +46,7 @@ DROP INDEX IF EXISTS directory.makers_slug_idx;
 ALTER TABLE directory.makers
     DROP COLUMN IF EXISTS updated_at,
     DROP COLUMN IF EXISTS is_active,
+    DROP COLUMN IF EXISTS website_url,
     DROP COLUMN IF EXISTS location,
     DROP COLUMN IF EXISTS zip,
     DROP COLUMN IF EXISTS state,

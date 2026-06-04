@@ -86,7 +86,7 @@ sf_onyx AS (
 
 sf_iets AS (
     INSERT INTO directory.storefronts (id, operated_by_maker_id, name, slug, type, website_url)
-    SELECT gen_random_uuid(), id, 'iets franz…', 'iets-franz-online', 'online', 'https://urbanoutfitters.com/iets-franz'
+    SELECT gen_random_uuid(), id, 'iets franz…', 'iets-franz-online', 'online', 'https://www.urbanoutfitters.com/brands/iets-frans'
     FROM maker_iets
     RETURNING id
 ),

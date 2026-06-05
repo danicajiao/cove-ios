@@ -13,7 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/danicajiao/cove/services/cove-item/internal/imgproxy"
+	"github.com/danicajiao/cove/packages/imgproxy"
 )
 
 // Deps holds the shared dependencies injected into every handler.
@@ -25,13 +25,13 @@ type Deps struct {
 
 // Signal is a trust signal attached to a maker, storefront, or item.
 type Signal struct {
-	Code        string   `json:"code"`
-	Name        string   `json:"name"`
-	Description *string  `json:"description,omitempty"`
-	Weight      float64  `json:"weight"`
-	Status      string   `json:"status"`
-	VerifiedAt  *string  `json:"verified_at,omitempty"`
-	CertNumber  *string  `json:"cert_number,omitempty"`
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Weight      float64 `json:"weight"`
+	Status      string  `json:"status"`
+	VerifiedAt  *string `json:"verified_at,omitempty"`
+	CertNumber  *string `json:"cert_number,omitempty"`
 }
 
 // ImageVariants holds signed imgproxy URLs for list-view sizes (thumb, sm, md).
@@ -86,11 +86,11 @@ func (d *Deps) signListVariants(mediaKey string, width, height int) *ImageVarian
 	}
 	urls := d.Signer.SignVariants(mediaKey, "thumb", "sm", "md")
 	return &ImageVariants{
-		Width: width,
+		Width:  width,
 		Height: height,
-		Thumb: urls["thumb"],
-		Sm:    urls["sm"],
-		Md:    urls["md"],
+		Thumb:  urls["thumb"],
+		Sm:     urls["sm"],
+		Md:     urls["md"],
 	}
 }
 

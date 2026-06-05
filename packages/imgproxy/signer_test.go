@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danicajiao/cove/services/cove-item/internal/imgproxy"
+	"github.com/danicajiao/cove/packages/imgproxy"
 )
 
 // testKey and testSalt are 32-byte (64 hex char) values used only in tests.
@@ -96,6 +96,25 @@ func TestSign_SignatureIsDeterministic(t *testing.T) {
 	}
 	if stripExp(r1.URL) != stripExp(r2.URL) {
 		t.Errorf("same inputs produced different processing paths:\n  %s\n  %s", r1.URL, r2.URL)
+	}
+}
+
+func TestParseFit(t *testing.T) {
+	cases := []struct {
+		input string
+		want  imgproxy.FitType
+	}{
+		{"cover", imgproxy.FitCover},
+		{"contain", imgproxy.FitContain},
+		{"", imgproxy.FitCover},
+		{"unknown", imgproxy.FitCover},
+		{"COVER", imgproxy.FitCover}, // case-sensitive — unrecognised → default
+	}
+	for _, c := range cases {
+		got := imgproxy.ParseFit(c.input)
+		if got != c.want {
+			t.Errorf("ParseFit(%q) = %q, want %q", c.input, got, c.want)
+		}
 	}
 }
 

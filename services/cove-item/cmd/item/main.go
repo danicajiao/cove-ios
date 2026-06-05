@@ -11,8 +11,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/danicajiao/cove/packages/imgproxy"
 	"github.com/danicajiao/cove/services/cove-item/internal/handler"
-	"github.com/danicajiao/cove/services/cove-item/internal/imgproxy"
 )
 
 // commitSHA is set at build time via ldflags:

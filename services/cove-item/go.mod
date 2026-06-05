@@ -3,9 +3,12 @@ module github.com/danicajiao/cove/services/cove-item
 go 1.25.0
 
 require (
+	github.com/danicajiao/cove/packages/imgproxy v0.0.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/jackc/pgx/v5 v5.7.2
 )
+
+replace github.com/danicajiao/cove/packages/imgproxy => ../../packages/imgproxy
 
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect

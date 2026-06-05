@@ -1,8 +1,13 @@
-// Package imgproxy provides URL signing for the imgproxy image processing service.
+// Package imgproxy provides URL signing for the imgproxy image processing
+// service, shared across Cove backend services.
 //
 // imgproxy verifies each incoming URL by checking an HMAC-SHA256 signature
 // prepended to the processing path. This package implements that signing
-// algorithm so cove-image can produce URLs that imgproxy will accept.
+// algorithm so any service can produce URLs that imgproxy will accept.
+//
+// Two consumers exist today:
+//   - cove-image signs ad-hoc dimensions (vendor upload-preview flow)
+//   - cove-item signs the fixed variant catalog (discovery + detail responses)
 //
 // Reference: https://docs.imgproxy.net/usage/signing_the_url
 package imgproxy
@@ -36,6 +41,25 @@ func ParseFit(s string) FitType {
 		return FitContain
 	}
 	return FitCover
+}
+
+// Variant is a named imgproxy resize preset. Services that serve images by
+// catalog (rather than arbitrary dimensions) sign these fixed presets.
+type Variant struct {
+	Name   string
+	Width  int
+	Height int
+}
+
+// Catalog is the canonical set of five image variants for the Cove platform.
+// All use FitCover (fill-and-crop to exact square) and @webp output. The sizes
+// are documented in docs/MEDIA_ARCHITECTURE.md §Serving variants.
+var Catalog = []Variant{
+	{"thumb", 200, 200},
+	{"sm", 400, 400},
+	{"md", 800, 800},
+	{"lg", 1600, 1600},
+	{"xl", 3200, 3200},
 }
 
 // Signer holds the signing credentials and configuration needed to produce
@@ -75,7 +99,7 @@ type SignResult struct {
 }
 
 // Sign generates a signed imgproxy URL for objectKey with the given resize params.
-// objectKey is the full key in the bucket, e.g. "images/abc123.png".
+// objectKey is the full key in the bucket, e.g. "images/abc123.webp".
 // width and height are in pixels; fit controls the resize mode.
 // The URL embeds an exp: processing option that makes imgproxy reject requests
 // after ExpiresAt, and the expiry is covered by the signature so it cannot be
@@ -93,6 +117,22 @@ func (s *Signer) Sign(objectKey string, width, height int, fit FitType) SignResu
 		URL:       s.baseURL + "/" + sig + path,
 		ExpiresAt: expiresAt,
 	}
+}
+
+// SignVariants signs the named catalog variants for a given objectKey.
+// Returns a map of variant name → signed URL. Names not present in Catalog
+// are silently ignored.
+func (s *Signer) SignVariants(objectKey string, names ...string) map[string]string {
+	out := make(map[string]string, len(names))
+	for _, v := range Catalog {
+		for _, name := range names {
+			if v.Name == name {
+				out[v.Name] = s.Sign(objectKey, v.Width, v.Height, FitCover).URL
+				break
+			}
+		}
+	}
+	return out
 }
 
 // sign returns the base64url-encoded (no padding) HMAC-SHA256 of

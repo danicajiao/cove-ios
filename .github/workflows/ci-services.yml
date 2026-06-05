@@ -289,8 +289,12 @@ jobs:
             ENV_LABEL="staging"
           fi
 
+          # Rewrite the tag on every `newTag: sha-...` line. Match any run of
+          # non-whitespace after `sha-` (not just hex) so first-deploy
+          # placeholders like `sha-placeholder` are replaced cleanly — a hex-only
+          # class would match zero chars before `placeholder` and corrupt it.
           for f in $OVERLAYS; do
-            sed -i "s|newTag: sha-[0-9a-f]*|newTag: ${NEW_TAG}|g" "$f"
+            sed -i "s|newTag: sha-[^[:space:]]*|newTag: ${NEW_TAG}|g" "$f"
           done
 
           git checkout -b "${BRANCH}"

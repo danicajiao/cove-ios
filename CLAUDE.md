@@ -339,19 +339,25 @@ gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
 
 Do not open the PR if any AC item is unmet — finish the work first. Skip this step for off-cycle branches that have no associated issue.
 
-### Post-merge AC comment
+### Post-merge AC verification
 
-After the user confirms a PR is merged, fetch the issue's AC, verify each item against the work that was done, and post a comment on the issue summarizing the result.
+After the user confirms a PR is merged, perform these steps **in order**:
+
+1. **Check the AC boxes in the issue body.** Fetch the issue, mark every satisfied item `[x]`, leave unmet or deferred items `[ ]`, and write the updated body back with `gh issue edit --body-file`.
+
+2. **Post the AC comment.** Write a comment listing each AC item with ✅ or ❌ and a brief note on how it was verified.
 
 ```bash
-# Fetch AC
+# 1. Fetch current issue body, edit checkboxes, write back
 gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
+# ... update [ ] → [x] for satisfied items ...
+gh issue edit <issue-number> --repo danicajiao/cove --body-file /tmp/issue-body.md
 
-# Post the comment
+# 2. Post the verification comment
 gh issue comment <issue-number> --repo danicajiao/cove --body-file /tmp/ac-comment.md
 ```
 
-The comment should list each AC item with ✅ or ❌ and a brief note on how it was verified. Skip for off-cycle PRs with no associated issue.
+The comment should list each AC item with ✅ or ❌ and a brief note on how it was verified. Skip both steps for off-cycle PRs with no associated issue.
 
 ### Pull request and issue linking
 

@@ -289,14 +289,7 @@ jobs:
             ENV_LABEL="staging"
           fi
 
-          # Rewrite the tag on every `newTag: sha-...` line. Match any run of
-          # non-whitespace after `sha-` (not just hex) so first-deploy
-          # placeholders like `sha-placeholder` are replaced cleanly — a hex-only
-          # class would match zero chars before `placeholder` and corrupt it.
-          for f in $OVERLAYS; do
-            sed -i "s|newTag: sha-[^[:space:]]*|newTag: ${NEW_TAG}|g" "$f"
-          done
-
+          # Checkout the branch before running sed so the working tree is clean.
           # If the remote branch already exists (e.g. a CI re-run for the same
           # commit), fetch it and base our local branch on top so the push isn't
           # rejected. If it doesn't exist yet, create a fresh branch as normal.
@@ -306,6 +299,15 @@ jobs:
           else
             git checkout -b "${BRANCH}"
           fi
+
+          # Rewrite the tag on every `newTag: sha-...` line. Match any run of
+          # non-whitespace after `sha-` (not just hex) so first-deploy
+          # placeholders like `sha-placeholder` are replaced cleanly — a hex-only
+          # class would match zero chars before `placeholder` and corrupt it.
+          for f in $OVERLAYS; do
+            sed -i "s|newTag: sha-[^[:space:]]*|newTag: ${NEW_TAG}|g" "$f"
+          done
+
           git add $OVERLAYS
           # Skip the commit if the re-run produced no diff (tags already at this SHA).
           git diff --cached --quiet || git commit -m "Bump cove services to sha-${SHORT_SHA} (${ENV_LABEL})"

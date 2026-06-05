@@ -297,9 +297,18 @@ jobs:
             sed -i "s|newTag: sha-[^[:space:]]*|newTag: ${NEW_TAG}|g" "$f"
           done
 
-          git checkout -b "${BRANCH}"
+          # If the remote branch already exists (e.g. a CI re-run for the same
+          # commit), fetch it and base our local branch on top so the push isn't
+          # rejected. If it doesn't exist yet, create a fresh branch as normal.
+          if git ls-remote --exit-code origin "refs/heads/${BRANCH}" > /dev/null 2>&1; then
+            git fetch origin "${BRANCH}"
+            git checkout -b "${BRANCH}" "origin/${BRANCH}"
+          else
+            git checkout -b "${BRANCH}"
+          fi
           git add $OVERLAYS
-          git commit -m "Bump cove services to sha-${SHORT_SHA} (${ENV_LABEL})"
+          # Skip the commit if the re-run produced no diff (tags already at this SHA).
+          git diff --cached --quiet || git commit -m "Bump cove services to sha-${SHORT_SHA} (${ENV_LABEL})"
           git push origin "${BRANCH}"
 
           {
@@ -324,9 +333,21 @@ jobs:
             echo "- [ ] No unexpected manifest changes in diff"
           } > /tmp/pr-body.md
 
-          gh pr create \
+          # Only open a new PR if one doesn't already exist for this branch.
+          # On re-runs the branch is updated above, but we don't need a second
+          # PR — the existing one already tracks the updated branch.
+          EXISTING_PR=$(gh pr list \
             --repo danicajiao/homelab \
-            --title "Bump cove services to SHA \`${SHORT_SHA}\`" \
-            --body-file /tmp/pr-body.md \
-            --base main \
-            --head "${BRANCH}"
+            --head "${BRANCH}" \
+            --json url \
+            --jq '.[0].url // ""')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Branch updated. PR already open: ${EXISTING_PR}"
+          else
+            gh pr create \
+              --repo danicajiao/homelab \
+              --title "Bump cove services to SHA \`${SHORT_SHA}\`" \
+              --body-file /tmp/pr-body.md \
+              --base main \
+              --head "${BRANCH}"
+          fi

@@ -1,0 +1,12 @@
+# Applies to image builds that use the repo root as their Docker build context
+# (cove-image and cove-item — both reference the shared packages/imgproxy module,
+# which lives outside their service directory). cove-api keeps a service-scoped
+# context and is unaffected by this file.
+#
+# Keep the context small: exclude the iOS app, docs, git metadata, CI config,
+# and markdown. Only services/ and packages/ are needed by the Go builds.
+.git
+.github
+apps/
+docs/
+**/*.md

@@ -7,11 +7,15 @@ on:
     paths:
       - 'services/cove-api/**'
       - 'services/cove-image/**'
+      - 'services/cove-item/**'
+      - 'packages/imgproxy/**'
       - '.github/workflows/ci-services.yml'
   pull_request:
     paths:
       - 'services/cove-api/**'
       - 'services/cove-image/**'
+      - 'services/cove-item/**'
+      - 'packages/imgproxy/**'
       - '.github/workflows/ci-services.yml'
   # Allows manually triggering a build+push from any branch.
   # Useful for bootstrapping GAR before the integration branch merges to main,
@@ -127,11 +131,14 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
+      # context is the repo root so the shared packages/imgproxy module is in
+      # the build context; the service Dockerfile is selected via file:.
       - name: Build and push image (main / manual)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v6
         with:
-          context: services/cove-image
+          context: .
+          file: services/cove-image/Dockerfile
           push: true
           tags: us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-${{ github.sha }}
           build-args: COMMIT_SHA=${{ github.sha }}
@@ -142,15 +149,107 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: services/cove-image
+          context: .
+          file: services/cove-image/Dockerfile
           push: false
           build-args: COMMIT_SHA=${{ github.sha }}
+
+  # ── cove-item ─────────────────────────────────────────────────────────────
+  cove-item:
+    name: cove-item
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: services/cove-item/go.mod
+          cache-dependency-path: services/cove-item/go.sum
+
+      - name: Run tests
+        working-directory: services/cove-item
+        run: go test ./...
+
+      - name: Run vet
+        working-directory: services/cove-item
+        run: go vet ./...
+
+      # Authenticate to GCP using Workload Identity Federation.
+      # Runs on pushes to main and on manual workflow_dispatch triggers.
+      # Does not run on PRs — PRs only build the image to verify it compiles.
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # context is the repo root so the shared packages/imgproxy module is in
+      # the build context; the service Dockerfile is selected via file:.
+      - name: Build and push image (main / manual)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/cove-item/Dockerfile
+          push: true
+          tags: us-central1-docker.pkg.dev/cove-6a685/services/cove-item:sha-${{ github.sha }}
+          build-args: COMMIT_SHA=${{ github.sha }}
+
+      # On PRs: build only (no push) to verify the Dockerfile and that the
+      # service still compiles. The image is not tagged or stored.
+      - name: Build image (PR)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/cove-item/Dockerfile
+          push: false
+          build-args: COMMIT_SHA=${{ github.sha }}
+
+  # ── packages/imgproxy ─────────────────────────────────────────────────────
+  packages-imgproxy:
+    name: packages/imgproxy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: packages/imgproxy/go.mod
+          # No external deps → no go.sum, so dependency caching has nothing to key on.
+          cache: false
+
+      - name: Run tests
+        working-directory: packages/imgproxy
+        run: go test ./...
+
+      - name: Run vet
+        working-directory: packages/imgproxy
+        run: go vet ./...
 
   # ── bump-overlay-tags ─────────────────────────────────────────────────────
   bump-overlay-tags:
     name: Open homelab PR — bump overlay tags
     runs-on: ubuntu-latest
-    needs: [cove-api, cove-image]
+    needs: [cove-api, cove-image, cove-item, packages-imgproxy]
     # Only runs after a successful image push — same gate as the push steps above.
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
 
@@ -190,8 +289,12 @@ jobs:
             ENV_LABEL="staging"
           fi
 
+          # Rewrite the tag on every `newTag: sha-...` line. Match any run of
+          # non-whitespace after `sha-` (not just hex) so first-deploy
+          # placeholders like `sha-placeholder` are replaced cleanly — a hex-only
+          # class would match zero chars before `placeholder` and corrupt it.
           for f in $OVERLAYS; do
-            sed -i "s|newTag: sha-[0-9a-f]*|newTag: ${NEW_TAG}|g" "$f"
+            sed -i "s|newTag: sha-[^[:space:]]*|newTag: ${NEW_TAG}|g" "$f"
           done
 
           git checkout -b "${BRANCH}"
@@ -210,6 +313,7 @@ jobs:
               ENV=$(echo "$f" | grep -o 'staging\|prod')
               echo "| \`${ENV}\` | \`cove-api\` | \`${NEW_TAG}\` |"
               echo "| \`${ENV}\` | \`cove-image\` | \`${NEW_TAG}\` |"
+              echo "| \`${ENV}\` | \`cove-item\` | \`${NEW_TAG}\` |"
             done
             echo ""
             echo "**Source:** [danicajiao/cove@${SHORT_SHA}](https://github.com/danicajiao/cove/commit/${COMMIT_SHA})"

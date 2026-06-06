@@ -1,22 +1,68 @@
 // Package handler implements the HTTP handlers for cove-user endpoints.
-// All handlers share a Deps struct that holds the database pool and
+// All handlers share a Deps struct that holds the database store and
 // build metadata.
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Row is the interface satisfied by *pgx.Row — used for QueryRow results.
+type Row interface {
+	Scan(dest ...any) error
+}
+
+// Rows is the interface satisfied by pgx.Rows — used for Query results.
+type Rows interface {
+	Next() bool
+	Scan(dest ...any) error
+	Close()
+	Err() error
+}
+
+// Store abstracts the database operations needed by handlers.
+// *pgxpool.Pool satisfies this via poolStore below.
+type Store interface {
+	QueryRow(ctx context.Context, sql string, args ...any) Row
+	Query(ctx context.Context, sql string, args ...any) (Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Begin(ctx context.Context) (pgx.Tx, error)
+}
+
+// poolStore wraps *pgxpool.Pool to satisfy Store.
+type poolStore struct{ p *pgxpool.Pool }
+
+func (s *poolStore) QueryRow(ctx context.Context, sql string, args ...any) Row {
+	return s.p.QueryRow(ctx, sql, args...)
+}
+
+func (s *poolStore) Query(ctx context.Context, sql string, args ...any) (Rows, error) {
+	return s.p.Query(ctx, sql, args...)
+}
+
+func (s *poolStore) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+	return s.p.Exec(ctx, sql, args...)
+}
+
+func (s *poolStore) Begin(ctx context.Context) (pgx.Tx, error) {
+	return s.p.Begin(ctx)
+}
+
+// NewStore wraps a *pgxpool.Pool as a Store. Called from main.go.
+func NewStore(p *pgxpool.Pool) Store { return &poolStore{p: p} }
+
 // Deps holds the shared dependencies injected into every handler.
 type Deps struct {
-	DB        *pgxpool.Pool
+	DB        Store
 	CommitSHA string
 }
 

@@ -37,7 +37,7 @@ func main() {
 
 	// ── Deps ─────────────────────────────────────────────────────────────────
 	deps := &handler.Deps{
-		DB:        pool,
+		DB:        handler.NewStore(pool),
 		CommitSHA: commitSHA,
 	}
 
@@ -49,7 +49,7 @@ func main() {
 
 	// All other routes require X-Cove-Uid (injected by cove-api upstream).
 	r.Group(func(r chi.Router) {
-		r.Use(uidMiddleware)
+		r.Use(handler.UIDMiddleware)
 		r.Get("/users/me", deps.GetMeHandler)
 		r.Get("/users/me/favorites", deps.GetFavoritesHandler)
 		r.Post("/users/me/favorites/{itemId}", deps.AddFavoriteHandler)
@@ -68,21 +68,6 @@ func main() {
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
-}
-
-// uidMiddleware rejects requests that do not carry a non-empty X-Cove-Uid
-// header with 401 Unauthorized. cove-user does NOT validate Firebase tokens
-// itself — it trusts the UID injected by the upstream cove-api gateway.
-func uidMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-Cove-Uid") == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 func mustEnv(key string) string {

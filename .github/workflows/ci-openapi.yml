@@ -6,6 +6,7 @@ on:
       - 'services/cove-api/api/**'
       - 'services/cove-image/api/**'
       - 'services/cove-item/api/**'
+      - 'services/cove-user/api/**'
       - '.github/workflows/ci-openapi.yml'
 
 jobs:
@@ -28,3 +29,6 @@ jobs:
 
       - name: Lint cove-item openapi.yaml
         run: redocly lint --config services/cove-item/redocly.yaml services/cove-item/api/openapi.yaml
+
+      - name: Lint cove-user openapi.yaml
+        run: redocly lint --config services/cove-user/redocly.yaml services/cove-user/api/openapi.yaml

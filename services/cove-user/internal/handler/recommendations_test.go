@@ -9,13 +9,17 @@ import (
 )
 
 func TestRecommendedCategoriesHandler_WithInterests(t *testing.T) {
-	// First Query (interest-based) returns two categories.
+	// QueryRow: user lookup returns a UUID.
+	// Query (1st call): interest-based returns two categories → no fallback needed.
 	catID1 := newCategoryUUID("11111111111111111111111111111111")
 	catID2 := newCategoryUUID("22222222222222222222222222222222")
 
 	queryCalls := 0
 	deps := &Deps{
 		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return userUUIDRow() // lookupUserID succeeds
+			},
 			queryFn: func(ctx context.Context, sql string, args ...any) (Rows, error) {
 				queryCalls++
 				if queryCalls == 1 {
@@ -60,12 +64,15 @@ func TestRecommendedCategoriesHandler_WithInterests(t *testing.T) {
 }
 
 func TestRecommendedCategoriesHandler_FallbackNoInterests(t *testing.T) {
-	// First Query returns empty (no interests), second returns fallback categories.
+	// QueryRow: user exists. Query (1st): no interests. Query (2nd): fallback categories.
 	catID := newCategoryUUID("33333333333333333333333333333333")
 
 	queryCalls := 0
 	deps := &Deps{
 		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return userUUIDRow() // user has a profile but no interests
+			},
 			queryFn: func(ctx context.Context, sql string, args ...any) (Rows, error) {
 				queryCalls++
 				if queryCalls == 1 {
@@ -106,10 +113,54 @@ func TestRecommendedCategoriesHandler_FallbackNoInterests(t *testing.T) {
 	}
 }
 
+func TestRecommendedCategoriesHandler_NoProfile(t *testing.T) {
+	// QueryRow: user has no profile (ErrNoRows) → skip interest query, go to fallback.
+	catID := newCategoryUUID("44444444444444444444444444444444")
+
+	queryCalls := 0
+	deps := &Deps{
+		DB: &mockStore{
+			// No queryRowFn — default returns errRow{pgx.ErrNoRows} → no profile.
+			queryFn: func(ctx context.Context, sql string, args ...any) (Rows, error) {
+				queryCalls++
+				return &categoryRows{rows: []categoryRow{
+					{id: catID, name: "Accessories", path: "accessories"},
+				}}, nil
+			},
+		},
+		CommitSHA: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/recommendations/categories", nil)
+	req.Header.Set("X-Cove-Uid", "uid-new-user")
+	rr := httptest.NewRecorder()
+
+	deps.RecommendedCategoriesHandler(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", rr.Code)
+	}
+
+	var body recommendedCategoriesResponse
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if len(body.Categories) != 1 {
+		t.Errorf("expected 1 fallback category, got %d", len(body.Categories))
+	}
+	// Only the fallback query should run — interest query is skipped.
+	if queryCalls != 1 {
+		t.Errorf("expected 1 query call (fallback only), got %d", queryCalls)
+	}
+}
+
 func TestRecommendedCategoriesHandler_BothQueriesEmpty(t *testing.T) {
 	// Both queries return empty — response should be 200 with empty categories list.
 	deps := &Deps{
 		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return userUUIDRow()
+			},
 			queryFn: func(ctx context.Context, sql string, args ...any) (Rows, error) {
 				return &emptyRows{}, nil
 			},

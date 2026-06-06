@@ -12,6 +12,13 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// testUserUUID is a stable UUID used as the internal user_id in all tests.
+var testUserUUID = newCategoryUUID("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1")
+
+// userUUIDRow returns a uuidRow pre-populated with testUserUUID.
+// Used to mock a successful lookupUserID call.
+func userUUIDRow() Row { return &uuidRow{val: testUserUUID} }
+
 // ── GetMeHandler ──────────────────────────────────────────────────────────────
 
 func TestGetMeHandler_UserNotFound(t *testing.T) {
@@ -48,7 +55,6 @@ func TestGetMeHandler_UserFound(t *testing.T) {
 				return &profileRow{
 					uid:       "uid-123",
 					username:  "testuser",
-					email:     "test@example.com",
 					createdAt: "2026-01-01T00:00:00Z",
 				}
 			},
@@ -75,43 +81,85 @@ func TestGetMeHandler_UserFound(t *testing.T) {
 	if body["username"] != "testuser" {
 		t.Errorf("username: got %q", body["username"])
 	}
-	if body["email"] != "test@example.com" {
-		t.Errorf("email: got %q", body["email"])
+	if _, hasEmail := body["email"]; hasEmail {
+		t.Error("email should not be present in response")
 	}
 }
 
-// ── IngestEventHandler ────────────────────────────────────────────────────────
+// ── CreateUserHandler ─────────────────────────────────────────────────────────
 
-func TestIngestEventHandler_InvalidEventType(t *testing.T) {
-	// userExists is called first (QueryRow returns true), then event_type validation
-	// fires before any DB write.
-	deps := &Deps{
-		DB: &mockStore{
-			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: true}
-			},
-		},
-		CommitSHA: "test",
-	}
+func TestCreateUserHandler_MissingUsername(t *testing.T) {
+	deps := &Deps{DB: &mockStore{}, CommitSHA: "test"}
 
-	body := `{"event_type":"click"}`
-	req := httptest.NewRequest(http.MethodPost, "/users/me/events", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/users/me", strings.NewReader(`{"username":""}`))
 	req.Header.Set("X-Cove-Uid", "uid-123")
 	rr := httptest.NewRecorder()
 
-	deps.IngestEventHandler(rr, req)
+	deps.CreateUserHandler(rr, req)
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("expected 400, got %d", rr.Code)
 	}
 }
 
-func TestIngestEventHandler_UserNotFound(t *testing.T) {
-	// userExists QueryRow returns false — user doesn't exist.
+func TestCreateUserHandler_Success(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: false}
+				return &profileRow{uid: "uid-123", username: "johndoe", createdAt: "2026-01-01T00:00:00Z"}
+			},
+		},
+		CommitSHA: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/users/me", strings.NewReader(`{"username":"johndoe"}`))
+	req.Header.Set("X-Cove-Uid", "uid-123")
+	rr := httptest.NewRecorder()
+
+	deps.CreateUserHandler(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d", rr.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if body["username"] != "johndoe" {
+		t.Errorf("username: got %q", body["username"])
+	}
+}
+
+func TestCreateUserHandler_Duplicate(t *testing.T) {
+	// Simulate a unique-constraint violation (SQLSTATE 23505).
+	deps := &Deps{
+		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return &errRow{err: &pgconn.PgError{Code: "23505"}}
+			},
+		},
+		CommitSHA: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/users/me", strings.NewReader(`{"username":"johndoe"}`))
+	req.Header.Set("X-Cove-Uid", "uid-123")
+	rr := httptest.NewRecorder()
+
+	deps.CreateUserHandler(rr, req)
+
+	if rr.Code != http.StatusConflict {
+		t.Errorf("expected 409, got %d", rr.Code)
+	}
+}
+
+// ── IngestEventHandler ────────────────────────────────────────────────────────
+
+func TestIngestEventHandler_UserNotFound(t *testing.T) {
+	// lookupUserID QueryRow returns ErrNoRows → 404.
+	deps := &Deps{
+		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return &errRow{err: pgx.ErrNoRows}
 			},
 		},
 		CommitSHA: "test",
@@ -129,12 +177,35 @@ func TestIngestEventHandler_UserNotFound(t *testing.T) {
 	}
 }
 
+func TestIngestEventHandler_InvalidEventType(t *testing.T) {
+	// lookupUserID succeeds, then event_type validation fires before any DB write.
+	deps := &Deps{
+		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return userUUIDRow()
+			},
+		},
+		CommitSHA: "test",
+	}
+
+	body := `{"event_type":"click"}`
+	req := httptest.NewRequest(http.MethodPost, "/users/me/events", strings.NewReader(body))
+	req.Header.Set("X-Cove-Uid", "uid-123")
+	rr := httptest.NewRecorder()
+
+	deps.IngestEventHandler(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rr.Code)
+	}
+}
+
 func TestIngestEventHandler_ValidRequest(t *testing.T) {
 	execCalled := false
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: true}
+				return userUUIDRow()
 			},
 			execFn: func(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
 				execCalled = true
@@ -165,7 +236,7 @@ func TestReplaceInterestsHandler_MalformedJSON(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: true}
+				return userUUIDRow()
 			},
 		},
 		CommitSHA: "test",
@@ -186,7 +257,7 @@ func TestReplaceInterestsHandler_UserNotFound(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: false}
+				return &errRow{err: pgx.ErrNoRows}
 			},
 		},
 		CommitSHA: "test",
@@ -209,7 +280,7 @@ func TestReplaceInterestsHandler_EmptyCategoryIDs(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: true}
+				return userUUIDRow()
 			},
 			beginFn: func(ctx context.Context) (pgx.Tx, error) {
 				return &mockTx{}, nil
@@ -235,7 +306,7 @@ func TestReplaceInterestsHandler_ValidRequest(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &boolRow{val: true}
+				return userUUIDRow()
 			},
 			beginFn: func(ctx context.Context) (pgx.Tx, error) {
 				return &mockTx{

@@ -341,7 +341,7 @@ paths:
       summary: Get authenticated user profile
       description: |
         Proxied to cove-user. Returns the profile for the authenticated user.
-        Returns 404 if the user has not been created in profile.users yet.
+        Returns 404 if the user has not yet been created via POST /users/me.
       responses:
         "200":
           description: User profile
@@ -357,6 +357,45 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMe
+      summary: Create authenticated user profile
+      description: |
+        Proxied to cove-user. Creates a profile row for the authenticated user.
+        Called once after Firebase Auth creates the account — the client
+        supplies only the username; the UID comes from the validated token.
+        Returns 409 if the profile already exists (safe to retry).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Missing or empty username
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: User profile already exists
           content:
             application/json:
               schema:
@@ -1126,22 +1165,27 @@ components:
 
     UserProfile:
       type: object
-      required: [uid, username, email, created_at]
+      required: [uid, username, created_at]
       properties:
         uid:
           type: string
-          description: Firebase Auth UID.
+          description: Auth UID (provider-agnostic; Firebase UID in Phase 1+).
           example: abc123
         username:
           type: string
           example: johndoe
-        email:
-          type: string
-          format: email
-          example: john@example.com
         created_at:
           type: string
           format: date-time
+
+    CreateUserRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: Desired display username. Must be non-empty after trimming whitespace.
+          example: johndoe
 
     # ── Favorites schemas (cove-user) ─────────────────────────────────────────
 

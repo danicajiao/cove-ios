@@ -91,3 +91,10 @@ func formatUUID(u pgtype.UUID) string {
 func isNotFound(err error) bool {
 	return errors.Is(err, pgx.ErrNoRows)
 }
+
+// isDuplicate returns true when err is a PostgreSQL unique-constraint violation
+// (SQLSTATE 23505). Used to detect double-submit on INSERT.
+func isDuplicate(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}

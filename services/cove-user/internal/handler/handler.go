@@ -98,3 +98,14 @@ func isDuplicate(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
+
+// duplicateConstraint returns the constraint name from a unique-violation error,
+// or "" if err is not a unique violation. Use after isDuplicate to tell apart
+// which constraint fired (e.g. "users_auth_uid_key" vs "users_username_key").
+func duplicateConstraint(err error) string {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return pgErr.ConstraintName
+	}
+	return ""
+}

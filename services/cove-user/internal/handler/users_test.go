@@ -130,12 +130,12 @@ func TestCreateUserHandler_Success(t *testing.T) {
 	}
 }
 
-func TestCreateUserHandler_Duplicate(t *testing.T) {
-	// Simulate a unique-constraint violation (SQLSTATE 23505).
+func TestCreateUserHandler_DuplicateUID(t *testing.T) {
+	// Same Firebase user posts twice — auth_uid constraint fires → "user already exists".
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &errRow{err: &pgconn.PgError{Code: "23505"}}
+				return &errRow{err: &pgconn.PgError{Code: "23505", ConstraintName: "users_auth_uid_key"}}
 			},
 		},
 		CommitSHA: "test",
@@ -149,6 +149,38 @@ func TestCreateUserHandler_Duplicate(t *testing.T) {
 
 	if rr.Code != http.StatusConflict {
 		t.Errorf("expected 409, got %d", rr.Code)
+	}
+	var body map[string]string
+	_ = json.NewDecoder(rr.Body).Decode(&body)
+	if body["error"] != "user already exists" {
+		t.Errorf("unexpected error message: %q", body["error"])
+	}
+}
+
+func TestCreateUserHandler_UsernameTaken(t *testing.T) {
+	// Different user picks an already-claimed username — username constraint fires.
+	deps := &Deps{
+		DB: &mockStore{
+			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
+				return &errRow{err: &pgconn.PgError{Code: "23505", ConstraintName: "users_username_key"}}
+			},
+		},
+		CommitSHA: "test",
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/users/me", strings.NewReader(`{"username":"johndoe"}`))
+	req.Header.Set("X-Cove-Uid", "uid-456")
+	rr := httptest.NewRecorder()
+
+	deps.CreateUserHandler(rr, req)
+
+	if rr.Code != http.StatusConflict {
+		t.Errorf("expected 409, got %d", rr.Code)
+	}
+	var body map[string]string
+	_ = json.NewDecoder(rr.Body).Decode(&body)
+	if body["error"] != "username already taken" {
+		t.Errorf("unexpected error message: %q", body["error"])
 	}
 }
 

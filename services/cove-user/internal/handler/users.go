@@ -68,6 +68,13 @@ RETURNING auth_uid, username, created_at::text`
 		Scan(&u.UID, &u.Username, &u.CreatedAt)
 	if err != nil {
 		if isDuplicate(err) {
+			// Distinguish which unique constraint fired:
+			//   users_auth_uid_key → same Firebase user posted twice (safe to retry)
+			//   users_username_key → username already claimed by another user
+			if duplicateConstraint(err) == "users_username_key" {
+				writeError(w, http.StatusConflict, "username already taken")
+				return
+			}
 			writeError(w, http.StatusConflict, "user already exists")
 			return
 		}

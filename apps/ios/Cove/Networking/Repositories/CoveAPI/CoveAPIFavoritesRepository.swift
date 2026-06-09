@@ -31,7 +31,7 @@ final class CoveAPIFavoritesRepository: FavoritesRepository {
     func listFavorites(uid: String) async throws -> [FavoriteItem] {
         let response = try await api.favorites()
         return response.favorites.map { fav in
-            FavoriteItem(id: fav.itemId, itemId: fav.itemId, categoryId: nil)
+            FavoriteItem(id: fav.item_id, itemId: fav.item_id, categoryId: nil)
         }
     }
 

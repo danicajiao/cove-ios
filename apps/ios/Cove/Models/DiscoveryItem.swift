@@ -73,8 +73,8 @@ extension DiscoveryItem {
         id = discovery.id
         createdAt = nil
         categoryId = ""
-        defaultPrice = Float(discovery.priceCents ?? 0) / 100
-        defaultImageURL = discovery.primaryImage?.md ?? ""
+        defaultPrice = Float(discovery.price_cents ?? 0) / 100
+        defaultImageURL = discovery.primary_image?.md ?? ""
         isFavorite = nil
         itemDetailsId = discovery.id
 
@@ -83,7 +83,7 @@ extension DiscoveryItem {
         makerID = discovery.maker.id
         itemDescription = discovery.description
 
-        primaryImage = discovery.primaryImage
+        primaryImage = discovery.primary_image
         media = []
     }
 
@@ -91,8 +91,8 @@ extension DiscoveryItem {
     init(detail: Components.Schemas.ItemDetail) {
         id = detail.id
         createdAt = nil
-        categoryId = detail.categoryId
-        defaultPrice = Float(detail.priceCents ?? 0) / 100
+        categoryId = detail.category_id
+        defaultPrice = Float(detail.price_cents ?? 0) / 100
         isFavorite = nil
         itemDetailsId = detail.id
 

@@ -53,7 +53,7 @@ final class CoveAPIItemRepository: ItemRepository {
             let detail = try await api.item(id: id)
             return DiscoveryItemDetails(
                 id: detail.id,
-                categoryId: detail.categoryId,
+                categoryId: detail.category_id,
                 itemId: detail.id,
                 description: detail.description,
                 about: nil
@@ -121,7 +121,7 @@ final class CoveAPIItemRepository: ItemRepository {
         var seen = Set<String>()
         var brands: [Brand] = []
         for result in results {
-            let storefront = result.nearestStorefront
+            let storefront = result.nearest_storefront
             guard seen.insert(storefront.id).inserted else { continue }
             brands.append(Brand(id: storefront.id, createdAt: nil, name: storefront.name, imageURL: ""))
         }

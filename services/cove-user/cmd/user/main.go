@@ -51,6 +51,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(handler.UIDMiddleware)
 		r.Get("/users/me", deps.GetMeHandler)
+		r.Post("/users/me", deps.CreateUserHandler)
 		r.Get("/users/me/favorites", deps.GetFavoritesHandler)
 		r.Post("/users/me/favorites/{itemId}", deps.AddFavoriteHandler)
 		r.Delete("/users/me/favorites/{itemId}", deps.RemoveFavoriteHandler)

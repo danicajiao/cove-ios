@@ -2,7 +2,7 @@ openapi: "3.1.0"
 
 info:
   title: cove-user
-  version: "0.1.0"
+  version: "0.2.0"
   description: |
     User profile, favorites, follows, interests, attention events, and
     personalized category recommendations for the Cove platform.
@@ -40,7 +40,7 @@ paths:
       summary: Get authenticated user profile
       description: |
         Returns the profile for the authenticated user.
-        Returns 404 if the user has not been created in profile.users yet.
+        Returns 404 if the user has not yet been created via POST /users/me.
       parameters:
         - name: X-Cove-Uid
           in: header
@@ -63,6 +63,51 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMe
+      summary: Create authenticated user profile
+      description: |
+        Creates a profile row for the authenticated user. Called once after
+        Firebase Auth creates the account — the client supplies only the
+        username; uid is taken from X-Cove-Uid (injected by cove-api).
+        Returns 409 if the profile already exists (safe to retry).
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Missing or empty username
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: User profile already exists
           content:
             application/json:
               schema:
@@ -479,22 +524,27 @@ components:
 
     UserProfile:
       type: object
-      required: [uid, username, email, created_at]
+      required: [uid, username, created_at]
       properties:
         uid:
           type: string
-          description: Firebase Auth UID.
+          description: Auth UID (provider-agnostic; Firebase UID in Phase 1+).
           example: abc123
         username:
           type: string
           example: johndoe
-        email:
-          type: string
-          format: email
-          example: john@example.com
         created_at:
           type: string
           format: date-time
+
+    CreateUserRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: Desired display username. Must be non-empty after trimming whitespace.
+          example: johndoe
 
     # ── Favorites ────────────────────────────────────────────────────────────
 

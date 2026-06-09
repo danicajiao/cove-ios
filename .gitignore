@@ -151,3 +151,6 @@ ExportOptions.plist
 
 ### Cove Product Brief ###
 docs/Cove - Product Brief.docx.pdf
+
+### Migration archives ###
+**/migrations/_archive/

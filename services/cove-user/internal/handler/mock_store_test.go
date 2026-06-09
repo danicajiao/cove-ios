@@ -55,20 +55,20 @@ type errRow struct{ err error }
 
 func (r *errRow) Scan(dest ...any) error { return r.err }
 
-// ── boolRow ───────────────────────────────────────────────────────────────────
+// ── uuidRow ───────────────────────────────────────────────────────────────────
 
-// boolRow scans a single bool value. Used by userExists.
-type boolRow struct{ val bool }
+// uuidRow scans a single pgtype.UUID. Used by lookupUserID.
+type uuidRow struct{ val pgtype.UUID }
 
-func (r *boolRow) Scan(dest ...any) error {
+func (r *uuidRow) Scan(dest ...any) error {
 	if len(dest) != 1 {
-		return fmt.Errorf("boolRow: expected 1 dest, got %d", len(dest))
+		return fmt.Errorf("uuidRow: expected 1 dest, got %d", len(dest))
 	}
-	if p, ok := dest[0].(*bool); ok {
+	if p, ok := dest[0].(*pgtype.UUID); ok {
 		*p = r.val
 		return nil
 	}
-	return fmt.Errorf("boolRow: cannot scan into %T", dest[0])
+	return fmt.Errorf("uuidRow: cannot scan into %T", dest[0])
 }
 
 // ── intRow ────────────────────────────────────────────────────────────────────
@@ -89,16 +89,17 @@ func (r *intRow) Scan(dest ...any) error {
 
 // ── profileRow ────────────────────────────────────────────────────────────────
 
-// profileRow scans uid, username, email, created_at for GetMeHandler.
+// profileRow scans auth_uid, username, created_at for GetMeHandler /
+// CreateUserHandler. Email was removed from the schema in migration 000002.
 type profileRow struct {
-	uid, username, email, createdAt string
+	uid, username, createdAt string
 }
 
 func (r *profileRow) Scan(dest ...any) error {
-	if len(dest) != 4 {
-		return fmt.Errorf("profileRow: expected 4 dest, got %d", len(dest))
+	if len(dest) != 3 {
+		return fmt.Errorf("profileRow: expected 3 dest, got %d", len(dest))
 	}
-	vals := []string{r.uid, r.username, r.email, r.createdAt}
+	vals := []string{r.uid, r.username, r.createdAt}
 	for i, d := range dest {
 		p, ok := d.(*string)
 		if !ok {
@@ -201,8 +202,8 @@ func hexVal(c byte) byte {
 // mockTx implements pgx.Tx with no-ops for everything except Exec, Commit,
 // and Rollback, which are the only methods used by ReplaceInterestsHandler.
 type mockTx struct {
-	execFn     func(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
-	commitErr  error
+	execFn      func(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	commitErr   error
 	rollbackErr error
 }
 

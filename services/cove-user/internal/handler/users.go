@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -13,30 +14,29 @@ import (
 // ── User profile ──────────────────────────────────────────────────────────────
 
 type userProfile struct {
-	UID       string `json:"uid"`
+	UID       string `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
 	Username  string `json:"username"`
-	Email     string `json:"email"`
 	CreatedAt string `json:"created_at"`
 }
 
 // GetMeHandler handles GET /users/me.
 // Returns 404 if the user doesn't exist in profile.users.
 func (d *Deps) GetMeHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
 	const q = `
-SELECT uid, username, email, created_at::text
+SELECT auth_uid, username, created_at::text
 FROM profile.users
-WHERE uid = $1`
+WHERE auth_uid = $1`
 
 	var u userProfile
-	err := d.DB.QueryRow(r.Context(), q, uid).Scan(&u.UID, &u.Username, &u.Email, &u.CreatedAt)
+	err := d.DB.QueryRow(r.Context(), q, authUID).Scan(&u.UID, &u.Username, &u.CreatedAt)
 	if err != nil {
 		if isNotFound(err) {
 			writeError(w, http.StatusNotFound, "user profile not found")
 			return
 		}
-		log.Printf("ERROR GetMeHandler uid=%s: %v", uid, err)
+		log.Printf("ERROR GetMeHandler auth_uid=%s: %v", authUID, err)
 		writeError(w, http.StatusInternalServerError, "profile query failed")
 		return
 	}
@@ -44,13 +44,55 @@ WHERE uid = $1`
 	writeJSON(w, http.StatusOK, u)
 }
 
+// CreateUserHandler handles POST /users/me.
+// Creates a new profile row for the authenticated user.
+// Returns 409 if the profile already exists (idempotent double-submit safety).
+func (d *Deps) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+	authUID := r.Header.Get("X-Cove-Uid")
+
+	var req struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.Username) == "" {
+		writeError(w, http.StatusBadRequest, "username is required")
+		return
+	}
+
+	const q = `
+INSERT INTO profile.users (auth_uid, username)
+VALUES ($1, $2)
+RETURNING auth_uid, username, created_at::text`
+
+	var u userProfile
+	err := d.DB.QueryRow(r.Context(), q, authUID, strings.TrimSpace(req.Username)).
+		Scan(&u.UID, &u.Username, &u.CreatedAt)
+	if err != nil {
+		if isDuplicate(err) {
+			// Distinguish which unique constraint fired:
+			//   users_auth_uid_key → same Firebase user posted twice (safe to retry)
+			//   users_username_key → username already claimed by another user
+			if duplicateConstraint(err) == "users_username_key" {
+				writeError(w, http.StatusConflict, "username already taken")
+				return
+			}
+			writeError(w, http.StatusConflict, "user already exists")
+			return
+		}
+		log.Printf("ERROR CreateUserHandler auth_uid=%s: %v", authUID, err)
+		writeError(w, http.StatusInternalServerError, "user creation failed")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, u)
+}
+
 // ── Favorites ─────────────────────────────────────────────────────────────────
 
 type favoriteItem struct {
-	ItemID      string  `json:"item_id"`
-	ItemName    string  `json:"item_name"`
-	PriceCents  *int    `json:"price_cents,omitempty"`
-	FavoritedAt string  `json:"favorited_at"`
+	ItemID      string `json:"item_id"`
+	ItemName    string `json:"item_name"`
+	PriceCents  *int   `json:"price_cents,omitempty"`
+	FavoritedAt string `json:"favorited_at"`
 }
 
 type favoritesResponse struct {
@@ -60,10 +102,10 @@ type favoritesResponse struct {
 
 // GetFavoritesHandler handles GET /users/me/favorites.
 func (d *Deps) GetFavoritesHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -80,12 +122,11 @@ func (d *Deps) GetFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Count total favorites.
 	var total int
 	err := d.DB.QueryRow(r.Context(),
-		`SELECT COUNT(*) FROM profile.favorites WHERE uid = $1`, uid).Scan(&total)
+		`SELECT COUNT(*) FROM profile.favorites WHERE user_id = $1`, userID).Scan(&total)
 	if err != nil {
-		log.Printf("ERROR GetFavoritesHandler count uid=%s: %v", uid, err)
+		log.Printf("ERROR GetFavoritesHandler count user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "favorites query failed")
 		return
 	}
@@ -94,13 +135,13 @@ func (d *Deps) GetFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 SELECT f.item_id, i.name, i.price_cents, f.created_at::text
 FROM profile.favorites f
 JOIN catalog.items i ON i.id = f.item_id
-WHERE f.uid = $1
+WHERE f.user_id = $1
 ORDER BY f.created_at DESC
 LIMIT $2 OFFSET $3`
 
-	rows, err := d.DB.Query(r.Context(), q, uid, limit, offset)
+	rows, err := d.DB.Query(r.Context(), q, userID, limit, offset)
 	if err != nil {
-		log.Printf("ERROR GetFavoritesHandler query uid=%s: %v", uid, err)
+		log.Printf("ERROR GetFavoritesHandler query user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "favorites query failed")
 		return
 	}
@@ -113,7 +154,7 @@ LIMIT $2 OFFSET $3`
 		var priceCents *int32
 		var favoritedAt string
 		if err := rows.Scan(&itemID, &name, &priceCents, &favoritedAt); err != nil {
-			log.Printf("ERROR GetFavoritesHandler scan uid=%s: %v", uid, err)
+			log.Printf("ERROR GetFavoritesHandler scan user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "favorites scan failed")
 			return
 		}
@@ -138,22 +179,22 @@ LIMIT $2 OFFSET $3`
 
 // AddFavoriteHandler handles POST /users/me/favorites/{itemId}.
 func (d *Deps) AddFavoriteHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 	itemID := chi.URLParam(r, "itemId")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
 	const q = `
-INSERT INTO profile.favorites (uid, item_id)
+INSERT INTO profile.favorites (user_id, item_id)
 VALUES ($1, $2)
-ON CONFLICT (uid, item_id) DO NOTHING`
+ON CONFLICT (user_id, item_id) DO NOTHING`
 
-	ct, err := d.DB.Exec(r.Context(), q, uid, itemID)
+	ct, err := d.DB.Exec(r.Context(), q, userID, itemID)
 	if err != nil {
-		log.Printf("ERROR AddFavoriteHandler uid=%s item=%s: %v", uid, itemID, err)
+		log.Printf("ERROR AddFavoriteHandler user_id=%s item=%s: %v", userID, itemID, err)
 		writeError(w, http.StatusInternalServerError, "add favorite failed")
 		return
 	}
@@ -167,14 +208,18 @@ ON CONFLICT (uid, item_id) DO NOTHING`
 
 // RemoveFavoriteHandler handles DELETE /users/me/favorites/{itemId}.
 func (d *Deps) RemoveFavoriteHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 	itemID := chi.URLParam(r, "itemId")
 
-	const q = `DELETE FROM profile.favorites WHERE uid = $1 AND item_id = $2`
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
+		return
+	}
 
-	ct, err := d.DB.Exec(r.Context(), q, uid, itemID)
+	ct, err := d.DB.Exec(r.Context(),
+		`DELETE FROM profile.favorites WHERE user_id = $1 AND item_id = $2`, userID, itemID)
 	if err != nil {
-		log.Printf("ERROR RemoveFavoriteHandler uid=%s item=%s: %v", uid, itemID, err)
+		log.Printf("ERROR RemoveFavoriteHandler user_id=%s item=%s: %v", userID, itemID, err)
 		writeError(w, http.StatusInternalServerError, "remove favorite failed")
 		return
 	}
@@ -201,10 +246,10 @@ type followsResponse struct {
 
 // GetFollowsHandler handles GET /users/me/follows.
 func (d *Deps) GetFollowsHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -212,20 +257,20 @@ func (d *Deps) GetFollowsHandler(w http.ResponseWriter, r *http.Request) {
 SELECT 'maker' AS entity_type, m.id, m.name, f.created_at::text
 FROM profile.follows f
 JOIN directory.makers m ON m.id = f.maker_id
-WHERE f.uid = $1 AND f.maker_id IS NOT NULL
+WHERE f.user_id = $1 AND f.maker_id IS NOT NULL
 
 UNION ALL
 
 SELECT 'storefront' AS entity_type, s.id, s.name, f.created_at::text
 FROM profile.follows f
 JOIN directory.storefronts s ON s.id = f.storefront_id
-WHERE f.uid = $1 AND f.storefront_id IS NOT NULL
+WHERE f.user_id = $1 AND f.storefront_id IS NOT NULL
 
 ORDER BY 4 DESC`
 
-	rows, err := d.DB.Query(r.Context(), q, uid)
+	rows, err := d.DB.Query(r.Context(), q, userID)
 	if err != nil {
-		log.Printf("ERROR GetFollowsHandler uid=%s: %v", uid, err)
+		log.Printf("ERROR GetFollowsHandler user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "follows query failed")
 		return
 	}
@@ -236,7 +281,7 @@ ORDER BY 4 DESC`
 		var entityType, entityName, followedAt string
 		var entityID pgtype.UUID
 		if err := rows.Scan(&entityType, &entityID, &entityName, &followedAt); err != nil {
-			log.Printf("ERROR GetFollowsHandler scan uid=%s: %v", uid, err)
+			log.Printf("ERROR GetFollowsHandler scan user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "follows scan failed")
 			return
 		}
@@ -263,10 +308,10 @@ type addFollowRequest struct {
 // AddFollowHandler handles POST /users/me/follows.
 // profile.follows has no unique constraint — query before insert to detect duplicates.
 func (d *Deps) AddFollowHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -286,13 +331,12 @@ func (d *Deps) AddFollowHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.MakerID != nil {
-		// Check for duplicate.
 		var existing int
 		err := d.DB.QueryRow(r.Context(),
-			`SELECT COUNT(*) FROM profile.follows WHERE uid = $1 AND maker_id = $2`,
-			uid, *req.MakerID).Scan(&existing)
+			`SELECT COUNT(*) FROM profile.follows WHERE user_id = $1 AND maker_id = $2`,
+			userID, *req.MakerID).Scan(&existing)
 		if err != nil {
-			log.Printf("ERROR AddFollowHandler check maker uid=%s maker=%s: %v", uid, *req.MakerID, err)
+			log.Printf("ERROR AddFollowHandler check maker user_id=%s maker=%s: %v", userID, *req.MakerID, err)
 			writeError(w, http.StatusInternalServerError, "follow check failed")
 			return
 		}
@@ -302,21 +346,20 @@ func (d *Deps) AddFollowHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err = d.DB.Exec(r.Context(),
-			`INSERT INTO profile.follows (uid, maker_id) VALUES ($1, $2)`,
-			uid, *req.MakerID)
+			`INSERT INTO profile.follows (user_id, maker_id) VALUES ($1, $2)`,
+			userID, *req.MakerID)
 		if err != nil {
-			log.Printf("ERROR AddFollowHandler insert maker uid=%s maker=%s: %v", uid, *req.MakerID, err)
+			log.Printf("ERROR AddFollowHandler insert maker user_id=%s maker=%s: %v", userID, *req.MakerID, err)
 			writeError(w, http.StatusInternalServerError, "add follow failed")
 			return
 		}
 	} else {
-		// Check for duplicate.
 		var existing int
 		err := d.DB.QueryRow(r.Context(),
-			`SELECT COUNT(*) FROM profile.follows WHERE uid = $1 AND storefront_id = $2`,
-			uid, *req.StorefrontID).Scan(&existing)
+			`SELECT COUNT(*) FROM profile.follows WHERE user_id = $1 AND storefront_id = $2`,
+			userID, *req.StorefrontID).Scan(&existing)
 		if err != nil {
-			log.Printf("ERROR AddFollowHandler check storefront uid=%s sf=%s: %v", uid, *req.StorefrontID, err)
+			log.Printf("ERROR AddFollowHandler check storefront user_id=%s sf=%s: %v", userID, *req.StorefrontID, err)
 			writeError(w, http.StatusInternalServerError, "follow check failed")
 			return
 		}
@@ -326,10 +369,10 @@ func (d *Deps) AddFollowHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err = d.DB.Exec(r.Context(),
-			`INSERT INTO profile.follows (uid, storefront_id) VALUES ($1, $2)`,
-			uid, *req.StorefrontID)
+			`INSERT INTO profile.follows (user_id, storefront_id) VALUES ($1, $2)`,
+			userID, *req.StorefrontID)
 		if err != nil {
-			log.Printf("ERROR AddFollowHandler insert storefront uid=%s sf=%s: %v", uid, *req.StorefrontID, err)
+			log.Printf("ERROR AddFollowHandler insert storefront user_id=%s sf=%s: %v", userID, *req.StorefrontID, err)
 			writeError(w, http.StatusInternalServerError, "add follow failed")
 			return
 		}
@@ -341,15 +384,18 @@ func (d *Deps) AddFollowHandler(w http.ResponseWriter, r *http.Request) {
 // RemoveFollowHandler handles DELETE /users/me/follows/{entityId}.
 // Tries both maker_id and storefront_id columns.
 func (d *Deps) RemoveFollowHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 	entityID := chi.URLParam(r, "entityId")
 
-	// Try deleting as maker first, then as storefront.
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
+		return
+	}
+
 	ct, err := d.DB.Exec(r.Context(),
-		`DELETE FROM profile.follows WHERE uid = $1 AND maker_id = $2`,
-		uid, entityID)
+		`DELETE FROM profile.follows WHERE user_id = $1 AND maker_id = $2`, userID, entityID)
 	if err != nil {
-		log.Printf("ERROR RemoveFollowHandler maker uid=%s entity=%s: %v", uid, entityID, err)
+		log.Printf("ERROR RemoveFollowHandler maker user_id=%s entity=%s: %v", userID, entityID, err)
 		writeError(w, http.StatusInternalServerError, "remove follow failed")
 		return
 	}
@@ -359,10 +405,9 @@ func (d *Deps) RemoveFollowHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ct, err = d.DB.Exec(r.Context(),
-		`DELETE FROM profile.follows WHERE uid = $1 AND storefront_id = $2`,
-		uid, entityID)
+		`DELETE FROM profile.follows WHERE user_id = $1 AND storefront_id = $2`, userID, entityID)
 	if err != nil {
-		log.Printf("ERROR RemoveFollowHandler storefront uid=%s entity=%s: %v", uid, entityID, err)
+		log.Printf("ERROR RemoveFollowHandler storefront user_id=%s entity=%s: %v", userID, entityID, err)
 		writeError(w, http.StatusInternalServerError, "remove follow failed")
 		return
 	}
@@ -389,10 +434,10 @@ type interestsResponse struct {
 
 // GetInterestsHandler handles GET /users/me/interests.
 func (d *Deps) GetInterestsHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -400,12 +445,12 @@ func (d *Deps) GetInterestsHandler(w http.ResponseWriter, r *http.Request) {
 SELECT i.category_id, c.path::text, c.name, i.created_at::text
 FROM profile.interests i
 JOIN catalog.categories c ON c.id = i.category_id
-WHERE i.uid = $1
+WHERE i.user_id = $1
 ORDER BY c.name`
 
-	rows, err := d.DB.Query(r.Context(), q, uid)
+	rows, err := d.DB.Query(r.Context(), q, userID)
 	if err != nil {
-		log.Printf("ERROR GetInterestsHandler uid=%s: %v", uid, err)
+		log.Printf("ERROR GetInterestsHandler user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "interests query failed")
 		return
 	}
@@ -416,7 +461,7 @@ ORDER BY c.name`
 		var categoryID pgtype.UUID
 		var path, name, createdAt string
 		if err := rows.Scan(&categoryID, &path, &name, &createdAt); err != nil {
-			log.Printf("ERROR GetInterestsHandler scan uid=%s: %v", uid, err)
+			log.Printf("ERROR GetInterestsHandler scan user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "interests scan failed")
 			return
 		}
@@ -442,10 +487,10 @@ type replaceInterestsRequest struct {
 // ReplaceInterestsHandler handles PUT /users/me/interests.
 // Replaces the full interest set in a transaction: DELETE existing + INSERT new.
 func (d *Deps) ReplaceInterestsHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -461,32 +506,32 @@ func (d *Deps) ReplaceInterestsHandler(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := d.DB.Begin(r.Context())
 	if err != nil {
-		log.Printf("ERROR ReplaceInterestsHandler begin tx uid=%s: %v", uid, err)
+		log.Printf("ERROR ReplaceInterestsHandler begin tx user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "transaction failed")
 		return
 	}
 	defer tx.Rollback(r.Context()) //nolint:errcheck
 
 	if _, err := tx.Exec(r.Context(),
-		`DELETE FROM profile.interests WHERE uid = $1`, uid); err != nil {
-		log.Printf("ERROR ReplaceInterestsHandler delete uid=%s: %v", uid, err)
+		`DELETE FROM profile.interests WHERE user_id = $1`, userID); err != nil {
+		log.Printf("ERROR ReplaceInterestsHandler delete user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "interests replace failed")
 		return
 	}
 
 	for _, catID := range req.CategoryIDs {
 		if _, err := tx.Exec(r.Context(),
-			`INSERT INTO profile.interests (uid, category_id) VALUES ($1, $2)
-			 ON CONFLICT (uid, category_id) DO NOTHING`,
-			uid, catID); err != nil {
-			log.Printf("ERROR ReplaceInterestsHandler insert uid=%s cat=%s: %v", uid, catID, err)
+			`INSERT INTO profile.interests (user_id, category_id) VALUES ($1, $2)
+			 ON CONFLICT (user_id, category_id) DO NOTHING`,
+			userID, catID); err != nil {
+			log.Printf("ERROR ReplaceInterestsHandler insert user_id=%s cat=%s: %v", userID, catID, err)
 			writeError(w, http.StatusInternalServerError, "interests replace failed")
 			return
 		}
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {
-		log.Printf("ERROR ReplaceInterestsHandler commit uid=%s: %v", uid, err)
+		log.Printf("ERROR ReplaceInterestsHandler commit user_id=%s: %v", userID, err)
 		writeError(w, http.StatusInternalServerError, "interests replace failed")
 		return
 	}
@@ -512,10 +557,10 @@ var validEventTypes = map[string]bool{
 
 // IngestEventHandler handles POST /users/me/events.
 func (d *Deps) IngestEventHandler(w http.ResponseWriter, r *http.Request) {
-	uid := r.Header.Get("X-Cove-Uid")
+	authUID := r.Header.Get("X-Cove-Uid")
 
-	if !d.userExists(r, uid) {
-		writeError(w, http.StatusNotFound, "user profile not found")
+	userID, ok := d.lookupUserID(r, w, authUID)
+	if !ok {
 		return
 	}
 
@@ -536,12 +581,12 @@ func (d *Deps) IngestEventHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const q = `
-INSERT INTO profile.events (uid, event_type, category_id, item_id, metadata)
+INSERT INTO profile.events (user_id, event_type, category_id, item_id, metadata)
 VALUES ($1, $2, $3, $4, $5)`
 
-	_, err := d.DB.Exec(r.Context(), q, uid, req.EventType, req.CategoryID, req.ItemID, metadata)
+	_, err := d.DB.Exec(r.Context(), q, userID, req.EventType, req.CategoryID, req.ItemID, metadata)
 	if err != nil {
-		log.Printf("ERROR IngestEventHandler uid=%s type=%s: %v", uid, req.EventType, err)
+		log.Printf("ERROR IngestEventHandler user_id=%s type=%s: %v", userID, req.EventType, err)
 		writeError(w, http.StatusInternalServerError, "event ingest failed")
 		return
 	}
@@ -551,15 +596,21 @@ VALUES ($1, $2, $3, $4, $5)`
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// userExists returns true if the uid has a row in profile.users.
-// On DB error it writes a 500 and returns false.
-func (d *Deps) userExists(r *http.Request, uid string) bool {
-	var exists bool
+// lookupUserID resolves an auth_uid to the internal profile.users UUID.
+// On not-found it writes 404; on DB error it writes 500.
+// Returns ("", false) in either error case — callers should return immediately.
+func (d *Deps) lookupUserID(r *http.Request, w http.ResponseWriter, authUID string) (string, bool) {
+	var id pgtype.UUID
 	err := d.DB.QueryRow(r.Context(),
-		`SELECT EXISTS(SELECT 1 FROM profile.users WHERE uid = $1)`, uid).Scan(&exists)
+		`SELECT id FROM profile.users WHERE auth_uid = $1`, authUID).Scan(&id)
 	if err != nil {
-		log.Printf("ERROR userExists uid=%s: %v", uid, err)
-		return false
+		if isNotFound(err) {
+			writeError(w, http.StatusNotFound, "user profile not found")
+		} else {
+			log.Printf("ERROR lookupUserID auth_uid=%s: %v", authUID, err)
+			writeError(w, http.StatusInternalServerError, "user lookup failed")
+		}
+		return "", false
 	}
-	return exists
+	return formatUUID(id), true
 }

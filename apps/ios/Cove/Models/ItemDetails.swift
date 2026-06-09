@@ -1,15 +1,14 @@
 //
 //  ItemDetails.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 4/9/23.
 //
 
-import FirebaseFirestore
+import Foundation
 
 protocol ItemDetails: Codable {
     var id: String? { get }
     var categoryId: String { get }
-    var createdAt: Timestamp? { get }
+    var createdAt: Date? { get }
     var itemId: String { get }
 }

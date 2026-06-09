@@ -1,26 +1,45 @@
 //
 //  CoveAPIFavoritesRepository.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 5/18/26.
 //
 
 import Foundation
 
-/// Stub implementation of `FavoritesRepository` backed by `cove-api`.
+/// `FavoritesRepository` implementation backed by the cove-api gateway → cove-user service.
 ///
-/// Every method throws `RepositoryError.decodingFailed` until Phase 3
-/// fleshes it out with real `cove-user` calls (favorites live under the user service).
+/// Uses `GET /users/me/favorites`, `POST /users/me/favorites/{itemId}`, and
+/// `DELETE /users/me/favorites/{itemId}`. Both `add` and `remove` are idempotent —
+/// 409 (already favorited) and 404 (not favorited) are treated as success.
+///
+/// The `categoryId` parameter in `add(itemId:categoryId:uid:)` is accepted for
+/// protocol conformance but not forwarded to the API; cove-user resolves the
+/// item's category from its own store.
 final class CoveAPIFavoritesRepository: FavoritesRepository {
+    // MARK: - Properties
+
+    private let api: CoveAPIClient
+
+    // MARK: - Init
+
+    init(api: CoveAPIClient = .shared) {
+        self.api = api
+    }
+
+    // MARK: - FavoritesRepository
+
     func listFavorites(uid: String) async throws -> [FavoriteItem] {
-        throw RepositoryError.decodingFailed("listFavorites not implemented — lands in Phase 3")
+        let response = try await api.favorites()
+        return response.favorites.map { fav in
+            FavoriteItem(id: fav.itemId, itemId: fav.itemId, categoryId: nil)
+        }
     }
 
     func add(itemId: String, categoryId: String, uid: String) async throws {
-        throw RepositoryError.decodingFailed("add not implemented — lands in Phase 3")
+        try await api.addFavorite(itemId: itemId)
     }
 
     func remove(itemId: String, uid: String) async throws {
-        throw RepositoryError.decodingFailed("remove not implemented — lands in Phase 3")
+        try await api.removeFavorite(itemId: itemId)
     }
 }

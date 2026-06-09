@@ -1,6 +1,5 @@
 //
 //  ItemDetailTabs.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 4/12/23.
 //
@@ -13,7 +12,29 @@ struct ItemDetailTabs: View {
     let tabSpacing = Spacing.xs
 
     var body: some View {
-        if let musicItemDetails = viewModel.itemDetails as? MusicItemDetails {
+        if let discoveryDetails = viewModel.itemDetails as? DiscoveryItemDetails {
+            // Phase 3 API-backed items: two-tab layout (Description / About).
+            VStack(spacing: stackSpacing) {
+                HStack(spacing: tabSpacing) {
+                    tabPill("Description", selection: .description)
+                    tabPill("About", selection: .about)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if viewModel.detailSelection == .description {
+                    Text(discoveryDetails.description ?? "No description available.")
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Text.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else if viewModel.detailSelection == .about {
+                    Text(discoveryDetails.about ?? "")
+                        .font(Font.custom("Lato-Regular", size: 16))
+                        .foregroundStyle(Color.Colors.Text.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+        } else if let musicItemDetails = viewModel.itemDetails as? MusicItemDetails {
             VStack(spacing: stackSpacing) {
                 HStack(spacing: tabSpacing) {
                     tabPill("Description", selection: .description)

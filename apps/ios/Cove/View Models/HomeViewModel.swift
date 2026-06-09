@@ -19,7 +19,7 @@ class HomeViewModel: ObservableObject {
     private let cacheTimeout: TimeInterval = 300
     private let itemRepository: ItemRepository
 
-    init(itemRepository: ItemRepository = FirebaseItemRepository()) {
+    init(itemRepository: ItemRepository = CoveAPIItemRepository()) {
         self.itemRepository = itemRepository
     }
 

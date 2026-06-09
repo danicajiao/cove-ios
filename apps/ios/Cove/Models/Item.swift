@@ -1,18 +1,14 @@
 //
 //  Item.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 3/8/22.
 //
 
-import FirebaseFirestore
+import Foundation
 
 protocol Item: Codable, Identifiable, Hashable {
-//    @Published var imgData: Data = Data()
-//    @Published var favorited = false
-
     var id: String? { get }
-    var createdAt: Timestamp? { get }
+    var createdAt: Date? { get }
     var categoryId: String { get }
     var defaultPrice: Float { get }
     var defaultImageURL: String { get }
@@ -21,8 +17,8 @@ protocol Item: Codable, Identifiable, Hashable {
 }
 
 struct ExampleItem: Item {
-    @DocumentID var id: String?
-    @ServerTimestamp var createdAt: Timestamp?
+    var id: String?
+    var createdAt: Date?
     var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
@@ -45,7 +41,7 @@ struct ExampleItem: Item {
 
     static let placeholder = ExampleItem(
         id: "aaaaa123445",
-        createdAt: Timestamp(),
+        createdAt: nil,
         categoryId: "some categoryID",
         defaultPrice: 23,
         defaultImageURL: "some url",

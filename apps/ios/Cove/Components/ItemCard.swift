@@ -1,6 +1,5 @@
 //
 //  ItemCard.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 3/6/22.
 //
@@ -28,18 +27,19 @@ struct ItemCard: View {
     init(item: any Item) {
         self.item = item
 
-        if let coffeeItem = item as? CoffeeItem {
-            // item is a CoffeeItem
+        if let discoveryItem = item as? DiscoveryItem {
+            titleStr = discoveryItem.name
+            subtitleStr = discoveryItem.makerName
+            price = discoveryItem.defaultPrice
+        } else if let coffeeItem = item as? CoffeeItem {
             titleStr = coffeeItem.info.name
             subtitleStr = coffeeItem.info.roastery
             price = coffeeItem.defaultPrice
         } else if let musicItem = item as? MusicItem {
-            // item is a MusicItem
             titleStr = musicItem.info.album
             subtitleStr = musicItem.info.artist
             price = musicItem.defaultPrice
         } else if let apparelItem = item as? ApparelItem {
-            // item is an ApparelItem
             titleStr = apparelItem.info.name
             subtitleStr = apparelItem.info.brand
             price = apparelItem.defaultPrice
@@ -113,8 +113,26 @@ struct ItemCard: View {
     }
 
     private func fetchImage() async {
+        // Fast path: use the pre-signed URL from the API when available.
+        if let discoveryItem = item as? DiscoveryItem,
+           let variants = discoveryItem.primaryImage,
+           let url = variants.url(forTargetPointSize: 171) {
+            await loadImage(from: url)
+            return
+        }
+
+        // Fallback: fetch a signed URL via the image repository (legacy items).
+        guard !item.defaultImageURL.isEmpty else { return }
         do {
             let url = try await imageRepository.imageURL(for: item.defaultImageURL)
+            await loadImage(from: url)
+        } catch {
+            print("Error fetching image: \(error.localizedDescription)")
+        }
+    }
+
+    private func loadImage(from url: URL) async {
+        do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let image = UIImage(data: data) {
                 uiImage = image
@@ -126,7 +144,7 @@ struct ItemCard: View {
                 }
             }
         } catch {
-            print("Error fetching image: \(error.localizedDescription)")
+            print("Error loading image: \(error.localizedDescription)")
         }
     }
 }

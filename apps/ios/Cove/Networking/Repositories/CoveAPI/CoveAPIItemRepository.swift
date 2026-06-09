@@ -1,43 +1,130 @@
 //
 //  CoveAPIItemRepository.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 5/18/26.
 //
 
 import Foundation
 
-/// Stub implementation of `ItemRepository` backed by `cove-api`.
+/// `ItemRepository` implementation backed by the cove-api gateway.
 ///
-/// Every method throws `RepositoryError.decodingFailed` until Phase 3
-/// fleshes it out with real `cove-item` calls. Wiring it in place now
-/// means the Phase 3 swap requires only a one-line DI change in `AppState`.
+/// Calls `GET /discovery` for list feeds and `GET /items/{id}` for detail.
+/// Every method returns `DiscoveryItem` instances — views and ViewModels receive
+/// pre-signed image URLs in the same payload and never need to call the image
+/// repository separately for item images.
 final class CoveAPIItemRepository: ItemRepository {
+    // MARK: - Properties
+
+    private let api: CoveAPIClient
+
+    // MARK: - Init
+
+    init(api: CoveAPIClient = .shared) {
+        self.api = api
+    }
+
+    // MARK: - ItemRepository
+
     func fetchHome() async throws -> [any Item] {
-        throw RepositoryError.decodingFailed("fetchHome not implemented — lands in Phase 3")
+        let results = try await api.discovery()
+        return results.map { DiscoveryItem(discovery: $0) }
     }
 
     func fetchItem(id: String) async throws -> any Item {
-        throw RepositoryError.decodingFailed("fetchItem not implemented — lands in Phase 3")
+        do {
+            let detail = try await api.item(id: id)
+            return DiscoveryItem(detail: detail)
+        } catch CoveAPIError.unexpectedStatus(404) {
+            throw RepositoryError.notFound
+        }
     }
 
+    /// Returns a `DiscoveryItemDetails` built from the same `GET /items/{id}` call.
+    ///
+    /// Re-fetches the item to extract the `details` blob. The API round-trip is
+    /// cheap (the gateway caches at Cloudflare); a local cache can be added if
+    /// the extra request becomes measurable.
     func fetchDetails(for item: any Item) async throws -> any ItemDetails {
-        throw RepositoryError.decodingFailed("fetchDetails not implemented — lands in Phase 3")
+        guard let id = item.id else {
+            throw RepositoryError.notFound
+        }
+
+        do {
+            let detail = try await api.item(id: id)
+            return DiscoveryItemDetails(
+                id: detail.id,
+                categoryId: detail.categoryId,
+                itemId: detail.id,
+                description: detail.description,
+                about: nil
+            )
+        } catch CoveAPIError.unexpectedStatus(404) {
+            throw RepositoryError.notFound
+        }
     }
 
+    /// Returns items from the general discovery feed.
+    ///
+    /// The cove-api discovery endpoint does not yet support UUID-based category
+    /// filtering (it accepts ltree path strings, not UUIDs). Until category
+    /// path lookup is added, this returns top-scored items from the full feed —
+    /// a reasonable fallback for the "similar items" shelf.
     func fetchSimilarItems(categoryId: String, limit: Int) async throws -> [any Item] {
-        throw RepositoryError.decodingFailed("fetchSimilarItems not implemented — lands in Phase 3")
+        let results = try await api.discovery()
+        return Array(results.prefix(limit).map { DiscoveryItem(discovery: $0) })
     }
 
+    /// Returns items from the general discovery feed.
+    ///
+    /// Category UUID → ltree path resolution is not yet implemented; the
+    /// discovery feed is used as a fallback for the bag's "you might also like"
+    /// shelf until path-based filtering is wired up.
     func fetchItems(inCategories categoryIds: [String]) async throws -> [any Item] {
-        throw RepositoryError.decodingFailed("fetchItems(inCategories:) not implemented — lands in Phase 3")
+        guard !categoryIds.isEmpty else { return [] }
+        let results = try await api.discovery()
+        return results.map { DiscoveryItem(discovery: $0) }
     }
 
+    /// Fetches items by ID in parallel, one `GET /items/{id}` call per ID.
+    ///
+    /// Used by `FavoritesViewModel` to hydrate the favorites list. Errors for
+    /// individual items are swallowed so one missing item does not abort the
+    /// entire batch.
     func fetchItems(withIds ids: [String]) async throws -> [any Item] {
-        throw RepositoryError.decodingFailed("fetchItems(withIds:) not implemented — lands in Phase 3")
+        guard !ids.isEmpty else { return [] }
+        return try await withThrowingTaskGroup(of: (any Item)?.self) { group in
+            for id in ids {
+                group.addTask {
+                    do {
+                        let detail = try await self.api.item(id: id)
+                        return DiscoveryItem(detail: detail)
+                    } catch {
+                        return nil
+                    }
+                }
+            }
+            var items: [any Item] = []
+            for try await item in group {
+                if let item { items.append(item) }
+            }
+            return items
+        }
     }
 
+    /// Returns unique storefronts from the discovery feed as `Brand` stubs.
+    ///
+    /// cove-api does not have a dedicated "list all storefronts" endpoint yet.
+    /// Until one is added the home screen's stores shelf is populated from
+    /// the storefronts that appear in the discovery response.
     func fetchBrands() async throws -> [Brand] {
-        throw RepositoryError.decodingFailed("fetchBrands not implemented — lands in Phase 3")
+        let results = try await api.discovery()
+        var seen = Set<String>()
+        var brands: [Brand] = []
+        for result in results {
+            let storefront = result.nearestStorefront
+            guard seen.insert(storefront.id).inserted else { continue }
+            brands.append(Brand(id: storefront.id, createdAt: nil, name: storefront.name, imageURL: ""))
+        }
+        return brands
     }
 }

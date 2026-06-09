@@ -17,8 +17,8 @@ class FavoritesViewModel: ObservableObject {
     private let itemRepository: ItemRepository
 
     init(
-        favoritesRepository: FavoritesRepository = FirebaseFavoritesRepository(),
-        itemRepository: ItemRepository = FirebaseItemRepository()
+        favoritesRepository: FavoritesRepository = CoveAPIFavoritesRepository(),
+        itemRepository: ItemRepository = CoveAPIItemRepository()
     ) {
         self.favoritesRepository = favoritesRepository
         self.itemRepository = itemRepository

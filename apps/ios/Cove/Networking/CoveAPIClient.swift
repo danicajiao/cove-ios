@@ -90,6 +90,208 @@ final class CoveAPIClient: @unchecked Sendable {
         }
     }
 
+    // MARK: - Discovery
+
+    /// Fetches the discovery feed from `GET /discovery`.
+    ///
+    /// All parameters are optional. When none are provided the gateway returns
+    /// up to 25 active items ranked by trust score descending.
+    ///
+    /// - Parameters:
+    ///   - query: Free-text search term (PostgreSQL `websearch_to_tsquery`).
+    ///   - category: ltree path to scope results (e.g. `"food.coffee"`).
+    /// - Returns: An array of `DiscoveryResult` items ordered by blended score.
+    func discovery(query: String? = nil, category: String? = nil) async throws -> [Components.Schemas.DiscoveryResult] {
+        let response = try await client.getDiscovery(
+            query: .init(q: query, lat: nil, lon: nil, radius: nil, category: category)
+        )
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json.results
+        case .badRequest:
+            throw CoveAPIError.unexpectedStatus(400)
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Items
+
+    /// Fetches full item detail from `GET /items/{id}`.
+    ///
+    /// Returns all item fields including trust signals, storefronts, and
+    /// signed imgproxy URLs for all five image variants across every media row.
+    ///
+    /// - Parameter id: Item UUID string.
+    /// - Returns: `ItemDetail` with pre-signed media URLs.
+    /// - Throws: `CoveAPIError.unexpectedStatus(404)` when the item is not found
+    ///   or inactive, `CoveAPIError.unexpectedStatus(401)` for auth failures.
+    func item(id: String) async throws -> Components.Schemas.ItemDetail {
+        let response = try await client.getItem(path: .init(id: id))
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Makers
+
+    /// Fetches maker detail from `GET /makers/{id}`.
+    ///
+    /// Returns maker profile fields, trust signals, and the list of storefronts
+    /// operated by this maker.
+    ///
+    /// - Parameter id: Maker UUID string.
+    func maker(id: String) async throws -> Components.Schemas.MakerDetail {
+        let response = try await client.getMaker(path: .init(id: id))
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Storefronts
+
+    /// Fetches storefront detail from `GET /storefronts/{id}`.
+    ///
+    /// Returns location, trust signals, and items available at this storefront.
+    ///
+    /// - Parameter id: Storefront UUID string.
+    func storefront(id: String) async throws -> Components.Schemas.StorefrontDetail {
+        let response = try await client.getStorefront(path: .init(id: id))
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - User profile
+
+    /// Fetches the authenticated user's profile from `GET /users/me`.
+    ///
+    /// - Throws: `CoveAPIError.unexpectedStatus(404)` when no profile exists yet.
+    ///   Call `createMe(username:)` to create one.
+    func me() async throws -> Components.Schemas.UserProfile {
+        let response = try await client.getMe()
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    /// Creates a profile for the authenticated user via `POST /users/me`.
+    ///
+    /// The Firebase UID is taken from the token — only the username is supplied.
+    /// Returns `CoveAPIError.unexpectedStatus(409)` when a profile already exists;
+    /// callers can treat 409 as a success (safe to retry).
+    ///
+    /// - Parameter username: Desired display username (non-empty after trimming).
+    func createMe(username: String) async throws -> Components.Schemas.UserProfile {
+        let body = Components.Schemas.CreateUserRequest(username: username)
+        let response = try await client.createMe(body: .json(body))
+        switch response {
+        case let .created(created):
+            return try created.body.json
+        case .badRequest:
+            throw CoveAPIError.unexpectedStatus(400)
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .conflict:
+            throw CoveAPIError.unexpectedStatus(409)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Favorites
+
+    /// Lists the authenticated user's favorited items from `GET /users/me/favorites`.
+    ///
+    /// - Parameters:
+    ///   - limit: Maximum results (defaults to 25, max 100).
+    ///   - offset: Pagination offset (defaults to 0).
+    func favorites(limit: Int? = nil, offset: Int? = nil) async throws -> Components.Schemas.FavoritesResponse {
+        let response = try await client.getFavorites(query: .init(limit: limit, offset: offset))
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    /// Adds an item to favorites via `POST /users/me/favorites/{itemId}`.
+    ///
+    /// Idempotent — a 409 (already favorited) is treated as success.
+    ///
+    /// - Parameter itemId: Item UUID string.
+    func addFavorite(itemId: String) async throws {
+        let response = try await client.addFavorite(path: .init(itemId: itemId))
+        switch response {
+        case .noContent:
+            return
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case .conflict:
+            // Already favorited — treat as success.
+            return
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    /// Removes an item from favorites via `DELETE /users/me/favorites/{itemId}`.
+    ///
+    /// Idempotent — a 404 (not favorited) is treated as success.
+    ///
+    /// - Parameter itemId: Item UUID string.
+    func removeFavorite(itemId: String) async throws {
+        let response = try await client.removeFavorite(path: .init(itemId: itemId))
+        switch response {
+        case .noContent:
+            return
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            // Already removed — treat as success.
+            return
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
     // MARK: - Health
 
     /// Calls `GET /health` and returns the gateway health payload.

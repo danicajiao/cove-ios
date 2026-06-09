@@ -101,10 +101,10 @@ extension DiscoveryItem {
         makerID = detail.maker.id
         itemDescription = detail.description
 
-        media = detail.media
+        media = detail.media ?? []
 
         // Build the primary_image variants from the first primary media item
-        let primaryMedia = detail.media.first(where: { $0.role == .primary })
+        let primaryMedia = (detail.media ?? []).first(where: { $0.role == .primary })
         if let primaryMediaItem = primaryMedia {
             primaryImage = .init(width: primaryMediaItem.width, height: primaryMediaItem.height, thumb: primaryMediaItem.thumb, sm: primaryMediaItem.sm, md: primaryMediaItem.md)
             defaultImageURL = primaryMediaItem.md
@@ -126,7 +126,7 @@ extension Components.Schemas.ImageVariants {
     ///   - size: Target render size in SwiftUI points.
     ///   - scale: Device pixel scale (defaults to the main screen scale).
     /// - Returns: A signed URL, or `nil` when no variant string is a valid URL.
-    func url(forTargetPointSize size: CGFloat, scale: CGFloat = UIScreen.main.scale) -> URL? {
+    func url(forTargetPointSize size: CGFloat, scale: CGFloat = UITraitCollection.current.displayScale) -> URL? {
         let target = size * scale
         let candidate: String = switch target {
         case ..<300: thumb

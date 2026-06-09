@@ -36,7 +36,7 @@ final class CoveAPIUserRepository: UserRepository {
                 displayName: profile.username,
                 email: nil,
                 photoURL: nil,
-                createdAt: profile.createdAt
+                createdAt: profile.created_at
             )
         } catch CoveAPIError.unexpectedStatus(404) {
             // No profile yet — auto-create with a username derived from the
@@ -49,7 +49,7 @@ final class CoveAPIUserRepository: UserRepository {
                     displayName: created.username,
                     email: nil,
                     photoURL: nil,
-                    createdAt: created.createdAt
+                    createdAt: created.created_at
                 )
             } catch CoveAPIError.unexpectedStatus(409) {
                 // Race condition: profile was created between GET and POST.
@@ -60,7 +60,7 @@ final class CoveAPIUserRepository: UserRepository {
                     displayName: profile.username,
                     email: nil,
                     photoURL: nil,
-                    createdAt: profile.createdAt
+                    createdAt: profile.created_at
                 )
             }
         }

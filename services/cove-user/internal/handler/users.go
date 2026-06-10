@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -89,10 +90,10 @@ RETURNING auth_uid, username, created_at::text`
 // ── Favorites ─────────────────────────────────────────────────────────────────
 
 type favoriteItem struct {
-	ItemID      string `json:"item_id"`
-	ItemName    string `json:"item_name"`
-	PriceCents  *int   `json:"price_cents,omitempty"`
-	FavoritedAt string `json:"favorited_at"`
+	ItemID      string    `json:"item_id"`
+	ItemName    string    `json:"item_name"`
+	PriceCents  *int      `json:"price_cents,omitempty"`
+	FavoritedAt time.Time `json:"favorited_at"`
 }
 
 type favoritesResponse struct {
@@ -132,7 +133,7 @@ func (d *Deps) GetFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const q = `
-SELECT f.item_id, i.name, i.price_cents, f.created_at::text
+SELECT f.item_id, i.name, i.price_cents, f.created_at
 FROM profile.favorites f
 JOIN catalog.items i ON i.id = f.item_id
 WHERE f.user_id = $1
@@ -152,7 +153,7 @@ LIMIT $2 OFFSET $3`
 		var itemID pgtype.UUID
 		var name string
 		var priceCents *int32
-		var favoritedAt string
+		var favoritedAt time.Time
 		if err := rows.Scan(&itemID, &name, &priceCents, &favoritedAt); err != nil {
 			log.Printf("ERROR GetFavoritesHandler scan user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "favorites scan failed")

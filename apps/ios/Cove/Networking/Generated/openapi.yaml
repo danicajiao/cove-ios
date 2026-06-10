@@ -1191,7 +1191,7 @@ components:
 
     FavoriteItem:
       type: object
-      required: [item_id, item_name]
+      required: [item_id, item_name, favorited_at]
       properties:
         item_id:
           type: string
@@ -1203,6 +1203,7 @@ components:
           example: 2300
         favorited_at:
           type: string
+          format: date-time
 
     FavoritesResponse:
       type: object

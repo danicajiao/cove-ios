@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -30,7 +31,7 @@ type Signal struct {
 	Description *string `json:"description,omitempty"`
 	Weight      float64 `json:"weight"`
 	Status      string  `json:"status"`
-	VerifiedAt  *string `json:"verified_at,omitempty"`
+	VerifiedAt  *time.Time `json:"verified_at,omitempty"`
 	CertNumber  *string `json:"cert_number,omitempty"`
 }
 
@@ -128,7 +129,8 @@ func querySignals(d *Deps, r *http.Request, sql, id string) ([]Signal, error) {
 	var signals []Signal
 	for rows.Next() {
 		var code, name, status string
-		var description, verifiedAt, certNumber *string
+		var description, certNumber *string
+		var verifiedAt *time.Time
 		var weight float64
 		if err := rows.Scan(&code, &name, &description, &weight, &status, &verifiedAt, &certNumber); err != nil {
 			return nil, err

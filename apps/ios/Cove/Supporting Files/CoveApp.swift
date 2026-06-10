@@ -76,6 +76,8 @@ struct CoveApp: App {
                     MainView()
                         .environment(\.imageRepository, CoveAPIImageRepository())
                         .environmentObject(bag)
+                } else if appState.authState == .needsUsernameOnboarding {
+                    UsernameOnboardingView(appState: appState)
                 } else {
                     NavigationStack(path: $authPath) {
                         ZStack {

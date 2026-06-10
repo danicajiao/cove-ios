@@ -23,6 +23,7 @@ enum Path: Hashable {
 enum AuthState {
     case loggedIn
     case loggedOut
+    case needsUsernameOnboarding
 }
 
 enum AuthMethod: String {
@@ -42,8 +43,8 @@ class AppState: ObservableObject {
                 onFailure(error)
             } else {
                 DispatchQueue.main.async {
-                    self.authState = .loggedIn
                     self.authMethod = .email
+                    self.authState = .needsUsernameOnboarding
                 }
                 onSuccess()
             }
@@ -58,9 +59,8 @@ class AppState: ObservableObject {
                 onFailure(error)
 //                print(error?.localizedDescription ?? "")
             } else {
-                DispatchQueue.main.async {
-                    strongSelf.authState = .loggedIn
-                    strongSelf.authMethod = .email
+                Task {
+                    await strongSelf.handlePostSignIn(method: .email)
                 }
                 onSuccess()
             }
@@ -226,9 +226,8 @@ class AppState: ObservableObject {
 
                 onFailure(error)
             } else {
-                DispatchQueue.main.async {
-                    self.authMethod = .google
-                    self.authState = .loggedIn
+                Task {
+                    await self.handlePostSignIn(method: .google)
                 }
             }
         }
@@ -257,10 +256,29 @@ class AppState: ObservableObject {
                 print(error.localizedDescription)
                 onFailure(error)
             } else {
-                DispatchQueue.main.async {
-                    self.authMethod = .facebook
-                    self.authState = .loggedIn
+                Task {
+                    await self.handlePostSignIn(method: .facebook)
                 }
+            }
+        }
+    }
+
+    private func handlePostSignIn(method: AuthMethod) async {
+        do {
+            _ = try await CoveAPIClient.shared.me()
+            await MainActor.run {
+                self.authMethod = method
+                self.authState = .loggedIn
+            }
+        } catch CoveAPIError.unexpectedStatus(404) {
+            await MainActor.run {
+                self.authMethod = method
+                self.authState = .needsUsernameOnboarding
+            }
+        } catch {
+            await MainActor.run {
+                self.authMethod = method
+                self.authState = .loggedIn
             }
         }
     }

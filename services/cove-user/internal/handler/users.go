@@ -15,9 +15,9 @@ import (
 // ── User profile ──────────────────────────────────────────────────────────────
 
 type userProfile struct {
-	UID       string `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
-	Username  string `json:"username"`
-	CreatedAt string `json:"created_at"`
+	UID       string    `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // GetMeHandler handles GET /users/me.
@@ -26,7 +26,7 @@ func (d *Deps) GetMeHandler(w http.ResponseWriter, r *http.Request) {
 	authUID := r.Header.Get("X-Cove-Uid")
 
 	const q = `
-SELECT auth_uid, username, created_at::text
+SELECT auth_uid, username, created_at
 FROM profile.users
 WHERE auth_uid = $1`
 
@@ -62,7 +62,7 @@ func (d *Deps) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	const q = `
 INSERT INTO profile.users (auth_uid, username)
 VALUES ($1, $2)
-RETURNING auth_uid, username, created_at::text`
+RETURNING auth_uid, username, created_at`
 
 	var u userProfile
 	err := d.DB.QueryRow(r.Context(), q, authUID, strings.TrimSpace(req.Username)).
@@ -235,10 +235,10 @@ func (d *Deps) RemoveFavoriteHandler(w http.ResponseWriter, r *http.Request) {
 // ── Follows ───────────────────────────────────────────────────────────────────
 
 type follow struct {
-	EntityType string `json:"entity_type"`
-	EntityID   string `json:"entity_id"`
-	EntityName string `json:"entity_name"`
-	FollowedAt string `json:"followed_at"`
+	EntityType string    `json:"entity_type"`
+	EntityID   string    `json:"entity_id"`
+	EntityName string    `json:"entity_name"`
+	FollowedAt time.Time `json:"followed_at"`
 }
 
 type followsResponse struct {
@@ -255,14 +255,14 @@ func (d *Deps) GetFollowsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const q = `
-SELECT 'maker' AS entity_type, m.id, m.name, f.created_at::text
+SELECT 'maker' AS entity_type, m.id, m.name, f.created_at
 FROM profile.follows f
 JOIN directory.makers m ON m.id = f.maker_id
 WHERE f.user_id = $1 AND f.maker_id IS NOT NULL
 
 UNION ALL
 
-SELECT 'storefront' AS entity_type, s.id, s.name, f.created_at::text
+SELECT 'storefront' AS entity_type, s.id, s.name, f.created_at
 FROM profile.follows f
 JOIN directory.storefronts s ON s.id = f.storefront_id
 WHERE f.user_id = $1 AND f.storefront_id IS NOT NULL
@@ -279,7 +279,8 @@ ORDER BY 4 DESC`
 
 	follows := []follow{}
 	for rows.Next() {
-		var entityType, entityName, followedAt string
+		var entityType, entityName string
+		var followedAt time.Time
 		var entityID pgtype.UUID
 		if err := rows.Scan(&entityType, &entityID, &entityName, &followedAt); err != nil {
 			log.Printf("ERROR GetFollowsHandler scan user_id=%s: %v", userID, err)
@@ -423,10 +424,10 @@ func (d *Deps) RemoveFollowHandler(w http.ResponseWriter, r *http.Request) {
 // ── Interests ─────────────────────────────────────────────────────────────────
 
 type interest struct {
-	CategoryID   string `json:"category_id"`
-	CategoryPath string `json:"category_path"`
-	CategoryName string `json:"category_name"`
-	CreatedAt    string `json:"created_at"`
+	CategoryID   string    `json:"category_id"`
+	CategoryPath string    `json:"category_path"`
+	CategoryName string    `json:"category_name"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type interestsResponse struct {
@@ -443,7 +444,7 @@ func (d *Deps) GetInterestsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	const q = `
-SELECT i.category_id, c.path::text, c.name, i.created_at::text
+SELECT i.category_id, c.path::text, c.name, i.created_at
 FROM profile.interests i
 JOIN catalog.categories c ON c.id = i.category_id
 WHERE i.user_id = $1
@@ -460,7 +461,8 @@ ORDER BY c.name`
 	interests := []interest{}
 	for rows.Next() {
 		var categoryID pgtype.UUID
-		var path, name, createdAt string
+		var path, name string
+		var createdAt time.Time
 		if err := rows.Scan(&categoryID, &path, &name, &createdAt); err != nil {
 			log.Printf("ERROR GetInterestsHandler scan user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "interests scan failed")

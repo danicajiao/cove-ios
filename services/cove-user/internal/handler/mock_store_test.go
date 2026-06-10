@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -92,21 +93,29 @@ func (r *intRow) Scan(dest ...any) error {
 // profileRow scans auth_uid, username, created_at for GetMeHandler /
 // CreateUserHandler. Email was removed from the schema in migration 000002.
 type profileRow struct {
-	uid, username, createdAt string
+	uid, username string
+	createdAt     time.Time
 }
 
 func (r *profileRow) Scan(dest ...any) error {
 	if len(dest) != 3 {
 		return fmt.Errorf("profileRow: expected 3 dest, got %d", len(dest))
 	}
-	vals := []string{r.uid, r.username, r.createdAt}
-	for i, d := range dest {
+	strs := []*string{nil, nil}
+	for i, d := range dest[:2] {
 		p, ok := d.(*string)
 		if !ok {
 			return fmt.Errorf("profileRow: dest[%d] is %T, want *string", i, d)
 		}
-		*p = vals[i]
+		strs[i] = p
 	}
+	p, ok := dest[2].(*time.Time)
+	if !ok {
+		return fmt.Errorf("profileRow: dest[2] is %T, want *time.Time", dest[2])
+	}
+	*strs[0] = r.uid
+	*strs[1] = r.username
+	*p = r.createdAt
 	return nil
 }
 

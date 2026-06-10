@@ -9,6 +9,8 @@ import FirebaseAuth
 
 @MainActor
 class ProfileViewModel: ObservableObject {
+    @Published var profile: UserProfile?
+
     private let userRepository: UserRepository
 
     private var currentUser: User? {
@@ -19,6 +21,15 @@ class ProfileViewModel: ObservableObject {
         self.userRepository = userRepository
     }
 
+    func fetchProfile() async {
+        guard let uid = currentUser?.uid else { return }
+        do {
+            profile = try await userRepository.fetchProfile(uid: uid)
+        } catch {
+            // Profile unavailable — view falls back to Firebase-derived display name.
+        }
+    }
+
     var displayName: String {
         if let name = currentUser?.displayName, !name.isEmpty {
             return name
@@ -27,6 +38,9 @@ class ProfileViewModel: ObservableObject {
     }
 
     var username: String {
+        if let dbUsername = profile?.displayName, !dbUsername.isEmpty {
+            return "@\(dbUsername)"
+        }
         let slug = displayName.lowercased().replacingOccurrences(of: " ", with: "_")
         return "@\(slug)"
     }

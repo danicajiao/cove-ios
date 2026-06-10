@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -116,11 +117,10 @@ ORDER BY weight DESC, name`
 	var signals []Signal
 	for sigRows.Next() {
 		var scope, code, name string
-		var description *string
+		var description, certNumber *string
+		var verifiedAt *time.Time
 		var weight float64
 		var status string
-		var verifiedAt *string
-		var certNumber *string
 		if err := sigRows.Scan(&scope, &code, &name, &description, &weight,
 			&status, &verifiedAt, &certNumber); err != nil {
 			log.Printf("ERROR signals scan item=%s: %v", id, err)

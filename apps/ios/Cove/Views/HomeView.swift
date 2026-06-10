@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject private var favoritesStore: FavoritesStore
 
     @State var search: String = ""
 
@@ -132,6 +133,7 @@ struct HomeView: View {
             Task {
                 try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
+                await favoritesStore.loadFavorites()
             }
         }
     }

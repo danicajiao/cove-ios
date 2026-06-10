@@ -114,7 +114,10 @@ struct ItemCard: View {
 
     private func fetchImage() async {
         // Fast path: use the pre-signed URL from the API when available.
-        if let discoveryItem = item as? DiscoveryItem, let variants = discoveryItem.primaryImage, let url = variants.url(forTargetPointSize: 171) {
+        if let discoveryItem = item as? DiscoveryItem,
+           let variants = discoveryItem.primaryImage,
+           let url = variants.url(forTargetPointSize: 171)
+        {
             await loadImage(from: url)
             return
         }

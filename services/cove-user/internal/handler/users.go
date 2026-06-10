@@ -15,9 +15,9 @@ import (
 // ── User profile ──────────────────────────────────────────────────────────────
 
 type userProfile struct {
-	UID       string `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
-	Username  string `json:"username"`
-	CreatedAt string `json:"created_at"`
+	UID       string    `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // GetMeHandler handles GET /users/me.
@@ -26,7 +26,7 @@ func (d *Deps) GetMeHandler(w http.ResponseWriter, r *http.Request) {
 	authUID := r.Header.Get("X-Cove-Uid")
 
 	const q = `
-SELECT auth_uid, username, created_at::text
+SELECT auth_uid, username, created_at
 FROM profile.users
 WHERE auth_uid = $1`
 
@@ -62,7 +62,7 @@ func (d *Deps) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	const q = `
 INSERT INTO profile.users (auth_uid, username)
 VALUES ($1, $2)
-RETURNING auth_uid, username, created_at::text`
+RETURNING auth_uid, username, created_at`
 
 	var u userProfile
 	err := d.DB.QueryRow(r.Context(), q, authUID, strings.TrimSpace(req.Username)).

@@ -15,8 +15,6 @@ class HomeViewModel: ObservableObject {
     let categories = ["Music", "Coffee", "Home", "Bevs", "Apparel"]
     let origins = ["Colombia", "Guatemala", "Ethiopia", "Costa Rica", "Kenya"]
 
-    var favoritesStore: FavoritesStore?
-
     private var lastFetchTime: Date?
     private let cacheTimeout: TimeInterval = 300
     private let itemRepository: ItemRepository
@@ -39,7 +37,6 @@ class HomeViewModel: ObservableObject {
 
         items = fetched
         lastFetchTime = Date()
-        await favoritesStore?.loadFavorites()
     }
 
     func fetchBrands() async throws {

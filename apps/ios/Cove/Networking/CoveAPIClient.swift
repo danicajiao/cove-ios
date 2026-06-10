@@ -11,6 +11,17 @@ import HTTPTypes
 import OpenAPIRuntime
 import OpenAPIURLSession
 
+// MARK: - ISO8601 date transcoder with fractional seconds
+
+extension ISO8601DateTranscoder {
+    /// Handles the fractional-second timestamps that Go's `time.Time` produces
+    /// (e.g. `2026-06-09T05:43:40.191296Z`). The default transcoder only accepts
+    /// whole-second precision, which causes a decode error on those fields.
+    static var iso8601WithFractionalSeconds: ISO8601DateTranscoder {
+        .init(options: [.withInternetDateTime, .withFractionalSeconds])
+    }
+}
+
 // MARK: - CoveAPIClient
 
 /// Typed HTTP client for the cove-api gateway.
@@ -46,6 +57,7 @@ final class CoveAPIClient: @unchecked Sendable {
         let middleware = FirebaseAuthMiddleware()
         client = Client(
             serverURL: serverURL,
+            configuration: .init(dateTranscoder: .iso8601WithFractionalSeconds),
             transport: transport,
             middlewares: [middleware]
         )

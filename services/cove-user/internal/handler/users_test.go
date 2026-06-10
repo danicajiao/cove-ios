@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -55,7 +56,7 @@ func TestGetMeHandler_UserFound(t *testing.T) {
 				return &profileRow{
 					uid:       "uid-123",
 					username:  "testuser",
-					createdAt: "2026-01-01T00:00:00Z",
+					createdAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 				}
 			},
 		},
@@ -106,7 +107,7 @@ func TestCreateUserHandler_Success(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &profileRow{uid: "uid-123", username: "johndoe", createdAt: "2026-01-01T00:00:00Z"}
+				return &profileRow{uid: "uid-123", username: "johndoe", createdAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)}
 			},
 		},
 		CommitSHA: "test",

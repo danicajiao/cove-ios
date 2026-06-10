@@ -76,7 +76,8 @@ private struct ItemDetailContent: View {
         // Fast path: use the pre-signed URL from the API when available.
         if let discoveryItem = item as? DiscoveryItem,
            let variants = discoveryItem.primaryImage,
-           let url = variants.url(forTargetPointSize: 300) {
+           let url = variants.url(forTargetPointSize: 300)
+        {
             await loadImage(from: url)
             return
         }

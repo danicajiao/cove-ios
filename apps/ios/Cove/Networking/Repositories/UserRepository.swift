@@ -8,15 +8,11 @@
 import Foundation
 
 /// Abstraction over user profile reads and writes.
-///
-/// **Lazy-create semantics:** `fetchProfile(uid:)` implementations are expected to
-/// create a default profile record on first access if one does not yet exist.
-/// Callers may always `await fetchProfile` and treat the result as non-nil.
 protocol UserRepository {
     /// Fetches the profile for the given Firebase UID.
     ///
-    /// If no profile record exists yet (e.g. first sign-in), implementations
-    /// should create and return a default profile rather than throwing.
+    /// Throws `CoveAPIError.unexpectedStatus(404)` if no profile exists yet.
+    /// Profile creation is handled by the username onboarding screen.
     ///
     /// - Parameter uid: The Firebase Auth UID of the user whose profile to fetch.
     func fetchProfile(uid: String) async throws -> UserProfile

@@ -45,6 +45,7 @@ struct ProfileView: View {
             .padding(.bottom, Spacing.xl)
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
+        .task { await viewModel.fetchProfile() }
         .confirmationDialog("Confirm Log Out", isPresented: $presentAlert) {
             Button("Log out", role: .destructive) {
                 appState.logOut()

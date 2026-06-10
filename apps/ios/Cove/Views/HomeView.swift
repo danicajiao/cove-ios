@@ -130,10 +130,10 @@ struct HomeView: View {
         }
         .onAppear {
             print("homeView appeared")
+            viewModel.favoritesStore = favoritesStore
             Task {
                 try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
-                await favoritesStore.loadFavorites()
             }
         }
     }

@@ -1203,7 +1203,6 @@ components:
           example: 2300
         favorited_at:
           type: string
-          format: date-time
 
     FavoritesResponse:
       type: object

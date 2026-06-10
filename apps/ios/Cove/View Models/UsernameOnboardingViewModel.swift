@@ -47,7 +47,7 @@ class UsernameOnboardingViewModel: ObservableObject {
         } catch CoveAPIError.unexpectedStatus(409) {
             serverError = "That username is already taken. Try another."
             isLoading = false
-        } catch CoveAPIError.unexpectedStatus(let code) {
+        } catch let CoveAPIError.unexpectedStatus(code) {
             print("❌ createMe failed with HTTP \(code)")
             serverError = "Something went wrong. Please try again."
             isLoading = false

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoritesView: View {
     @StateObject private var viewModel = FavoritesViewModel()
+    @EnvironmentObject private var favoritesStore: FavoritesStore
 
     private var columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.xl), count: 2)
 
@@ -55,10 +56,8 @@ struct FavoritesView: View {
             .padding(.top, Spacing.xxxl)
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
-        .onAppear {
-            Task {
-                try await viewModel.fetchFavorites()
-            }
+        .task(id: favoritesStore.favoriteIds) {
+            try? await viewModel.fetchFavorites()
         }
     }
 }

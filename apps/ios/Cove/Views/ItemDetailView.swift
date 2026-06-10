@@ -1,6 +1,5 @@
 //
 //  ItemDetailView.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 5/8/22.
 //
@@ -30,10 +29,6 @@ struct ItemDetailView: View {
         self.itemId = itemId
         _viewModel = StateObject(wrappedValue: ItemDetailViewModel(itemId: itemId))
     }
-
-//    var rows: [GridItem] = [
-//        GridItem(.adaptive(minimum: .infinity, maximum: .infinity), spacing: 20)
-//    ]
 
     var body: some View {
         Group {
@@ -78,8 +73,27 @@ private struct ItemDetailContent: View {
     // MARK: - Image fetch
 
     private func fetchImage() async {
+        // Fast path: use the pre-signed URL from the API when available.
+        if let discoveryItem = item as? DiscoveryItem,
+           let variants = discoveryItem.primaryImage,
+           let url = variants.url(forTargetPointSize: 300)
+        {
+            await loadImage(from: url)
+            return
+        }
+
+        // Fallback: fetch a signed URL via the image repository (legacy items).
+        guard !item.defaultImageURL.isEmpty else { return }
         do {
             let url = try await imageRepository.imageURL(for: item.defaultImageURL)
+            await loadImage(from: url)
+        } catch {
+            print("Error fetching image: \(error.localizedDescription)")
+        }
+    }
+
+    private func loadImage(from url: URL) async {
+        do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let image = UIImage(data: data) {
                 uiImage = image
@@ -88,15 +102,16 @@ private struct ItemDetailContent: View {
                 }
             }
         } catch {
-            print("Error fetching image: \(error.localizedDescription)")
+            print("Error loading image: \(error.localizedDescription)")
         }
     }
 
     // MARK: - Computed properties
 
-    /// Computed properties for item-specific info
     var titleStr: String {
-        if let coffeeItem = item as? CoffeeItem {
+        if let discoveryItem = item as? DiscoveryItem {
+            return discoveryItem.name
+        } else if let coffeeItem = item as? CoffeeItem {
             return coffeeItem.info.name
         } else if let musicItem = item as? MusicItem {
             return musicItem.info.album
@@ -107,7 +122,9 @@ private struct ItemDetailContent: View {
     }
 
     var subtitleStr: String {
-        if let coffeeItem = item as? CoffeeItem {
+        if let discoveryItem = item as? DiscoveryItem {
+            return discoveryItem.makerName
+        } else if let coffeeItem = item as? CoffeeItem {
             return coffeeItem.info.roastery
         } else if let musicItem = item as? MusicItem {
             return musicItem.info.artist
@@ -233,10 +250,6 @@ private struct ItemDetailContent: View {
                     .frame(height: 1)
                     .foregroundStyle(Color.Colors.Fills.quinary)
                 HStack(spacing: Spacing.lg) {
-//                    if let itemId = item.id {
-//                        LikeButton(itemId: itemId, categoryId: item.categoryId, size: 40, outlined: true)
-//                    }
-
                     Button {
                         if !bag.bagItems.contains(where: { bagItem in
                             bagItem.item.id == item.id

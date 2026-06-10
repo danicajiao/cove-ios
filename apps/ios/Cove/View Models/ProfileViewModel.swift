@@ -15,7 +15,7 @@ class ProfileViewModel: ObservableObject {
         Auth.auth().currentUser
     }
 
-    init(userRepository: UserRepository = FirebaseUserRepository()) {
+    init(userRepository: UserRepository = CoveAPIUserRepository()) {
         self.userRepository = userRepository
     }
 

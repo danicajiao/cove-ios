@@ -1,29 +1,20 @@
 //
 //  ApparelItem.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 3/27/23.
 //
 
-import FirebaseFirestore
+import Foundation
 
 struct ApparelItem: Item {
-    @DocumentID var id: String?
-    @ServerTimestamp var createdAt: Timestamp?
+    var id: String?
+    var createdAt: Date?
     var categoryId: String
     var defaultPrice: Float
     var defaultImageURL: String
     var info: ApparelInfo
     var isFavorite: Bool?
     var itemDetailsId: String
-
-    /// Maps the renamed Swift property back to the existing Firestore field name.
-    /// Remove in Phase 3 when Firestore is decommissioned (#324).
-    private enum CodingKeys: String, CodingKey {
-        case id // @DocumentID — Firestore injects the document reference ID here
-        case createdAt, categoryId, defaultPrice, defaultImageURL, info, isFavorite
-        case itemDetailsId = "productDetailsId"
-    }
 
     struct ApparelInfo: Codable {
         var brand: String

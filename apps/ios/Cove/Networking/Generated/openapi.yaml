@@ -1018,7 +1018,7 @@ components:
           format: uri
 
     ItemDetail:
-      required: [id, name, category_id, maker, signals, storefronts, media]
+      required: [id, name, category_id, maker]
       properties:
         id:
           type: string

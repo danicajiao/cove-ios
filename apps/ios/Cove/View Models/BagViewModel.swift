@@ -15,8 +15,8 @@ class BagViewModel: ObservableObject {
     private let favoritesRepository: FavoritesRepository
 
     init(
-        itemRepository: ItemRepository = FirebaseItemRepository(),
-        favoritesRepository: FavoritesRepository = FirebaseFavoritesRepository()
+        itemRepository: ItemRepository = CoveAPIItemRepository(),
+        favoritesRepository: FavoritesRepository = CoveAPIFavoritesRepository()
     ) {
         self.itemRepository = itemRepository
         self.favoritesRepository = favoritesRepository

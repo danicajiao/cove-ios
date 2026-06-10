@@ -21,7 +21,7 @@ class FavoritesStore: ObservableObject {
     private var authListener: AuthStateDidChangeListenerHandle?
     private let repository: FavoritesRepository
 
-    init(repository: FavoritesRepository = FirebaseFavoritesRepository()) {
+    init(repository: FavoritesRepository = CoveAPIFavoritesRepository()) {
         self.repository = repository
         authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             Task { @MainActor in

@@ -26,7 +26,7 @@ class ItemDetailViewModel: ObservableObject {
 
     init(
         itemId: String,
-        itemRepository: ItemRepository = FirebaseItemRepository()
+        itemRepository: ItemRepository = CoveAPIItemRepository()
     ) {
         self.itemRepository = itemRepository
         item = nil

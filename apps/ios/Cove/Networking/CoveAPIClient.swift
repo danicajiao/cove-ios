@@ -46,6 +46,7 @@ final class CoveAPIClient: @unchecked Sendable {
         let middleware = FirebaseAuthMiddleware()
         client = Client(
             serverURL: serverURL,
+            configuration: .init(dateTranscoder: FractionalSecondsDateTranscoder()),
             transport: transport,
             middlewares: [middleware]
         )
@@ -357,6 +358,28 @@ enum CoveAPIError: Error {
     /// The server returned a documented 2xx response whose body could not be interpreted.
     /// The associated string describes what was wrong (e.g. a URL field that failed to parse).
     case invalidResponseBody(String)
+}
+
+// MARK: - FractionalSecondsDateTranscoder
+
+/// ISO8601 date transcoder that handles fractional seconds (e.g. "2026-06-10T19:52:45.808675Z").
+/// The default swift-openapi-generator transcoder uses ISO8601DateFormatter without
+/// .withFractionalSeconds, which rejects microsecond-precision timestamps from the API.
+struct FractionalSecondsDateTranscoder: DateTranscoder {
+    func encode(_ date: Date) throws -> String {
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fmt.string(from: date)
+    }
+
+    func decode(_ string: String) throws -> Date {
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = fmt.date(from: string) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid ISO8601 date: \(string)"))
+        }
+        return date
+    }
 }
 
 // MARK: - LocalizedError

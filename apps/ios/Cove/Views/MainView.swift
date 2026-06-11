@@ -11,79 +11,57 @@ struct MainView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var bag: Bag
     @StateObject private var tabState = TabState()
-    // @State private var opacity: Double = 0
 
     var body: some View {
         TabView(selection: $tabState.currentTab) {
             TabNavigationStack {
                 HomeView()
             }
-            .onTapGesture {
-                tabState.currentTab = "home"
-            }
             .tabItem {
-                Label("Home", systemImage: tabState.currentTab == "home" ? "house.fill" : "house")
+                Label("Home", systemImage: tabState.currentTab == .home ? "house.fill" : "house")
                     .environment(\.symbolVariants, .none)
             }
-            .tag("home")
+            .tag(Tab.home)
 
             TabNavigationStack {
                 Text("Browse View")
             }
-            .onTapGesture {
-                tabState.currentTab = "browse"
-            }
             .tabItem {
-                Label("Browse", systemImage: tabState.currentTab == "browse" ? "magnifyingglass" : "magnifyingglass")
+                Label("Browse", systemImage: "magnifyingglass")
                     .environment(\.symbolVariants, .none)
             }
-            .tag("browse")
+            .tag(Tab.browse)
 
             TabNavigationStack {
                 BagView()
             }
-            .onTapGesture {
-                tabState.currentTab = "bag"
-            }
             .tabItem {
-                Label("Bag", systemImage: tabState.currentTab == "bag" ? "bag.fill" : "bag")
+                Label("Bag", systemImage: tabState.currentTab == .bag ? "bag.fill" : "bag")
                     .environment(\.symbolVariants, .none)
             }
             .badge(bag.totalItems)
-            .tag("bag")
+            .tag(Tab.bag)
 
             TabNavigationStack {
                 FavoritesView()
             }
-            .onTapGesture {
-                tabState.currentTab = "favorites"
-            }
             .tabItem {
-                Label("Favorites", systemImage: tabState.currentTab == "favorites" ? "heart.fill" : "heart")
+                Label("Favorites", systemImage: tabState.currentTab == .favorites ? "heart.fill" : "heart")
                     .environment(\.symbolVariants, .none)
             }
-            .tag("favorites")
+            .tag(Tab.favorites)
 
             TabNavigationStack {
                 ProfileView()
             }
-            .onTapGesture {
-                tabState.currentTab = "profile"
-            }
             .tabItem {
-                Label("Profile", systemImage: tabState.currentTab == "profile" ? "person.crop.circle.fill" : "person.crop.circle")
+                Label("Profile", systemImage: tabState.currentTab == .profile ? "person.crop.circle.fill" : "person.crop.circle")
                     .environment(\.symbolVariants, .none)
             }
-            .tag("profile")
+            .tag(Tab.profile)
         }
         .environmentObject(tabState)
-        // .opacity(opacity)
         .background(Color.Colors.Backgrounds.primary)
-        .onAppear {
-            // withAnimation(.easeIn(duration: 1)) {
-            //     opacity = 1
-            // }
-        }
     }
 }
 

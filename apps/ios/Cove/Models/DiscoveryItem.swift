@@ -101,10 +101,10 @@ extension DiscoveryItem {
         makerID = detail.maker.id
         itemDescription = detail.description
 
-        media = detail.media ?? []
+        media = detail.media
 
         // Build the primary_image variants from the first primary media item
-        let primaryMedia = (detail.media ?? []).first(where: { $0.role == .primary })
+        let primaryMedia = detail.media.first(where: { $0.role == .primary })
         if let primaryMediaItem = primaryMedia {
             primaryImage = .init(
                 width: primaryMediaItem.width,

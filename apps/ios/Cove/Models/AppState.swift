@@ -12,11 +12,8 @@ import GoogleSignIn
 import SwiftUI
 
 enum Path: Hashable {
-    case welcome
     case login
     case signup
-    case main
-    case home
     case item(id: String)
 }
 
@@ -38,6 +35,33 @@ class AppState: ObservableObject {
     @Published var authState: AuthState = .loggedOut
     var authMethod: AuthMethod?
 
+    private var authListener: AuthStateDidChangeListenerHandle?
+
+    init() {
+        authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self else { return }
+            guard let user else {
+                setAuthState(.loggedOut)
+                return
+            }
+            let providerId = user.providerData.first?.providerID ?? ""
+            let method = AuthMethod(rawValue: providerId) ?? .email
+            Task {
+                await self.handlePostSignIn(method: method)
+            }
+        }
+    }
+
+    deinit {
+        if let authListener { Auth.auth().removeStateDidChangeListener(authListener) }
+    }
+
+    func setAuthState(_ state: AuthState) {
+        withAnimation {
+            authState = state
+        }
+    }
+
     func emailSignUp(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { _, error in
             if error != nil {
@@ -45,7 +69,7 @@ class AppState: ObservableObject {
             } else {
                 DispatchQueue.main.async {
                     self.authMethod = .email
-                    self.authState = .needsUsernameOnboarding
+                    self.setAuthState(.needsUsernameOnboarding)
                 }
                 onSuccess()
             }
@@ -269,17 +293,17 @@ class AppState: ObservableObject {
             let profile = try await CoveAPIClient.shared.me()
             await MainActor.run {
                 self.authMethod = method
-                self.authState = profile.interests_onboarded ? .loggedIn : .needsInterestOnboarding
+                self.setAuthState(profile.interests_onboarded ? .loggedIn : .needsInterestOnboarding)
             }
         } catch CoveAPIError.unexpectedStatus(404) {
             await MainActor.run {
                 self.authMethod = method
-                self.authState = .needsUsernameOnboarding
+                self.setAuthState(.needsUsernameOnboarding)
             }
         } catch {
             await MainActor.run {
                 self.authMethod = method
-                self.authState = .loggedIn
+                self.setAuthState(.loggedIn)
             }
         }
     }
@@ -299,7 +323,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 LoginManager().logOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {
@@ -311,7 +335,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 GIDSignIn.sharedInstance.signOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {
@@ -322,7 +346,7 @@ class AppState: ObservableObject {
             do {
                 try Auth.auth().signOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {

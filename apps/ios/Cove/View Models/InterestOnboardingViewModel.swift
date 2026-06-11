@@ -76,11 +76,11 @@ class InterestOnboardingViewModel: ObservableObject {
         } catch {
             print("❌ skip replaceInterests failed: \(error)")
         }
-        appState.authState = .loggedIn
+        appState.setAuthState(.loggedIn)
     }
 
     private func complete() {
-        appState.authState = .loggedIn
+        appState.setAuthState(.loggedIn)
     }
 
     // Cycles through brand colors so each section gets a distinct selected-chip color.

@@ -9,10 +9,11 @@ import SwiftUI
 
 struct BackButton: View {
     @Environment(\.dismiss) private var dismiss
+    var action: (() -> Void)?
 
     var body: some View {
         Button {
-            dismiss()
+            if let action { action() } else { dismiss() }
         } label: {
             Circle()
                 .fill(Color.Colors.Fills.inverse)

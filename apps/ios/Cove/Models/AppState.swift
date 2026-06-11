@@ -24,6 +24,7 @@ enum AuthState {
     case loggedIn
     case loggedOut
     case needsUsernameOnboarding
+    case needsInterestOnboarding
 }
 
 enum AuthMethod: String {
@@ -265,10 +266,10 @@ class AppState: ObservableObject {
 
     private func handlePostSignIn(method: AuthMethod) async {
         do {
-            _ = try await CoveAPIClient.shared.me()
+            let profile = try await CoveAPIClient.shared.me()
             await MainActor.run {
                 self.authMethod = method
-                self.authState = .loggedIn
+                self.authState = profile.interests_onboarded ? .loggedIn : .needsInterestOnboarding
             }
         } catch CoveAPIError.unexpectedStatus(404) {
             await MainActor.run {

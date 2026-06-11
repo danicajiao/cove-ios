@@ -14,10 +14,16 @@ import (
 
 // ── User profile ──────────────────────────────────────────────────────────────
 
+// User flag constants — presence of a row in profile.user_flags with this value means the flag is set.
+const (
+	flagInterestsOnboarded = "interests_onboarded"
+)
+
 type userProfile struct {
-	UID       string    `json:"uid"`       // auth_uid — Firebase UID exposed as "uid" for API compatibility
-	Username  string    `json:"username"`
-	CreatedAt time.Time `json:"created_at"`
+	UID                string    `json:"uid"`                 // auth_uid — Firebase UID exposed as "uid" for API compatibility
+	Username           string    `json:"username"`
+	CreatedAt          time.Time `json:"created_at"`
+	InterestsOnboarded bool      `json:"interests_onboarded"` // true once PUT /users/me/interests has been called
 }
 
 // GetMeHandler handles GET /users/me.
@@ -26,12 +32,13 @@ func (d *Deps) GetMeHandler(w http.ResponseWriter, r *http.Request) {
 	authUID := r.Header.Get("X-Cove-Uid")
 
 	const q = `
-SELECT auth_uid, username, created_at
-FROM profile.users
-WHERE auth_uid = $1`
+SELECT u.auth_uid, u.username, u.created_at,
+       EXISTS(SELECT 1 FROM profile.user_flags f WHERE f.user_id = u.id AND f.flag = 'interests_onboarded')
+FROM profile.users u
+WHERE u.auth_uid = $1`
 
 	var u userProfile
-	err := d.DB.QueryRow(r.Context(), q, authUID).Scan(&u.UID, &u.Username, &u.CreatedAt)
+	err := d.DB.QueryRow(r.Context(), q, authUID).Scan(&u.UID, &u.Username, &u.CreatedAt, &u.InterestsOnboarded)
 	if err != nil {
 		if isNotFound(err) {
 			writeError(w, http.StatusNotFound, "user profile not found")
@@ -67,6 +74,7 @@ RETURNING auth_uid, username, created_at`
 	var u userProfile
 	err := d.DB.QueryRow(r.Context(), q, authUID, strings.TrimSpace(req.Username)).
 		Scan(&u.UID, &u.Username, &u.CreatedAt)
+	// New users have no flags yet — interests_onboarded is always false on creation.
 	if err != nil {
 		if isDuplicate(err) {
 			// Distinguish which unique constraint fired:
@@ -531,6 +539,14 @@ func (d *Deps) ReplaceInterestsHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "interests replace failed")
 			return
 		}
+	}
+
+	if _, err := tx.Exec(r.Context(),
+		`INSERT INTO profile.user_flags (user_id, flag) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		userID, flagInterestsOnboarded); err != nil {
+		log.Printf("ERROR ReplaceInterestsHandler flag user_id=%s: %v", userID, err)
+		writeError(w, http.StatusInternalServerError, "interests replace failed")
+		return
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {

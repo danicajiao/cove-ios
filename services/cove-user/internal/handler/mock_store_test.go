@@ -90,32 +90,42 @@ func (r *intRow) Scan(dest ...any) error {
 
 // ── profileRow ────────────────────────────────────────────────────────────────
 
-// profileRow scans auth_uid, username, created_at for GetMeHandler /
-// CreateUserHandler. Email was removed from the schema in migration 000002.
+// profileRow scans the user profile columns.
+// GetMeHandler scans 4 columns (uid, username, created_at, interests_onboarded via EXISTS).
+// CreateUserHandler scans 3 (uid, username, created_at — new users always have no flags).
 type profileRow struct {
-	uid, username string
-	createdAt     time.Time
+	uid, username      string
+	createdAt          time.Time
+	interestsOnboarded bool
 }
 
 func (r *profileRow) Scan(dest ...any) error {
-	if len(dest) != 3 {
-		return fmt.Errorf("profileRow: expected 3 dest, got %d", len(dest))
+	if len(dest) != 3 && len(dest) != 4 {
+		return fmt.Errorf("profileRow: expected 3 or 4 dest, got %d", len(dest))
 	}
-	strs := []*string{nil, nil}
 	for i, d := range dest[:2] {
 		p, ok := d.(*string)
 		if !ok {
 			return fmt.Errorf("profileRow: dest[%d] is %T, want *string", i, d)
 		}
-		strs[i] = p
+		if i == 0 {
+			*p = r.uid
+		} else {
+			*p = r.username
+		}
 	}
-	p, ok := dest[2].(*time.Time)
+	pt, ok := dest[2].(*time.Time)
 	if !ok {
 		return fmt.Errorf("profileRow: dest[2] is %T, want *time.Time", dest[2])
 	}
-	*strs[0] = r.uid
-	*strs[1] = r.username
-	*p = r.createdAt
+	*pt = r.createdAt
+	if len(dest) == 4 {
+		pb, ok := dest[3].(*bool)
+		if !ok {
+			return fmt.Errorf("profileRow: dest[3] is %T, want *bool", dest[3])
+		}
+		*pb = r.interestsOnboarded
+	}
 	return nil
 }
 

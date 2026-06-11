@@ -230,6 +230,47 @@ final class CoveAPIClient: @unchecked Sendable {
         }
     }
 
+    // MARK: - Categories
+
+    /// Fetches the full category tree from `GET /categories`.
+    ///
+    /// Used by the interest-picker onboarding screen and the browse surface.
+    func categories() async throws -> [Components.Schemas.CategoryNode] {
+        let response = try await client.getCategories()
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json.categories
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Interests
+
+    /// Replaces the authenticated user's interest categories via `PUT /users/me/interests`.
+    ///
+    /// Passing an empty array clears all interests. Returns on 204.
+    ///
+    /// - Parameter categoryIds: UUID strings of the selected leaf categories.
+    func replaceInterests(categoryIds: [String]) async throws {
+        let body = Components.Schemas.ReplaceInterestsRequest(category_ids: categoryIds)
+        let response = try await client.replaceInterests(body: .json(body))
+        switch response {
+        case .noContent:
+            return
+        case .badRequest:
+            throw CoveAPIError.unexpectedStatus(400)
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
     // MARK: - Favorites
 
     /// Lists the authenticated user's favorited items from `GET /users/me/favorites`.

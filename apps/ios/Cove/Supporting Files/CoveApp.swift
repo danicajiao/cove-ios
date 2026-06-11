@@ -78,6 +78,8 @@ struct CoveApp: App {
                         .environmentObject(bag)
                 } else if appState.authState == .needsUsernameOnboarding {
                     UsernameOnboardingView(appState: appState)
+                } else if appState.authState == .needsInterestOnboarding {
+                    InterestOnboardingView(appState: appState)
                 } else {
                     NavigationStack(path: $authPath) {
                         ZStack {

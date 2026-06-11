@@ -1165,7 +1165,7 @@ components:
 
     UserProfile:
       type: object
-      required: [uid, username, created_at]
+      required: [uid, username, created_at, interests_onboarded]
       properties:
         uid:
           type: string
@@ -1177,6 +1177,9 @@ components:
         created_at:
           type: string
           format: date-time
+        interests_onboarded:
+          type: boolean
+          description: True once PUT /users/me/interests has been called at least once (even with an empty array). Used to gate the interest-picker onboarding screen.
 
     CreateUserRequest:
       type: object

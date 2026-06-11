@@ -73,7 +73,12 @@ struct InterestOnboardingView: View {
                                 .font(.custom("Lato-Bold", size: 16))
                                 .foregroundStyle(Color.Colors.Text.primary)
 
-                            ChipGrid(leaves: section.leaves, selectedIDs: viewModel.selectedIDs) { id in
+                            ChipGrid(
+                                leaves: section.leaves,
+                                selectedIDs: viewModel.selectedIDs,
+                                selectedFill: section.selectedFill,
+                                selectedText: section.selectedText
+                            ) { id in
                                 viewModel.toggle(id: id)
                             }
                         }
@@ -130,13 +135,20 @@ struct InterestOnboardingView: View {
 private struct ChipGrid: View {
     let leaves: [LeafCategory]
     let selectedIDs: Set<String>
+    let selectedFill: Color
+    let selectedText: Color
     let onTap: (String) -> Void
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: Spacing.sm)], spacing: Spacing.sm) {
             ForEach(leaves) { leaf in
-                CategoryChip(name: leaf.name, isSelected: selectedIDs.contains(leaf.id))
-                    .onTapGesture { onTap(leaf.id) }
+                CategoryChip(
+                    name: leaf.name,
+                    isSelected: selectedIDs.contains(leaf.id),
+                    selectedFill: selectedFill,
+                    selectedText: selectedText
+                )
+                .onTapGesture { onTap(leaf.id) }
             }
         }
     }
@@ -147,16 +159,18 @@ private struct ChipGrid: View {
 private struct CategoryChip: View {
     let name: String
     let isSelected: Bool
+    let selectedFill: Color
+    let selectedText: Color
 
     var body: some View {
         Text(name)
             .font(.custom("Lato-Regular", size: 14))
-            .foregroundStyle(isSelected ? Color.Colors.Text.inverse : Color.Colors.Text.primary)
+            .foregroundStyle(isSelected ? selectedText : Color.Colors.Text.primary)
             .lineLimit(1)
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
             .frame(maxWidth: .infinity)
-            .background(isSelected ? Color.Colors.Fills.primary : Color.Colors.Fills.quinary)
+            .background(isSelected ? selectedFill : Color.Colors.Fills.quinary)
             .clipShape(Capsule())
             .overlay {
                 if !isSelected {

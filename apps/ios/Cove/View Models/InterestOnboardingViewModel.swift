@@ -3,12 +3,14 @@
 //  Cove
 //
 
-import Foundation
+import SwiftUI
 
 struct CategorySection: Identifiable {
     let id: String
     let name: String
     let leaves: [LeafCategory]
+    let selectedFill: Color
+    let selectedText: Color
 }
 
 struct LeafCategory: Identifiable {
@@ -81,22 +83,30 @@ class InterestOnboardingViewModel: ObservableObject {
         appState.authState = .loggedIn
     }
 
-    private func buildSections(from nodes: [Components.Schemas.CategoryNode]) -> [CategorySection] {
-        nodes.compactMap { root in
-            var leaves: [LeafCategory] = []
-            extractLeaves(from: root, into: &leaves)
-            return leaves.isEmpty ? nil : CategorySection(id: root.id, name: root.name, leaves: leaves)
-        }
-    }
+    // Cycles through brand colors so each section gets a distinct selected-chip color.
+    // Pairs: (fill, text) — text chosen for legibility on that fill.
+    private static let sectionPalette: [(fill: Color, text: Color)] = [
+        (Color.Colors.Brand.coral, Color.Colors.Text.inverse),
+        (Color.Colors.Brand.amber, Color.Colors.Text.primary),
+        (Color.Colors.Brand.sage, Color.Colors.Text.inverse),
+        (Color.Colors.Brand.blue, Color.Colors.Text.inverse),
+        (Color.Colors.Brand.violet, Color.Colors.Text.primary),
+        (Color.Colors.Brand.accent, Color.Colors.Text.primary)
+    ]
 
-    private func extractLeaves(from node: Components.Schemas.CategoryNode, into leaves: inout [LeafCategory]) {
-        let children = node.children ?? []
-        if children.isEmpty {
-            leaves.append(LeafCategory(id: node.id, name: node.name))
-        } else {
-            for child in children {
-                extractLeaves(from: child, into: &leaves)
-            }
+    private func buildSections(from nodes: [Components.Schemas.CategoryNode]) -> [CategorySection] {
+        var index = 0
+        return nodes.compactMap { root in
+            let chips = (root.children ?? [])
+                .filter { !($0.children ?? []).isEmpty }
+                .map { LeafCategory(id: $0.id, name: $0.name) }
+            guard !chips.isEmpty else { return nil }
+            let palette = Self.sectionPalette[index % Self.sectionPalette.count]
+            index += 1
+            return CategorySection(
+                id: root.id, name: root.name, leaves: chips,
+                selectedFill: palette.fill, selectedText: palette.text
+            )
         }
     }
 }

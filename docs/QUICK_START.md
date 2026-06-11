@@ -40,6 +40,26 @@ apps/ios/Cove/Supporting Files/GoogleService-Info.plist
 
 Select a simulator or connected device in Xcode and press **⌘R**.
 
+### 5. (Optional) Set up VS Code with Swift LSP
+
+If you use VS Code, install the [Swift extension](https://marketplace.visualstudio.com/items?itemName=sswg.swift-lang) and then configure `xcode-build-server` so that SourceKit-LSP can understand the Xcode project. Without this, go-to-definition, hover docs, and symbol search won't work.
+
+```bash
+brew install xcode-build-server
+cd apps/ios
+xcode-build-server config -scheme Cove -project Cove.xcodeproj
+```
+
+This generates `apps/ios/buildServer.json` (gitignored — run it once per machine). Then open the project in VS Code using the workspace file:
+
+```bash
+open /path/to/Development/cove.code-workspace
+```
+
+> If you don't have a `cove.code-workspace` file yet, create one in your `Development` folder. See [the workspace file format](https://code.visualstudio.com/docs/editor/workspaces) — add `cove` and `cove/apps/ios` as separate folders so the Swift extension finds `buildServer.json`.
+
+If LSP features stop working after a large refactor or a DerivedData wipe, rebuild in Xcode (⌘B) to refresh the index. Re-run `xcode-build-server config` only if you rename the Xcode scheme or move the project.
+
 ## Notes
 
 - **Bundle ID:** `com.danicajiao.cove`
@@ -60,4 +80,4 @@ Select a simulator or connected device in Xcode and press **⌘R**.
 
 ---
 
-**Last Updated**: May 2026
+**Last Updated**: June 2026

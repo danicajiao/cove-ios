@@ -1018,7 +1018,7 @@ components:
           format: uri
 
     ItemDetail:
-      required: [id, name, category_id, maker, signals, storefronts, media]
+      required: [id, name, category_id, maker, media]
       properties:
         id:
           type: string
@@ -1043,12 +1043,12 @@ components:
         maker:
           $ref: "#/components/schemas/MakerSummary"
         signals:
-          type: array
+          type: [array, "null"]
           description: Trust signals from all three levels (item, maker, storefront).
           items:
             $ref: "#/components/schemas/Signal"
         storefronts:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/StorefrontDetailSummary"
         media:
@@ -1073,7 +1073,7 @@ components:
           type: string
 
     MakerDetail:
-      required: [id, name, tier, trust_score, signals, storefronts]
+      required: [id, name, tier, trust_score]
       properties:
         id:
           type: string
@@ -1097,11 +1097,11 @@ components:
           type: string
           format: uri
         signals:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/Signal"
         storefronts:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/MakerStorefront"
 
@@ -1124,7 +1124,7 @@ components:
           $ref: "#/components/schemas/ImageVariants"
 
     StorefrontDetail:
-      required: [id, name, type, trust_score, signals, items]
+      required: [id, name, type, trust_score]
       properties:
         id:
           type: string
@@ -1153,11 +1153,11 @@ components:
         maker_name:
           type: string
         signals:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/Signal"
         items:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/StorefrontItem"
 
@@ -1165,7 +1165,7 @@ components:
 
     UserProfile:
       type: object
-      required: [uid, username, created_at]
+      required: [uid, username, created_at, interests_onboarded]
       properties:
         uid:
           type: string
@@ -1177,6 +1177,9 @@ components:
         created_at:
           type: string
           format: date-time
+        interests_onboarded:
+          type: boolean
+          description: True once PUT /users/me/interests has been called at least once (even with an empty array). Used to gate the interest-picker onboarding screen.
 
     CreateUserRequest:
       type: object

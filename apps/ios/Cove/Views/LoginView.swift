@@ -11,6 +11,7 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject private var appState: AppState
 
+    var onBack: () -> Void
     var onNavigateToSignup: () -> Void
 
     @State private var presentAlert = false
@@ -146,7 +147,7 @@ struct LoginView: View {
             .padding(Spacing.xl)
             .background(Color.Colors.Backgrounds.primary)
             .overlay(alignment: .topLeading) {
-                BackButton()
+                BackButton(action: onBack)
                     .padding(Spacing.xl)
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -167,7 +168,7 @@ struct LoginView: View {
 struct LoginView_Previews: PreviewProvider {
     static let appState = AppState()
     static var previews: some View {
-        LoginView(onNavigateToSignup: {})
+        LoginView(onBack: {}, onNavigateToSignup: {})
             .environmentObject(appState)
     }
 }

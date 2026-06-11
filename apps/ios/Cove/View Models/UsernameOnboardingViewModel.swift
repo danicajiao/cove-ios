@@ -43,7 +43,7 @@ class UsernameOnboardingViewModel: ObservableObject {
 
         do {
             _ = try await CoveAPIClient.shared.createMe(username: trimmed)
-            appState.authState = .loggedIn
+            appState.setAuthState(.needsInterestOnboarding)
         } catch CoveAPIError.unexpectedStatus(409) {
             serverError = "That username is already taken. Try another."
             isLoading = false

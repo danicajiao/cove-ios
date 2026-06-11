@@ -24,9 +24,7 @@ struct TabNavigationStack<Content: View>: View {
                         ItemDetailView(itemId: id)
                             .environmentObject(bag)
                     default:
-                        #if DEBUG
-                            let _ = print("⚠️ Unhandled navigation path in TabNavigationStack: \(path)")
-                        #endif
+                        let _ = assertionFailure("Unhandled navigation path: \(path)")
                         EmptyView()
                     }
                 }

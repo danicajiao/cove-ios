@@ -54,9 +54,10 @@ func TestGetMeHandler_UserFound(t *testing.T) {
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
 				return &profileRow{
-					uid:       "uid-123",
-					username:  "testuser",
-					createdAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+					uid:                "uid-123",
+					username:           "testuser",
+					createdAt:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+					interestsOnboarded: false,
 				}
 			},
 		},
@@ -107,7 +108,7 @@ func TestCreateUserHandler_Success(t *testing.T) {
 	deps := &Deps{
 		DB: &mockStore{
 			queryRowFn: func(ctx context.Context, sql string, args ...any) Row {
-				return &profileRow{uid: "uid-123", username: "johndoe", createdAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)}
+				return &profileRow{uid: "uid-123", username: "johndoe", createdAt: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), interestsOnboarded: false}
 			},
 		},
 		CommitSHA: "test",
@@ -363,8 +364,8 @@ func TestReplaceInterestsHandler_ValidRequest(t *testing.T) {
 	if rr.Code != http.StatusNoContent {
 		t.Errorf("expected 204, got %d", rr.Code)
 	}
-	// 1 DELETE + 2 INSERTs = 3 Exec calls.
-	if execCount != 3 {
-		t.Errorf("expected 3 Exec calls (1 DELETE + 2 INSERT), got %d", execCount)
+	// 1 DELETE + 2 INSERTs + 1 UPDATE (interests_onboarded) = 4 Exec calls.
+	if execCount != 4 {
+		t.Errorf("expected 4 Exec calls (1 DELETE + 2 INSERT + 1 UPDATE), got %d", execCount)
 	}
 }

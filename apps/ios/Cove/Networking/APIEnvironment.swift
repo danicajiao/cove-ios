@@ -28,7 +28,7 @@ enum APIEnvironment {
     // MARK: - Base URL
 
     var baseURL: URL {
-        let raw: String = switch self {
+        let raw = switch self {
         case .staging: "https://staging-api.coveapp.dev"
         case .production: "https://api.coveapp.dev"
         }

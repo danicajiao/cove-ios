@@ -20,7 +20,7 @@ struct MainView: View {
                 }
             }
 
-            Tab("", systemImage: "magnifyingglass", value: AppTab.browse) {
+            Tab("", systemImage: "safari", value: AppTab.browse) {
                 TabNavigationStack {
                     Text("Browse View")
                 }

@@ -723,6 +723,16 @@ paths:
         2. If the user has no interests, fall back to all leaf categories
            ordered by total event count across all users (last 30 days).
         3. If no events exist at all, order alphabetically by name.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of category cards to return. Defaults to 25, max 100.
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+            minimum: 1
       responses:
         "200":
           description: Recommended categories

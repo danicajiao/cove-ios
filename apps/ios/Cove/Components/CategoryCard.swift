@@ -22,7 +22,7 @@ struct CategoryCard: View {
     let onTap: () -> Void
 
     private let width: CGFloat = 140
-    private let height: CGFloat = 80
+    private let height: CGFloat = 92
 
     var body: some View {
         NavigationLink(value: Path.categoryResults(path: category.path, name: category.name)) {
@@ -30,6 +30,12 @@ struct CategoryCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(TapGesture().onEnded { onTap() })
+    }
+
+    private var parentLabel: String? {
+        let segments = category.path.split(separator: ".").map(String.init)
+        guard segments.count >= 2 else { return nil }
+        return segments[segments.count - 2].replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     private var cardContent: some View {
@@ -40,11 +46,20 @@ struct CategoryCard: View {
 
             Spacer(minLength: 0)
 
-            Text(category.name)
-                .font(Font.custom("Gazpacho-Black", size: 14))
-                .foregroundStyle(Color.Colors.Text.primary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
+            VStack(alignment: .leading, spacing: 2) {
+                if let parent = parentLabel {
+                    Text(parent)
+                        .font(Font.custom("Lato-Regular", size: 10))
+                        .foregroundStyle(Color.Colors.Text.tertiary)
+                        .lineLimit(1)
+                }
+
+                Text(category.name)
+                    .font(Font.custom("Gazpacho-Black", size: 14))
+                    .foregroundStyle(Color.Colors.Text.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
         }
         .padding(Spacing.md)
         .frame(width: width, height: height, alignment: .topLeading)
@@ -78,11 +93,15 @@ struct CategoryCard: View {
 #Preview {
     HStack(spacing: Spacing.md) {
         CategoryCard(
-            category: .init(id: "1", name: "Whole Bean Coffee", path: "food.coffee.whole_bean"),
+            category: .init(id: "1", name: "Accessories", path: "pets.dogs.accessories"),
             onTap: {}
         )
         CategoryCard(
-            category: .init(id: "2", name: "Vinyl", path: "music.recorded"),
+            category: .init(id: "2", name: "Accessories", path: "pets.cats.accessories"),
+            onTap: {}
+        )
+        CategoryCard(
+            category: .init(id: "3", name: "Beer", path: "alcohol.beer"),
             onTap: {}
         )
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Tab {
+enum AppTab {
     case home
     case browse
     case bag
@@ -16,6 +16,6 @@ enum Tab {
 }
 
 class TabState: Identifiable, ObservableObject {
-    @Published var currentTab: Tab = .home
-    @Published var previousTab: Tab = .home
+    @Published var currentTab: AppTab = .home
+    @Published var previousTab: AppTab = .home
 }

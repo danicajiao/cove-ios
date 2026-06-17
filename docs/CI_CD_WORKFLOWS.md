@@ -143,13 +143,13 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI.
 ### 5. CI - Services (`ci-services.yml`)
 
 **Triggers:**
-- Pull requests touching `services/cove-api/**` or `services/cove-image/**`
+- Pull requests touching `services/cove-api/**`, `services/cove-image/**`, `services/cove-item/**`, or `services/cove-user/**`
 - Pushes to `main` touching those paths
 - Manual `workflow_dispatch` (useful for bootstrapping GAR before an integration branch merges)
 
 **Concurrency:** Cancels in-progress runs for the same workflow + ref on new pushes.
 
-**Jobs:** One job per service — `cove-api` and `cove-image` run in parallel.
+**Jobs:** One job per service — `cove-api`, `cove-image`, `cove-item`, and `cove-user` run in parallel.
 
 **What each service job does:**
 
@@ -164,13 +164,11 @@ After both service jobs succeed on main or `workflow_dispatch`, a third job (`bu
 
 **Required secrets:** `HOMELAB_PAT` — GitHub PAT with write access to `danicajiao/homelab` (used by `bump-overlay-tags` to push and open the homelab PR).
 
-**Path filter note:** New services added in Phase 3 (`cove-item`, `cove-user`) will need their paths added to the `on.push.paths` and `on.pull_request.paths` filters, and a new parallel job for each service.
-
 ---
 
 ### 6. CI - OpenAPI Lint (`ci-openapi.yml`)
 
-**Trigger:** Pull requests touching `services/cove-api/api/**` or `services/cove-image/api/**`
+**Trigger:** Pull requests touching `services/cove-api/api/**`, `services/cove-image/api/**`, `services/cove-item/api/**`, or `services/cove-user/api/**`
 
 **Purpose:** Lint all OpenAPI specs for validity and style using [Redocly CLI](https://redocly.com/docs/cli/).
 

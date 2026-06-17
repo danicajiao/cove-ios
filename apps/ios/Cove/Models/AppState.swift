@@ -15,6 +15,9 @@ enum Path: Hashable {
     case login
     case signup
     case item(id: String)
+    /// Discovery results scoped to a category subtree. `path` is the ltree path
+    /// passed to `GET /discovery?category=`; `name` is the display title.
+    case categoryResults(path: String, name: String)
 }
 
 enum AuthState {

@@ -54,14 +54,28 @@ struct HomeView: View {
                 VStack {
                     SectionHeader(title: "Categories")
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Spacing.md) {
-                            ForEach(viewModel.categories, id: \.self) { category in
-                                SmallCategoryButton(category: category)
+                    if viewModel.isLoadingCategories {
+                        ProgressView()
+                            .frame(height: 80)
+                            .frame(maxWidth: .infinity)
+                    } else if viewModel.categories.isEmpty {
+                        Text("No categories yet")
+                            .font(Font.custom("Lato-Regular", size: 14))
+                            .foregroundStyle(Color.Colors.Text.tertiary)
+                            .frame(height: 80)
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: Spacing.md) {
+                                ForEach(viewModel.categories, id: \.id) { category in
+                                    CategoryCard(category: category) {
+                                        viewModel.recordCategoryTap(category)
+                                    }
+                                }
                             }
                         }
+                        .scrollClipDisabled()
                     }
-                    .scrollClipDisabled()
                 }
                 .padding(.horizontal, Spacing.xl)
 
@@ -131,6 +145,7 @@ struct HomeView: View {
         .onAppear {
             print("homeView appeared")
             Task {
+                await viewModel.fetchCategories()
                 try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
                 await favoritesStore.loadFavorites()

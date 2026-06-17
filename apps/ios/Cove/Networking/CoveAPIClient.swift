@@ -101,10 +101,19 @@ final class CoveAPIClient: @unchecked Sendable {
     /// - Parameters:
     ///   - query: Free-text search term (PostgreSQL `websearch_to_tsquery`).
     ///   - category: ltree path to scope results (e.g. `"food.coffee"`).
+    ///   - lat: Latitude in decimal degrees. Must be paired with `lon` for proximity scoring.
+    ///   - lon: Longitude in decimal degrees. Must be paired with `lat`.
+    ///   - radius: Search radius in metres. Applies only when `lat`/`lon` are present; defaults to 50 km server-side.
     /// - Returns: An array of `DiscoveryResult` items ordered by blended score.
-    func discovery(query: String? = nil, category: String? = nil) async throws -> [Components.Schemas.DiscoveryResult] {
+    func discovery(
+        query: String? = nil,
+        category: String? = nil,
+        lat: Double? = nil,
+        lon: Double? = nil,
+        radius: Double? = nil
+    ) async throws -> [Components.Schemas.DiscoveryResult] {
         let response = try await client.getDiscovery(
-            query: .init(q: query, lat: nil, lon: nil, radius: nil, category: category)
+            query: .init(q: query, lat: lat, lon: lon, radius: radius, category: category)
         )
         switch response {
         case let .ok(okResult):
@@ -242,6 +251,62 @@ final class CoveAPIClient: @unchecked Sendable {
             return try okResult.body.json.categories
         case .unauthorized:
             throw CoveAPIError.unexpectedStatus(401)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Recommendations
+
+    /// Fetches personalized category cards from `GET /recommendations/categories`.
+    ///
+    /// Ordering is determined server-side by the user's interests and recent
+    /// engagement; the client renders them in the returned order.
+    ///
+    /// - Parameter limit: Maximum number of cards to return (1–100). When `nil`
+    ///   the gateway applies its default of 25.
+    func recommendedCategories(limit: Int? = nil) async throws -> [Components.Schemas.RecommendedCategory] {
+        let response = try await client.getRecommendedCategories(query: .init(limit: limit))
+        switch response {
+        case let .ok(okResult):
+            return try okResult.body.json.categories
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case let .undocumented(statusCode, _):
+            throw CoveAPIError.unexpectedStatus(statusCode)
+        }
+    }
+
+    // MARK: - Events
+
+    /// Records a behavioral attention event via `POST /users/me/events`.
+    ///
+    /// Fire-and-forget signal input for personalized recommendations. Returns on 204.
+    ///
+    /// - Parameters:
+    ///   - eventType: The kind of attention event (e.g. `.category_tap`).
+    ///   - categoryId: UUID of the category involved, when applicable.
+    ///   - itemId: UUID of the item involved, when applicable.
+    func ingestEvent(
+        eventType: Components.Schemas.IngestEventRequest.event_typePayload,
+        categoryId: String? = nil,
+        itemId: String? = nil
+    ) async throws {
+        let body = Components.Schemas.IngestEventRequest(
+            event_type: eventType,
+            category_id: categoryId,
+            item_id: itemId
+        )
+        let response = try await client.ingestEvent(body: .json(body))
+        switch response {
+        case .noContent:
+            return
+        case .badRequest:
+            throw CoveAPIError.unexpectedStatus(400)
+        case .unauthorized:
+            throw CoveAPIError.unexpectedStatus(401)
+        case .notFound:
+            throw CoveAPIError.unexpectedStatus(404)
         case let .undocumented(statusCode, _):
             throw CoveAPIError.unexpectedStatus(statusCode)
         }
@@ -399,28 +464,6 @@ enum CoveAPIError: Error {
     /// The server returned a documented 2xx response whose body could not be interpreted.
     /// The associated string describes what was wrong (e.g. a URL field that failed to parse).
     case invalidResponseBody(String)
-}
-
-// MARK: - FractionalSecondsDateTranscoder
-
-/// ISO8601 date transcoder that handles fractional seconds (e.g. "2026-06-10T19:52:45.808675Z").
-/// The default swift-openapi-generator transcoder uses ISO8601DateFormatter without
-/// .withFractionalSeconds, which rejects microsecond-precision timestamps from the API.
-struct FractionalSecondsDateTranscoder: DateTranscoder {
-    func encode(_ date: Date) throws -> String {
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return fmt.string(from: date)
-    }
-
-    func decode(_ string: String) throws -> Date {
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = fmt.date(from: string) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid ISO8601 date: \(string)"))
-        }
-        return date
-    }
 }
 
 // MARK: - LocalizedError

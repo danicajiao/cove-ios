@@ -3,8 +3,16 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgtype"
+)
+
+// Default and ceiling for the number of category cards returned. Callers tune
+// the count via the optional ?limit= query parameter.
+const (
+	defaultCategoryLimit = 25
+	maxCategoryLimit     = 100
 )
 
 type recommendedCategory struct {
@@ -28,8 +36,18 @@ type recommendedCategoriesResponse struct {
 //     categories ordered by total event count across all users (last 30 days).
 //  4. If no events exist at all, the COALESCE(engagement, 0) clause naturally
 //     falls back to alphabetical by name.
+//
+// The result count is capped by the optional ?limit= query parameter
+// (default 25, max 100).
 func (d *Deps) RecommendedCategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	authUID := r.Header.Get("X-Cove-Uid")
+
+	limit := defaultCategoryLimit
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= maxCategoryLimit {
+			limit = n
+		}
+	}
 
 	// ── Resolve user_id (best-effort — new users without a profile skip to fallback) ──
 	var userIDUUID pgtype.UUID
@@ -61,9 +79,10 @@ LEFT JOIN (
     GROUP BY category_id
 ) e ON e.category_id = i.category_id
 WHERE i.user_id = $1
-ORDER BY COALESCE(e.engagement, 0) DESC, c.name ASC`
+ORDER BY COALESCE(e.engagement, 0) DESC, c.name ASC
+LIMIT $2`
 
-		rows, err := d.DB.Query(r.Context(), interestSQL, userID)
+		rows, err := d.DB.Query(r.Context(), interestSQL, userID, limit)
 		if err != nil {
 			log.Printf("ERROR RecommendedCategoriesHandler interest query user_id=%s: %v", userID, err)
 			writeError(w, http.StatusInternalServerError, "recommendations query failed")
@@ -91,13 +110,23 @@ ORDER BY COALESCE(e.engagement, 0) DESC, c.name ASC`
 		}
 	}
 
-	// If the user has interests, return them — no fallback needed.
-	if len(categories) > 0 {
+	// If interests filled the limit exactly, return now — no top-up needed.
+	if len(categories) >= limit {
 		writeJSON(w, http.StatusOK, recommendedCategoriesResponse{Categories: categories})
 		return
 	}
 
-	// ── Query 2: global fallback (no interests or no profile) ─────────────────
+	// ── Query 2: top-up / global fallback ────────────────────────────────────
+	// When the user has fewer interests than the requested limit, fill the
+	// remainder from globally popular leaf categories. Exclude any category
+	// already returned from interests so there are no duplicates.
+	remaining := limit - len(categories)
+
+	excludeIDs := make([]string, len(categories))
+	for i, cat := range categories {
+		excludeIDs[i] = cat.ID
+	}
+
 	const fallbackSQL = `
 SELECT c.id, c.name, c.path::text
 FROM catalog.categories c
@@ -109,9 +138,11 @@ LEFT JOIN (
     GROUP BY category_id
 ) e ON e.category_id = c.id
 WHERE c.is_leaf = true
-ORDER BY COALESCE(e.engagement, 0) DESC, c.name ASC`
+  AND NOT (c.id::text = ANY($2))
+ORDER BY COALESCE(e.engagement, 0) DESC, c.name ASC
+LIMIT $1`
 
-	fallbackRows, err := d.DB.Query(r.Context(), fallbackSQL)
+	fallbackRows, err := d.DB.Query(r.Context(), fallbackSQL, remaining, excludeIDs)
 	if err != nil {
 		log.Printf("ERROR RecommendedCategoriesHandler fallback query auth_uid=%s: %v", authUID, err)
 		writeError(w, http.StatusInternalServerError, "recommendations query failed")

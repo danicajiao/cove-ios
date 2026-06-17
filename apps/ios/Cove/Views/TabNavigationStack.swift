@@ -23,6 +23,9 @@ struct TabNavigationStack<Content: View>: View {
                     case let .item(id):
                         ItemDetailView(itemId: id)
                             .environmentObject(bag)
+                    case let .categoryResults(categoryPath, name):
+                        CategoryResultsView(categoryPath: categoryPath, title: name)
+                            .environmentObject(bag)
                     default:
                         let _ = assertionFailure("Unhandled navigation path: \(path)")
                         EmptyView()

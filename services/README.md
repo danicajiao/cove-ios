@@ -8,8 +8,8 @@ applications (the iOS app today, a web client later).
 |---|---|---|---|
 | `cove-api` | [`cove-api/`](cove-api/) | 1 | Deployed |
 | `cove-image` | [`cove-image/`](cove-image/) | 2 | Deployed |
-| `cove-product` | `cove-product/` | 3 | Planned |
-| `cove-user` | `cove-user/` | 3 | Planned |
+| `cove-item` | `cove-item/` | 3 | In progress |
+| `cove-user` | `cove-user/` | 3 | In progress |
 
 Each service owns its own `Dockerfile` and is built and pushed by the
 `ci-services.yml` GitHub Actions workflow on changes to its path. OpenAPI specs

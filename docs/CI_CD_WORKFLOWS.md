@@ -1,6 +1,6 @@
-# iOS CI/CD Workflows Documentation
+# CI/CD Workflows Documentation
 
-This document describes the CI/CD workflows configured for the Cove iOS app, including deployment to TestFlight and App Store.
+This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and pushes, and OpenAPI spec linting.
 
 ## Architecture
 
@@ -13,25 +13,28 @@ This document describes the CI/CD workflows configured for the Cove iOS app, inc
 │         ▼                 ▼                     ▼              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
 │  │  CI - iOS    │  │  CI - iOS    │  │  CD - TestFlight     │  │
-│  │  (Lint only) │  │  (Build/Test)│  │  CD - App Store      │  │
+│  │  CI - Svcs   │  │  CI - Svcs   │  │  CD - App Store      │  │
+│  │  CI - OpenAPI│  │  (Build/Push)│  │                      │  │
 │  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
 └─────────┼─────────────────┼─────────────────────┼──────────────┘
           ▼                 ▼                     ▼
    ┌─────────────┐    ┌─────────────┐      ┌─────────────┐
-   │  PR Status  │    │  Build/Test │      │  TestFlight │
-   │  Check      │    │  Results    │      │  App Store  │
+   │  PR Status  │    │  GAR Image  │      │  TestFlight │
+   │  Checks     │    │  Push +     │      │  App Store  │
+   │             │    │  homelab PR │      │             │
    └─────────────┘    └─────────────┘      └─────────────┘
 ```
 
 ## Overview
 
-The Cove iOS app uses GitHub Actions for continuous integration and deployment following mobile development best practices:
+The Cove project uses GitHub Actions for continuous integration and deployment:
 
 - **Manual TestFlight deployments** via workflow dispatch
 - **Manual App Store submissions** via workflow dispatch
-- **Automated quality checks** on pull requests (linting only)
-- **Automated build and test** on main branch pushes
-- **Auto-incrementing build numbers** for each deployment
+- **Automated iOS quality checks** on pull requests (linting only)
+- **Automated iOS build and test** on main branch pushes
+- **Automated backend service builds** on path-filtered PRs and main pushes
+- **Auto-incrementing build numbers** for each iOS deployment
 - **Manual marketing version bumps** only when releasing to App Store
 
 ## Workflows
@@ -137,6 +140,49 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI.
 
 **Required Secrets:** All 8 secrets (see Required Secrets section below)
 
+### 5. CI - Services (`ci-services.yml`)
+
+**Triggers:**
+- Pull requests touching `services/cove-api/**` or `services/cove-image/**`
+- Pushes to `main` touching those paths
+- Manual `workflow_dispatch` (useful for bootstrapping GAR before an integration branch merges)
+
+**Concurrency:** Cancels in-progress runs for the same workflow + ref on new pushes.
+
+**Jobs:** One job per service — `cove-api` and `cove-image` run in parallel.
+
+**What each service job does:**
+
+1. Set up Go (version from `go.mod`)
+2. Run `go test ./...` and `go vet ./...`
+3. **On main / `workflow_dispatch` only:** Authenticate to GCP via Workload Identity Federation, configure Docker, build and push image to Google Artifact Registry as `sha-<full-commit-sha>`
+4. **On PRs:** Build only (no push) — verifies the Dockerfile and that the service compiles
+
+After both service jobs succeed on main or `workflow_dispatch`, a third job (`bump-overlay-tags`) opens a PR against `danicajiao/homelab` that bumps the Kustomize overlay image tags to the new SHA. On main it updates both staging and prod overlays; on other branches (e.g. integration branch `workflow_dispatch`) it updates staging only.
+
+**Required variables (not secrets):** `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT` — see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for the one-time GCP setup.
+
+**Required secrets:** `HOMELAB_PAT` — GitHub PAT with write access to `danicajiao/homelab` (used by `bump-overlay-tags` to push and open the homelab PR).
+
+**Path filter note:** New services added in Phase 3 (`cove-item`, `cove-user`) will need their paths added to the `on.push.paths` and `on.pull_request.paths` filters, and a new parallel job for each service.
+
+---
+
+### 6. CI - OpenAPI Lint (`ci-openapi.yml`)
+
+**Trigger:** Pull requests touching `services/cove-api/api/**` or `services/cove-image/api/**`
+
+**Purpose:** Lint all OpenAPI specs for validity and style using [Redocly CLI](https://redocly.com/docs/cli/).
+
+**Steps:**
+1. Install `@redocly/cli` (latest)
+2. Lint `services/cove-api/api/openapi.yaml` using `services/cove-api/redocly.yaml`
+3. Lint `services/cove-image/api/openapi.yaml` using `services/cove-image/redocly.yaml`
+
+This workflow runs on PRs only — there is no main-push gate for spec linting. As Phase 3 services (`cove-item`, `cove-user`) gain OpenAPI specs, add their paths to this workflow's path filter and add lint steps.
+
+---
+
 ## Required Secrets
 
 **Total: 9 secrets (8 required, 1 unused)**
@@ -155,9 +201,15 @@ The following secrets must be configured in your GitHub repository settings:
 - `APP_STORE_CONNECT_API_KEY`: Base64-encoded API Key (.p8 file)
 
 ### GitHub
-- `GH_PAT`: GitHub Personal Access Token with repo permissions (for pushing commits)
+- `GH_PAT`: GitHub Personal Access Token with repo permissions (used by iOS CD workflows for pushing version bump commits)
+- `HOMELAB_PAT`: GitHub Personal Access Token with write access to `danicajiao/homelab` (used by `ci-services.yml` `bump-overlay-tags` job to push branches and open PRs in the homelab repo)
 
-**Note:** The `APPLE_TEAM_ID` secret mentioned in documentation is not currently used by the workflows.
+### GCP (services CI only)
+These are **variables** (not secrets) — non-sensitive identifiers stored under GitHub → Settings → Secrets and variables → Actions → **Variables** tab:
+- `WIF_PROVIDER`: Workload Identity Federation pool/provider path for GCP auth
+- `WIF_SERVICE_ACCOUNT`: Service account email that CI impersonates to push images to Artifact Registry
+
+**Note:** The `APPLE_TEAM_ID` secret mentioned in earlier documentation is not currently used by the workflows.
 
 ## Versioning Strategy
 

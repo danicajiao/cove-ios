@@ -1,6 +1,6 @@
 # Backend Infrastructure
 
-> **Status:** Phases 0, 1, and 2 complete. The cluster is fully bootstrapped and running. `cove-api` and `cove-image` are deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes all image requests through `CoveAPIClient` → `cove-api` → `cove-image`; Firebase Storage has been retired. Firebase Auth and Firestore remain in use until Phase 3.
+> **Status:** Phases 0, 1, and 2 complete. Phase 3 in progress. The cluster is fully bootstrapped and running. `cove-api` and `cove-image` are deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes all image requests through `CoveAPIClient` → `cove-api` → `cove-image`; Firebase Storage has been retired. Firebase Auth and Firestore remain in use until Phase 3 data services land.
 
 ## Contents
 
@@ -44,8 +44,8 @@ cove-api  (K3s pod, cove-staging / cove-prod namespace)
     │
     ├── /images/*  ──►  cove-image   (Phase 2, deployed)
     ├── /i/*       ──►  imgproxy     (Phase 2, deployed — image transforms)
-    ├── /products/* ──►  cove-product (Phase 3)
-    └── /users/*   ──►  cove-user    (Phase 3)
+    ├── /discovery, /categories, /items/*  ──►  cove-item   (Phase 3, in progress)
+    └── /users/*, /recommendations/*       ──►  cove-user   (Phase 3, in progress)
 ```
 
 Firebase Auth is the only GCP dependency in the request path. There is no GCP API Gateway, no Cloud Run, no Cloud SQL.
@@ -94,8 +94,8 @@ danicajiao/cove                 ← all source code and docs
 ├── services/
 │   ├── cove-api/               ← cove-api gateway service (Phase 1, deployed)
 │   ├── cove-image/             ← cove-image service (Phase 2, deployed)
-│   ├── cove-product/           ← cove-product service (Phase 3)
-│   └── cove-user/              ← cove-user service (Phase 3)
+│   ├── cove-item/              ← item discovery service (Phase 3, in progress)
+│   └── cove-user/              ← user profiles + recommendations service (Phase 3, in progress)
 │
 ├── packages/                   ← shared code (API schema, types — as needed)
 └── docs/
@@ -148,7 +148,7 @@ build-cove-image: ## Build the cove-image Docker image
 build-all: build-cove-api build-cove-image ## Build Docker images for all services
 ```
 
-As `cove-product` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`.
+As `cove-item` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`. The `ci-services.yml` workflow gains matching path filters for `services/cove-item/**` and `services/cove-user/**` when those services are added.
 
 This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
 
@@ -164,8 +164,8 @@ Services drop the `-svc` suffix. The pod, K8s Service, and image name are all th
 |---|---|---|
 | `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 (deployed) |
 | `cove-image` | Image upload (`POST /images`), signed-URL serving (`GET /images/{filename}/url`), normalization to WebP, content-addressed storage in Garage | Phase 2 (deployed) |
-| `cove-product` | Product catalog, categories, search | Phase 3 |
-| `cove-user` | User profiles, follows, producer accounts | Phase 3 |
+| `cove-item` | Item ingestion, category catalog, `GET /discovery` endpoint | Phase 3 (in progress) |
+| `cove-user` | User profiles, interests, `GET /recommendations/categories`, `POST /users/me/events` | Phase 3 (in progress) |
 
 In Kubernetes, each service runs as a `Deployment` in `cove-staging` or `cove-prod`, with a matching `Service` of the same name.
 
@@ -319,7 +319,7 @@ Images are stored in Google Artifact Registry under the `cove-6a685` project:
 ```
 us-central1-docker.pkg.dev/cove-6a685/services/cove-api:sha-abc1234
 us-central1-docker.pkg.dev/cove-6a685/services/cove-image:sha-abc1234
-us-central1-docker.pkg.dev/cove-6a685/services/cove-product:sha-abc1234
+us-central1-docker.pkg.dev/cove-6a685/services/cove-item:sha-abc1234
 us-central1-docker.pkg.dev/cove-6a685/services/cove-user:sha-abc1234
 ```
 
@@ -356,15 +356,16 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 - Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
 - Firestore `products.defaultImageURL` and `brands.imageURL` now store Garage keys (`images/<sha256>.webp`) instead of `gs://` URLs
 
-### Phase 3 — Data services
+### Phase 3 — Data services (in progress)
 
-> Being re-planned against the trust-layer data model — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / product / signals).
+See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / product / signals) and [MARKETPLACE_ARCHITECTURE.md](MARKETPLACE_ARCHITECTURE.md) for the full data model.
 
-- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3; `cove-product` and `cove-user` get read-only + FK reference grants.
-- Deploy `cove-product` and `cove-user` to `cove-staging`
-- Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows)
-- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/products/*`, and `api.coveapp.dev/users/*`
-- Firestore retired
+- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
+- `profile.user_flags` migration added to `cove-db`
+- Deploy `cove-item` (item ingestion, `GET /discovery` endpoint) and `cove-user` (user profiles, interests, `GET /recommendations/categories`, `POST /users/me/events`) to `cove-staging`
+- Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows, interests)
+- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/recommendations/*`, `api.coveapp.dev/users/*`, and `api.coveapp.dev/categories`
+- Firestore retired upon completion
 
 ### Phase 4 (planned) — Directory service
 

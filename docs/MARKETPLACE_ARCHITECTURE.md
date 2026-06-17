@@ -1,6 +1,6 @@
 # Marketplace Architecture
 
-> **Status:** Canonical data-model + services document. Reflects the trust-layer direction (May 2026). The app currently uses Firebase (Firestore + Auth + Storage); this describes the target Postgres-backed model Cove is migrating to. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
+> **Status:** Canonical data-model + services document (June 2026). Phase 3 is in progress — `cove-item` and `cove-user` services are being built against this schema. The iOS app still uses Firebase Firestore for structured data; migration to these services is the Phase 3 goal. Firebase Storage was retired in Phase 2. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
 
 ## Contents
 
@@ -97,12 +97,12 @@ A storefront may be operated by the maker themselves (a potter's studio, New Bel
 | Service | Path | Responsibility |
 |---|---|---|
 | `cove-api` | `services/cove-api/` | Single ingress (BFF gateway). Validates Firebase ID tokens, routes to backend services, forwards UID via `X-Cove-Uid`. |
-| `cove-product` | `services/cove-product/` | The discovery surface: makers, storefronts, products, availability, categories, trust signals, scoring, and the discovery query. Reads the whole graph. |
-| `cove-user` | `services/cove-user/` | User profiles, favorites, follows. |
+| `cove-item` | `services/cove-item/` | Item ingestion, category catalog, and the discovery endpoint (`GET /discovery`). Reads the `product` and `directory` schemas. |
+| `cove-user` | `services/cove-user/` | User profiles, interest management, `GET /recommendations/categories` (top-up algorithm), `POST /users/me/events` (attention events). |
 | `cove-image` | `services/cove-image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. Stateless. |
 | `cove-directory` | `services/cove-directory/` (future) | Self-serve onboarding, maker/storefront profile management, signal verification. Takes over writes to the `directory` schema when it ships. |
 
-**v1 service ownership note:** `cove-product` owns the entire discovery surface for v1, including the `directory` schema (makers + storefronts) which is seeded once during migration and read by `cove-product` for discovery. When `cove-directory` ships (onboarding), it takes over writes to `directory` via a permissions flip — `cove-product` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern.
+**v1 service ownership note:** `cove-item` owns the discovery surface for v1, including reading the `directory` schema (makers + storefronts) which is seeded once during migration. When `cove-directory` ships (onboarding), it takes over writes to `directory` via a permissions flip — `cove-item` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern.
 
 The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [iOS App Architecture](IOS_APP_ARCHITECTURE.md)).
 
@@ -114,9 +114,9 @@ All v1 services share one CNPG `Cluster` (`cove-db`) and one database (`cove`), 
 
 | Schema | Owning service | Tables |
 |---|---|---|
-| `directory` | `cove-directory` (future); read-only from `cove-product` in v1 | `makers`, `storefronts` |
-| `product` | `cove-product` | `categories`, `products`, `availability`, `media`, `signals`, `entity_signals` |
-| `user` | `cove-user` | `users`, `favorites`, `follows` |
+| `directory` | `cove-directory` (future); read-only from `cove-item` in v1 | `makers`, `storefronts` |
+| `product` | `cove-item` | `categories`, `products`, `availability`, `media`, `signals`, `entity_signals` |
+| `user` | `cove-user` | `users`, `favorites`, `follows`, `interests`, `events` |
 
 ### Why one cluster, not one per service
 
@@ -318,13 +318,13 @@ CREATE SCHEMA "user";   -- quoted: reserved word in some contexts
 CREATE ROLE cove_product LOGIN PASSWORD :'product_password';
 CREATE ROLE cove_user    LOGIN PASSWORD :'user_password';
 
-GRANT USAGE ON SCHEMA product  TO cove_product;
+GRANT USAGE ON SCHEMA product  TO cove_item;
 GRANT USAGE ON SCHEMA "user"   TO cove_user;
 
--- cove_product reads + references the directory graph for discovery
-GRANT USAGE      ON SCHEMA directory                          TO cove_product;
-GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_product;
-GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_product;
+-- cove_item reads + references the directory graph for discovery
+GRANT USAGE      ON SCHEMA directory                          TO cove_item;
+GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_item;
+GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_item;
 
 -- cove_user references products + the directory graph for favorites/follows
 GRANT USAGE      ON SCHEMA product, directory                 TO cove_user;
@@ -333,7 +333,7 @@ GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_user;
 GRANT REFERENCES ON product.products                          TO cove_user;
 GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_user;
 
-ALTER ROLE cove_product SET search_path = product, directory, public;
+ALTER ROLE cove_item    SET search_path = product, directory, public;
 ALTER ROLE cove_user    SET search_path = "user", public;
 ```
 
@@ -528,9 +528,9 @@ iOS app
    ▼
 api.coveapp.dev  (Cloudflare Tunnel)
    ▼
-cove-api  (validates token, injects X-Cove-Uid, routes /discovery, /products/* → cove-product)
+cove-api  (validates token, injects X-Cove-Uid, routes /discovery, /categories, /items/* → cove-item)
    ▼
-cove-product
+cove-item
    │  Runs the discovery query (products ⋈ makers ⋈ availability ⋈ storefronts; trust + proximity + relevance)
    │  Resolves each result's signals; signs imgproxy URLs for media (see MEDIA_ARCHITECTURE.md)
    ▼
@@ -540,7 +540,8 @@ HTTP 200 → iOS app
 ```swift
 // ViewModels never see this layer. The generated client is consumed by
 // CoveAPIProductRepository, which conforms to the ProductRepository protocol.
-let response = try await productClient.discover(.init(query: .init(q: "ceramics", lat: lat, lon: lon, radius: 20)))
+// (Phase 3: CoveAPIProductRepository replaces FirebaseProductRepository at the DI site.)
+let response = try await itemClient.discover(.init(query: .init(q: "ceramics", lat: lat, lon: lon, radius: 20)))
 let results = try response.ok.body.json
 ```
 
@@ -548,30 +549,30 @@ let results = try response.ok.body.json
 
 ## iOS networking layer
 
-ViewModels depend on repository protocols. Each protocol has a Firebase implementation (current) and a Remote implementation (post-migration target). Swapping one for the other is a one-line change at the DI site; ViewModels are untouched. This is the point of the Phase 0 repository abstraction (#222–#227).
+ViewModels depend on repository protocols. Each protocol has a Firebase implementation (current, active pre-Phase 3) and a `CoveAPI` implementation (stub now, target post-Phase 3). Swapping one for the other is a one-line change at the DI site; ViewModels are untouched. This is the point of the Phase 0 repository abstraction (#222–#227).
 
 ```
-ProductRepository (protocol)        ← HomeViewModel, ProductViewModel, discovery
-├── FirebaseProductRepository        ← current (Firestore)
-└── CoveAPIProductRepository         ← target (cove-product REST API)
+ProductRepository (protocol)        ← HomeViewModel, ProductDetailViewModel, BagViewModel
+├── FirebaseProductRepository        ← current (Firestore) — active
+└── CoveAPIProductRepository         ← stub — Phase 3 target (cove-item REST API)
 
 UserRepository (protocol)            ← ProfileViewModel
-├── FirebaseUserRepository           ← current
-└── CoveAPIUserRepository            ← target (cove-user)
+├── FirebaseUserRepository           ← current — active
+└── CoveAPIUserRepository            ← stub — Phase 3 target (cove-user)
 
 FavoritesRepository (protocol)       ← FavoritesViewModel, FavoritesStore
-├── FirebaseFavoritesRepository      ← current
-└── CoveAPIFavoritesRepository       ← target (cove-user)
+├── FirebaseFavoritesRepository      ← current — active
+└── CoveAPIFavoritesRepository       ← stub — Phase 3 target (cove-user)
 
-ImageRepository (protocol)           ← ProductCardView, image-loading sites
-├── FirebaseImageRepository          ← current (Firebase Storage)
-└── CoveAPIImageRepository           ← target (cove-image + imgproxy)
+ImageRepository (protocol)           ← all image-loading views
+├── FirebaseImageRepository          ← removed in Phase 2
+└── CoveAPIImageRepository           ← active (cove-image + imgproxy)
 ```
 
-**`ProductTypes.swift` is replaced by API-driven categories.** The current file (`apps/ios/Cove/Enums/ProductTypes.swift`) hardcodes three Firestore document IDs as a Swift enum — a Firebase-era artifact. In the target architecture:
-- The onboarding screen fetches the category tree from `GET /categories` and lets the user pick leaf nodes
-- The homepage fetches `GET /recommendations/categories` to render personalized category cards
-- Tapping a card triggers `GET /discovery?category=<path>&lat=...`
+**`ProductTypes.swift` is replaced by API-driven categories in Phase 3.** The current file (`apps/ios/Cove/Enums/ProductTypes.swift`) hardcodes three Firestore document IDs as a Swift enum — a Firebase-era artifact. In the Phase 3 target architecture:
+- The onboarding screen (`InterestOnboardingView`) fetches the category tree from `GET /categories` and lets the user pick leaf nodes — stored as `user.interests` rows via `POST /users/me/interests`
+- The homepage fetches `GET /recommendations/categories` to render personalized `CategoryCard` components (replacing the hardcoded `SmallCategoryButton` row)
+- Tapping a card triggers `GET /discovery?category=<path>&lat=...` and navigates to `CategoryResultsView`
 
 No Swift enum, no hardcoded IDs. Categories are data from the API.
 
@@ -603,14 +604,18 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 
 ## Open items
 
-To reconcile before the Phase 3 epic is re-planned:
+Items resolved in Phase 3:
 
-1. **Service ownership** — confirm `cove-product` owning the full discovery surface (incl. `directory` reads) for v1, with `cove-directory` taking over `directory` writes later.
-2. **PostGIS in CNPG** — confirm the extension can be provisioned on the homelab Postgres before Phase 3.
-3. **Trust score recomputation** — for v1 it's seeded once; define the trigger/job model for when signals change post-onboarding.
-4. **Discovery and category API shape** — finalize in OpenAPI specs: `/discovery` query params + response (including multi-storefront "Where to find it" per result); `GET /categories` (browsable tree, owned by `cove-product`); `GET /recommendations/categories` (personalized homepage cards, owned by `cove-user`); `POST /users/me/events` (attention event ingest, owned by `cove-user`).
+1. ~~**Service ownership**~~ — resolved: `cove-item` owns the discovery surface; `cove-directory` will take over `directory` writes when it ships.
+2. ~~**PostGIS in CNPG**~~ — resolved: PostGIS extension provisioned on `cove-db` in Phase 3.
+3. ~~**Discovery and category API shape**~~ — resolved in OpenAPI specs: `GET /discovery` (cove-item), `GET /categories` (cove-item), `GET /recommendations/categories` (cove-user), `POST /users/me/events` (cove-user).
+
+Items still open:
+
+4. **Trust score recomputation** — for v1 it is seeded once at seed time; define the trigger/job model for when signals change post-onboarding.
 5. **Independent-storefront tier** — `tier` lives on `maker`. A registered independent storefront (a boutique that resells, with no maker of its own) earns trust via its signals, not a tier; revisit if storefronts need their own tier.
 6. **`details` on products vs a separate table** — folded into a `details` JSONB column here; split back out only if payloads get large enough to hurt list queries.
+7. **`user_flags` column** — `profile.user_flags` migration was added in Phase 3; document its purpose and usage once defined.
 
 ---
 
@@ -635,3 +640,4 @@ To reconcile before the Phase 3 epic is re-planned:
 - **Version 4.0** (May 2026) — **Trust-layer reframe.** Split the old `vendor` into a maker + place graph; the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `product_variants` (no transactions). Folded `product_details` into a `details` column and `product_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_PRODUCT_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on products with a many-to-many `availability` join so one maker's product can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
 - **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `user.interests` and `user.events` tables to the `user` schema. Documented `ProductTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
+- **Version 5.0** (June 2026) — **Phase 3 alignment.** Renamed `cove-product` → `cove-item` to reflect what shipped (item ingestion + discovery endpoint). Updated `cove-user` responsibilities to include `GET /recommendations/categories` and `POST /users/me/events`. Noted `profile.user_flags` migration. Updated schema table to reflect `user.interests` and `user.events` landing. Closed Open items 1–3 (service ownership, PostGIS, API shape). Updated iOS networking layer to distinguish active Firebase implementations from CoveAPI stubs. Documented Phase 3 iOS scope (InterestOnboardingView, CategoryCard, CategoryResultsView).

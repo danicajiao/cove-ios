@@ -54,12 +54,13 @@ apps/ios/Cove/
 
 `CoveApp` is the root of the app. It reads `AppState.authState` to decide which UI to show:
 
-```
-CoveApp
-├── authState == .loggedIn  →  MainView (tab bar)
-└── authState == .loggedOut →  NavigationStack (auth flow)
-    ├── network available   →  WelcomeView
-    └── no network          →  SplashView
+```mermaid
+flowchart TD
+    CoveApp["CoveApp (root)<br/>reads AppState.authState"]
+    CoveApp -->|".loggedIn"| Main["MainView<br/>(tab bar)"]
+    CoveApp -->|".loggedOut"| Auth["NavigationStack<br/>(auth flow)"]
+    Auth -->|"network available"| Welcome["WelcomeView"]
+    Auth -->|"no network"| Splash["SplashView"]
 ```
 
 `AppState` holds `@Published var authState: AuthState`. When a user successfully signs in, `authState` flips to `.loggedIn`, which triggers `CoveApp` to rebuild and show `MainView`. Auth navigation is owned locally by `CoveApp` via `@State private var authPath: [AuthPath]`, which is reset to `[]` via `.onChange(of: appState.authState)` on logout.
@@ -165,17 +166,17 @@ Injected at the root (`CoveApp`) via `.environmentObject` and available througho
 
 The app has two completely separate networking tracks. They never share code.
 
+```mermaid
+flowchart LR
+    subgraph fb["Firebase SDK · Google-managed"]
+        FA["FirebaseAuth<br/>auth token issuance only"]
+    end
+    subgraph gw["cove-api gateway · K3s homelab via Cloudflare Tunnel"]
+        Client["CoveAPIClient"] --> API["cove-api"]
+    end
 ```
-Firebase SDK                        cove-api gateway
-(Google-managed infrastructure)     (K3s homelab, Cloudflare Tunnel)
 
-FirebaseAuth  ─────────────────►  Auth token issuance only
-
-                                  CoveAPIClient ──────────────────►  cove-api
-                                  (all gateway calls go here,
-                                   including image loading via
-                                   CoveAPIImageRepository)
-```
+`CoveAPIClient` is the sole path to the gateway — all calls go through it, including image loading via `CoveAPIImageRepository`. The two tracks never share code; the Firebase ID token issued on the left is attached as a `Bearer` header to requests on the right.
 
 ### APIEnvironment
 
@@ -203,26 +204,12 @@ This means TestFlight builds hit staging automatically; App Store builds hit pro
 
 **How the generation works:**
 
-```
-services/cove-api/api/openapi.yaml          ← backend source of truth
-        │
-        │  manual copy when spec changes:
-        │  cp services/cove-api/api/openapi.yaml \
-        │     apps/ios/Cove/Networking/Generated/openapi.yaml
-        ▼
-Cove/Networking/Generated/
-  openapi.yaml                          ← iOS copy of the spec
-  openapi-generator-config.yaml         ← instructs plugin: generate types + client
-        │
-        │  ⌘B triggers the OpenAPIGenerator build plugin
-        ▼
-DerivedData/.../GeneratedSources/       ← never checked in, never edited
-  Types.swift                           ← Components.Schemas.* structs
-  Client.swift                          ← one typed method per API operation
-        │
-        │  compiled into the app binary alongside hand-written code
-        ▼
-Cove/Networking/CoveAPIClient.swift     ← thin wrapper, what ViewModels call
+```mermaid
+flowchart TD
+    SRC["services/cove-api/api/openapi.yaml<br/>backend source of truth"]
+    SRC -->|"manual copy when spec changes<br/>cp … → Networking/Generated/openapi.yaml"| COPY["Cove/Networking/Generated/<br/>openapi.yaml — iOS copy of the spec<br/>openapi-generator-config.yaml — types + client"]
+    COPY -->|"⌘B triggers the OpenAPIGenerator build plugin"| GEN["DerivedData/.../GeneratedSources/<br/>Types.swift — Components.Schemas.* structs<br/>Client.swift — one typed method per operation<br/>(never checked in, never edited)"]
+    GEN -->|"compiled into the app binary"| WRAP["Cove/Networking/CoveAPIClient.swift<br/>thin wrapper — what ViewModels call"]
 ```
 
 The generated files live in DerivedData and are never committed. They recompile automatically whenever `openapi.yaml` changes.
@@ -252,16 +239,14 @@ let health = try await CoveAPIClient.shared.health()
 
 A `ClientMiddleware` that runs on every outgoing request to cove-api. It fetches the current Firebase user's ID token and injects it as a Bearer header before forwarding the request.
 
-```
-CoveAPIClient.shared.health()
-    │
-    ├─ FirebaseAuthMiddleware.intercept(...)
-    │    ├─ Auth.auth().currentUser? → get ID token
-    │    └─ request.headerFields[.authorization] = "Bearer <token>"
-    │
-    ├─ URLSessionTransport sends HTTP request to staging-api.coveapp.dev
-    │
-    └─ response decoded into Components.Schemas.HealthResponse
+```mermaid
+flowchart TD
+    Call["CoveAPIClient.shared.health()"]
+    Call --> MW["FirebaseAuthMiddleware.intercept(...)"]
+    MW --> Tok["Auth.auth().currentUser? → get ID token"]
+    Tok --> Hdr["request.headerFields[.authorization] = Bearer {token}"]
+    Hdr --> Send["URLSessionTransport → staging-api.coveapp.dev"]
+    Send --> Resp["response decoded into<br/>Components.Schemas.HealthResponse"]
 ```
 
 Routes that opt out of auth (e.g. `GET /health`) receive the header anyway — the gateway ignores it. This keeps the middleware unconditional with no per-route branching.

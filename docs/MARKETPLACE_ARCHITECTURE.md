@@ -710,28 +710,9 @@ let results = try response.ok.body.json
 
 ## iOS networking layer
 
-ViewModels depend on repository protocols backed by generated `CoveAPIClient` implementations (Phase 3 complete). The repository abstraction was introduced in Phase 0 (#222–#227) to allow swapping Firebase implementations for REST-backed ones at the DI site without touching ViewModels.
+ViewModels never call the network directly. They depend on repository protocols (`ItemRepository`, `UserRepository`, `FavoritesRepository`, `ImageRepository`) whose active implementations are backed by the generated `CoveAPIClient` (`CoveAPIItemRepository`, `CoveAPIUserRepository`, `CoveAPIFavoritesRepository`, `CoveAPIImageRepository`). The abstraction was introduced in Phase 0 (#222–#227) to swap Firebase implementations for REST-backed ones at the DI site without touching ViewModels. See [iOS App Architecture](IOS_APP_ARCHITECTURE.md) for the full repository layer, the generated-client pipeline, and `FirebaseAuthMiddleware`.
 
-```
-ItemRepository (protocol)           ← HomeViewModel, ItemDetailViewModel, BagViewModel
-└── CoveAPIItemRepository            ← active (cove-item REST API)
-
-UserRepository (protocol)           ← ProfileViewModel
-└── CoveAPIUserRepository            ← active (cove-user)
-
-FavoritesRepository (protocol)      ← FavoritesViewModel, FavoritesStore
-└── CoveAPIFavoritesRepository       ← active (cove-user)
-
-ImageRepository (protocol)          ← all image-loading views
-└── CoveAPIImageRepository           ← active (cove-image + imgproxy)
-```
-
-**`ProductTypes.swift` was removed in Phase 3** — it hardcoded three Firestore document IDs as a Swift enum, a Firebase-era artifact. Categories are now API-driven:
-- `InterestOnboardingView` fetches the category tree from `GET /categories` and lets the user pick leaf nodes — stored as `profile.interests` rows via `POST /users/me/interests`
-- The homepage fetches `GET /recommendations/categories` to render personalized `CategoryCard` components
-- Tapping a card triggers `GET /discovery?category=<path>&lat=...` and navigates to `CategoryResultsView`
-
-No Swift enum, no hardcoded IDs. Categories are data from the API.
+**Categories are API-driven** — the Firestore-era `ProductTypes.swift` enum (three hardcoded document IDs) was removed in Phase 3. `InterestOnboardingView` reads the tree from `GET /categories` and writes picks to `profile.interests` via `POST /users/me/interests`; the homepage renders `CategoryCard`s from `GET /recommendations/categories`; tapping one triggers `GET /discovery?category=<path>&lat=...` into `CategoryResultsView`.
 
 ---
 

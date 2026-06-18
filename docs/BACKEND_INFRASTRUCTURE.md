@@ -340,7 +340,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 - Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
 - Firestore `products.defaultImageURL` and `brands.imageURL` now store Garage keys (`images/<sha256>.webp`) instead of `gs://` URLs
 
-### Phase 3 — Data services (complete)
+### Phase 3 — Data services ✅ complete
 
 See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / product / signals) and [MARKETPLACE_ARCHITECTURE.md](MARKETPLACE_ARCHITECTURE.md) for the full data model.
 

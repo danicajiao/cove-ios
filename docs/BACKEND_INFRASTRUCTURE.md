@@ -20,24 +20,15 @@
 
 > The backend runs on a personal K3s cluster (zero hosting cost), exposed via Cloudflare Tunnel, managed GitOps with Argo CD. Manifests are written to run on GKE unchanged if the cluster needs to move to the cloud.
 
-```
-iOS App
-    │
-    │  Firebase Auth SDK (kept throughout all phases)
-    │  Firebase ID Token in Authorization: Bearer header
-    │
-    ▼
-api.coveapp.dev  (Cloudflare Tunnel — no open ports on the home machine)
-    │
-    ▼
-cove-api  (K3s pod, cove-staging / cove-prod namespace)
-    │  Validates Firebase ID Token via Firebase Admin SDK
-    │  Routes to backend services by path prefix
-    │
-    ├── /images/*  ──►  cove-image   (Phase 2, deployed)
-    ├── /i/*       ──►  imgproxy     (Phase 2, deployed — image transforms)
-    ├── /discovery, /categories, /items/*  ──►  cove-item   (Phase 3, complete)
-    └── /users/*, /recommendations/*       ──►  cove-user   (Phase 3, complete)
+```mermaid
+flowchart TD
+    iOS["iOS App"]
+    iOS -->|"Firebase ID token<br/>Authorization: Bearer"| CF["api.coveapp.dev<br/>Cloudflare Tunnel — no open ports"]
+    CF --> API["cove-api · K3s pod<br/>cove-staging / cove-prod<br/>validates ID token via Firebase Admin SDK,<br/>routes by path prefix"]
+    API -->|"/images/*"| IMG["cove-image"]
+    API -->|"/i/*"| IMGPROXY["imgproxy<br/>image transforms"]
+    API -->|"/discovery · /categories<br/>/items/* · /makers/* · /storefronts/*"| ITEM["cove-item"]
+    API -->|"/users/* · /recommendations/*"| USER["cove-user"]
 ```
 
 Firebase Auth is the only GCP dependency in the request path. There is no GCP API Gateway, no Cloud Run, no Cloud SQL.

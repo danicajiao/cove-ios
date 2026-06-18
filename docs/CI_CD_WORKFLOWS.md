@@ -13,19 +13,19 @@ flowchart TD
         MANUAL([Manual dispatch])
     end
 
-    PR --> IOS_PR["CI · iOS\nlint-and-validate"]
-    PR --> SVCS_PR["CI · Services\nbuild only"]
+    PR --> IOS_PR["CI · iOS<br/>lint-and-validate"]
+    PR --> SVCS_PR["CI · Services<br/>build only"]
     PR --> OPENAPI["CI · OpenAPI lint"]
 
-    PUSH --> IOS_MAIN["CI · iOS\nbuild-and-test"]
-    PUSH --> SVCS_MAIN["CI · Services\nbuild + push to GAR"]
+    PUSH --> IOS_MAIN["CI · iOS<br/>build-and-test"]
+    PUSH --> SVCS_MAIN["CI · Services<br/>build + push to GAR"]
 
     MANUAL --> CD_TF["CD · TestFlight"]
     MANUAL --> CD_AS["CD · App Store"]
 
     IOS_PR & SVCS_PR & OPENAPI --> STATUS(["PR status checks"])
 
-    SVCS_MAIN --> HOMELAB(["GAR image push\n+ homelab PR"])
+    SVCS_MAIN --> HOMELAB(["GAR image push<br/>+ homelab PR"])
 
     CD_TF --> TF(["TestFlight"])
     CD_AS --> AS(["App Store Connect"])

@@ -1,6 +1,6 @@
 # CI/CD Workflows Documentation
 
-This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and image pushes to Google Artifact Registry (GAR), and OpenAPI spec linting.
+This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and image pushes to Google Artifact Registry (GAR), OpenAPI spec linting, and an on-demand Claude Code assistant.
 
 ## Architecture
 
@@ -184,14 +184,31 @@ After all five jobs succeed on main or `workflow_dispatch`, a sixth job (`bump-o
 1. Install `@redocly/cli` (latest)
 2. Lint `services/cove-api/api/openapi.yaml` using `services/cove-api/redocly.yaml`
 3. Lint `services/cove-image/api/openapi.yaml` using `services/cove-image/redocly.yaml`
+4. Lint `services/cove-item/api/openapi.yaml` using `services/cove-item/redocly.yaml`
+5. Lint `services/cove-user/api/openapi.yaml` using `services/cove-user/redocly.yaml`
 
-This workflow runs on PRs only — there is no main-push gate for spec linting. As Phase 3 services (`cove-item`, `cove-user`) gain OpenAPI specs, add their paths to this workflow's path filter and add lint steps.
+This workflow runs on PRs only — there is no main-push gate for spec linting. All four service specs (`cove-api`, `cove-image`, `cove-item`, `cove-user`) are in the path filter and linted.
+
+---
+
+### 7. Claude Code (`claude.yml`)
+
+**Trigger:** New issue comments and pull-request review comments — the job runs only when the comment body contains `@claude`.
+
+**Purpose:** On-demand AI assistant. Mentioning `@claude` in an issue or PR comment runs [`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action), which can read the repo and CI results and respond on the thread.
+
+**Configuration:**
+- Runs on `ubuntu-latest`
+- Read-only repo permissions (`contents`, `pull-requests`, `issues`) plus `actions: read` so Claude can read CI results on PRs
+- Authenticates via the `CLAUDE_CODE_OAUTH_TOKEN` secret
+
+This is a developer-assistance workflow — it is not part of the build, test, or deploy path.
 
 ---
 
 ## Required Secrets
 
-**Total: 9 secrets (8 required, 1 unused)**
+**Total: 10 secrets (9 required, 1 unused)**
 
 The following secrets must be configured in your GitHub repository settings:
 
@@ -209,6 +226,9 @@ The following secrets must be configured in your GitHub repository settings:
 ### GitHub
 - `GH_PAT`: GitHub Personal Access Token with repo permissions (used by iOS CD workflows for pushing version bump commits)
 - `HOMELAB_PAT`: GitHub Personal Access Token with write access to `danicajiao/homelab` (used by `ci-services.yml` `bump-overlay-tags` job to push branches and open PRs in the homelab repo)
+
+### Claude Code
+- `CLAUDE_CODE_OAUTH_TOKEN`: OAuth token for the `@claude` GitHub action (`claude.yml`)
 
 ### GCP (services CI only)
 These are **variables** (not secrets) — non-sensitive identifiers stored under GitHub → Settings → Secrets and variables → Actions → **Variables** tab:

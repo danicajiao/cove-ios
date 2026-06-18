@@ -63,7 +63,7 @@ struct CoveApp: App {
     @StateObject var favoritesStore = FavoritesStore()
     @StateObject private var networkMonitor = NetworkMonitor()
 
-    @State private var authPath: [AuthPath] = []
+    @State private var authScreen: Path?
 
     init() {
         print("init run")
@@ -71,50 +71,68 @@ struct CoveApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if appState.authState == .loggedIn {
-                    MainView()
-                        .environment(\.imageRepository, CoveAPIImageRepository())
-                        .environmentObject(bag)
-                } else {
-                    NavigationStack(path: $authPath) {
-                        ZStack {
-                            if networkMonitor.isConnected {
-                                WelcomeView(
-                                    onNavigateToLogin: { authPath.append(.login) },
-                                    onNavigateToSignup: { authPath.append(.signup) }
-                                )
-                                .transition(.opacity)
-                            } else {
-                                SplashView()
-                                    .transition(.opacity)
-                            }
-                        }
-                        .animation(.default, value: networkMonitor.isConnected)
-                        .navigationDestination(for: AuthPath.self) { path in
-                            switch path {
-                            case .login:
-                                LoginView(onNavigateToSignup: { authPath.append(.signup) })
-                            case .signup:
-                                SignupView(onNavigateToLogin: { authPath.append(.login) })
-                            }
-                        }
-                    }
+            rootView
+                .animation(.default, value: appState.authState)
+                .task {
+                    #if DEBUG
+                        await runGatewaySmokeTest()
+                    #endif
                 }
+                .onChange(of: appState.authState) { _, newState in
+                    if newState == .loggedOut { authScreen = nil }
+                }
+                .environmentObject(appState)
+                .environmentObject(favoritesStore)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                    ApplicationDelegate.shared.application(UIApplication.shared, open: url, options: [:])
+                }
+        }
+    }
+
+    private var rootView: some View {
+        ZStack {
+            switch appState.authState {
+            case .loggedIn:
+                MainView()
+                    .environment(\.imageRepository, CoveAPIImageRepository())
+                    .environmentObject(bag)
+                    .transition(.opacity)
+            case .needsUsernameOnboarding:
+                UsernameOnboardingView(appState: appState)
+                    .transition(.opacity)
+            case .needsInterestOnboarding:
+                InterestOnboardingView(appState: appState)
+                    .transition(.opacity)
+            case .loggedOut:
+                authFlowView
+                    .animation(.default, value: networkMonitor.isConnected)
+                    .animation(.default, value: authScreen)
+                    .transition(.opacity)
             }
-            .task {
-                #if DEBUG
-                    await runGatewaySmokeTest()
-                #endif
-            }
-            .onChange(of: appState.authState) { _, _ in
-                authPath = []
-            }
-            .environmentObject(appState)
-            .environmentObject(favoritesStore)
-            .onOpenURL { url in
-                GIDSignIn.sharedInstance.handle(url)
-                ApplicationDelegate.shared.application(UIApplication.shared, open: url, options: [:])
+        }
+    }
+
+    private var authFlowView: some View {
+        ZStack {
+            if !networkMonitor.isConnected {
+                SplashView()
+                    .transition(.opacity)
+            } else {
+                switch authScreen {
+                case .login:
+                    LoginView(onBack: { authScreen = nil }, onNavigateToSignup: { authScreen = .signup })
+                        .transition(.opacity)
+                case .signup:
+                    SignupView(onBack: { authScreen = nil }, onNavigateToLogin: { authScreen = .login })
+                        .transition(.opacity)
+                default:
+                    WelcomeView(
+                        onNavigateToLogin: { authScreen = .login },
+                        onNavigateToSignup: { authScreen = .signup }
+                    )
+                    .transition(.opacity)
+                }
             }
         }
     }

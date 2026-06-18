@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LikeButton: View {
-    let productId: String
+    let itemId: String
     let categoryId: String
     var size: CGFloat = 26
     var outlined: Bool = false
@@ -22,7 +22,7 @@ struct LikeButton: View {
     }
 
     private var isFavorited: Bool {
-        favoritesStore.isFavorite(productId)
+        favoritesStore.isFavorite(itemId)
     }
 
     func haptic() {
@@ -54,7 +54,7 @@ struct LikeButton: View {
                 withAnimation(.easeOut(duration: 0.3)) {
                     scale = 1.0
                 }
-                Task { await favoritesStore.toggle(productId, categoryId: categoryId) }
+                Task { await favoritesStore.toggle(itemId, categoryId: categoryId) }
             }
         }, perform: {})
     }

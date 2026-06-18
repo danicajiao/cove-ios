@@ -271,7 +271,7 @@ All components are defined in the **Components page** of the Figma file. Views s
 | Text Field | `apps/ios/Cove/Components/` | Email, password, search, text area variants |
 | Section Header | `apps/ios/Cove/Components/` | Title + optional "See all →" in `brand/accent` |
 | Divider | `apps/ios/Cove/Components/` | Plain line and "OR" variants |
-| Card / Product | `apps/ios/Cove/Components/ProductCardView.swift` | Product image, name, roaster, price |
+| Card / Item | `apps/ios/Cove/Components/ItemCard.swift` | Item image, name, roaster, price |
 | Card / Category | `apps/ios/Cove/Components/CoffeeCategoryButton.swift` | Uses `category/*` fill colors |
 | Bag Item | `apps/ios/Cove/Components/` | Quantity stepper in `brand/accent`, price in `text/primary` |
 | Store Card | `apps/ios/Cove/Components/` | Circular logo + store name |

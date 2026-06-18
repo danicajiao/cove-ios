@@ -12,17 +12,19 @@ import GoogleSignIn
 import SwiftUI
 
 enum Path: Hashable {
-    case welcome
     case login
     case signup
-    case main
-    case home
-    case product(id: String)
+    case item(id: String)
+    /// Discovery results scoped to a category subtree. `path` is the ltree path
+    /// passed to `GET /discovery?category=`; `name` is the display title.
+    case categoryResults(path: String, name: String)
 }
 
 enum AuthState {
     case loggedIn
     case loggedOut
+    case needsUsernameOnboarding
+    case needsInterestOnboarding
 }
 
 enum AuthMethod: String {
@@ -36,14 +38,41 @@ class AppState: ObservableObject {
     @Published var authState: AuthState = .loggedOut
     var authMethod: AuthMethod?
 
+    private var authListener: AuthStateDidChangeListenerHandle?
+
+    init() {
+        authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self else { return }
+            guard let user else {
+                setAuthState(.loggedOut)
+                return
+            }
+            let providerId = user.providerData.first?.providerID ?? ""
+            let method = AuthMethod(rawValue: providerId) ?? .email
+            Task {
+                await self.handlePostSignIn(method: method)
+            }
+        }
+    }
+
+    deinit {
+        if let authListener { Auth.auth().removeStateDidChangeListener(authListener) }
+    }
+
+    func setAuthState(_ state: AuthState) {
+        withAnimation {
+            authState = state
+        }
+    }
+
     func emailSignUp(email: String, password: String, onFailure: @escaping (Error?) -> Void, onSuccess: @escaping () -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { _, error in
             if error != nil {
                 onFailure(error)
             } else {
                 DispatchQueue.main.async {
-                    self.authState = .loggedIn
                     self.authMethod = .email
+                    self.setAuthState(.needsUsernameOnboarding)
                 }
                 onSuccess()
             }
@@ -58,9 +87,8 @@ class AppState: ObservableObject {
                 onFailure(error)
 //                print(error?.localizedDescription ?? "")
             } else {
-                DispatchQueue.main.async {
-                    strongSelf.authState = .loggedIn
-                    strongSelf.authMethod = .email
+                Task {
+                    await strongSelf.handlePostSignIn(method: .email)
                 }
                 onSuccess()
             }
@@ -226,9 +254,8 @@ class AppState: ObservableObject {
 
                 onFailure(error)
             } else {
-                DispatchQueue.main.async {
-                    self.authMethod = .google
-                    self.authState = .loggedIn
+                Task {
+                    await self.handlePostSignIn(method: .google)
                 }
             }
         }
@@ -257,10 +284,29 @@ class AppState: ObservableObject {
                 print(error.localizedDescription)
                 onFailure(error)
             } else {
-                DispatchQueue.main.async {
-                    self.authMethod = .facebook
-                    self.authState = .loggedIn
+                Task {
+                    await self.handlePostSignIn(method: .facebook)
                 }
+            }
+        }
+    }
+
+    private func handlePostSignIn(method: AuthMethod) async {
+        do {
+            let profile = try await CoveAPIClient.shared.me()
+            await MainActor.run {
+                self.authMethod = method
+                self.setAuthState(profile.interests_onboarded ? .loggedIn : .needsInterestOnboarding)
+            }
+        } catch CoveAPIError.unexpectedStatus(404) {
+            await MainActor.run {
+                self.authMethod = method
+                self.setAuthState(.needsUsernameOnboarding)
+            }
+        } catch {
+            await MainActor.run {
+                self.authMethod = method
+                self.setAuthState(.loggedIn)
             }
         }
     }
@@ -280,7 +326,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 LoginManager().logOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {
@@ -292,7 +338,7 @@ class AppState: ObservableObject {
                 try Auth.auth().signOut()
                 GIDSignIn.sharedInstance.signOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {
@@ -303,7 +349,7 @@ class AppState: ObservableObject {
             do {
                 try Auth.auth().signOut()
                 DispatchQueue.main.async {
-                    self.authState = .loggedOut
+                    self.setAuthState(.loggedOut)
                     self.authMethod = nil
                 }
             } catch let signOutError as NSError {

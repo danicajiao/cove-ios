@@ -11,10 +11,10 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [ViewModels](#viewmodels)
 - [Global State](#global-state)
 - [Networking](#networking)
-- [Product Type System](#product-type-system)
-- [Firebase Data Model](#firebase-data-model)
+- [Item Type System](#item-type-system)
 - [Key Data Flows](#key-data-flows)
 - [Not Yet Implemented](#not-yet-implemented)
+- [Firebase Data Model (historical)](#firebase-data-model-historical)
 
 ---
 
@@ -23,8 +23,8 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through a combination of `@StateObject`, `@EnvironmentObject`, and `@Published` properties.
 
 The app talks to two separate backends:
-- **Firebase** — Auth (sign-in) and Firestore (structured data). Accessed directly through the Firebase iOS SDK. Firebase Storage has been retired as of Phase 2.
-- **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec. Image loading now goes through this path via `CoveAPIImageRepository`.
+- **Firebase** — Auth (sign-in) only. Accessed directly through the Firebase iOS SDK. Firestore and Firebase Storage were retired in Phase 3.
+- **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec. Image loading goes through this path via `CoveAPIImageRepository`.
 
 ---
 
@@ -33,15 +33,15 @@ The app talks to two separate backends:
 ```
 apps/ios/Cove/
 ├── Supporting Files/     # App entry point (CoveApp.swift), Info.plist
-├── Models/               # Data models and global state (AppState, VisitList, Product types)
-│                         #   Also defines Path, AuthState, AuthMethod enums (in AppState.swift)
-├── View Models/          # Business logic and Firestore access
+├── Models/               # Data models and global state (AppState, Bag, TabState, etc.)
+│                         #   Note: Path, AuthState, AuthMethod enums are defined in AppState.swift
+├── View Models/          # Business logic (HomeViewModel, FavoritesViewModel, etc.)
 ├── Views/                # SwiftUI views organized by feature
 │   ├── Profile/          # ProfileHeaderView, StatsRowView, ProfileRowView
-│   └── ...               # HomeView, VisitListView, ProductDetailView, auth views
-├── Components/           # Reusable UI components (ProductCardView, LikeButton, etc.)
+│   └── ...               # HomeView, BagView, ItemDetailView, auth views
+├── Components/           # Reusable UI components (ItemCard, CategoryCard, LikeButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
-├── Enums/                # ProductTypes
+├── Enums/                # AuthPath (ProductTypes removed in Phase 3)
 ├── Constants/            # Design token constants (Spacing.swift, Radius.swift)
 └── Resources/            # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
@@ -52,17 +52,31 @@ apps/ios/Cove/
 
 ### Auth-Driven Routing
 
-`CoveApp` is the root of the app. It reads `AppState.authState` to decide which UI to show:
+`CoveApp` is the root of the app. It switches on `AppState.authState` (four cases) to decide which UI to show:
 
-```
-CoveApp
-├── authState == .loggedIn  →  MainView (tab bar)
-└── authState == .loggedOut →  NavigationStack (auth flow)
-    ├── network available   →  WelcomeView
-    └── no network          →  SplashView
+```mermaid
+flowchart TD
+    CoveApp["CoveApp (root)<br/>switches on AppState.authState"]
+    CoveApp -->|".loggedOut"| Auth["auth flow"]
+    Auth -->|"network available"| Welcome["WelcomeView"]
+    Auth -->|"no network"| Splash["SplashView"]
+    CoveApp -->|".needsUsernameOnboarding"| UN["UsernameOnboardingView"]
+    CoveApp -->|".needsInterestOnboarding"| IO["InterestOnboardingView"]
+    CoveApp -->|".loggedIn"| Main["MainView (tab bar)"]
+    UN -.->|"username set"| IO
+    IO -.->|"interests_onboarded"| Main
 ```
 
-`AppState` holds `@Published var authState: AuthState`. When a user successfully signs in, `authState` flips to `.loggedIn`, which triggers `CoveApp` to rebuild and show `MainView`. Auth navigation is owned locally by `CoveApp` via `@State private var authPath: [AuthPath]`, which is reset to `[]` via `.onChange(of: appState.authState)` on logout.
+`AppState` holds `@Published var authState: AuthState` (`.loggedOut`, `.needsUsernameOnboarding`, `.needsInterestOnboarding`, `.loggedIn`). Auth navigation is owned locally by `CoveApp` via `@State private var authPath: [AuthPath]`, which is reset to `[]` via `.onChange(of: appState.authState)` on logout.
+
+### Post-sign-in onboarding
+
+After Firebase sign-in, `AppState` gates entry into the app on two `cove-user`-backed checks before reaching `.loggedIn`:
+
+1. **Username** — if the signed-in user has no username, `authState` becomes `.needsUsernameOnboarding` and `UsernameOnboardingView` collects one (persisted via `cove-user`, `POST /users/me`).
+2. **Interests** — `AppState` then loads the profile and reads the `interests_onboarded` flag. If `false`, `authState` becomes `.needsInterestOnboarding` and `InterestOnboardingView` fetches the category tree (`GET /categories`), lets the user pick leaf categories, and saves them via `PUT /users/me/interests` (which sets `interests_onboarded`). If already onboarded, it goes straight to `.loggedIn`.
+
+Once both checks pass, `authState` flips to `.loggedIn` and `MainView` is shown.
 
 ### Supported Auth Methods
 
@@ -75,7 +89,7 @@ CoveApp
 
 ### Navigation Enums
 
-`AuthPath` drives the auth `NavigationStack` in `CoveApp`:
+`AuthPath` drives the auth `NavigationStack` in `CoveApp`. It is defined in `Enums/AuthPath.swift`:
 
 ```swift
 enum AuthPath: Hashable {
@@ -84,11 +98,16 @@ enum AuthPath: Hashable {
 }
 ```
 
-`Path` drives in-app navigation within `TabNavigationStack`:
+`Path` drives in-app navigation within `TabNavigationStack`. It is defined in `Models/AppState.swift` alongside `AuthState` and `AuthMethod`:
 
 ```swift
 enum Path: Hashable {
-    case product(id: String)   // Product detail navigation within tabs
+    case welcome
+    case login
+    case signup
+    case main
+    case home
+    case item(id: String)
 }
 ```
 
@@ -96,34 +115,38 @@ enum Path: Hashable {
 
 ## Tab Structure
 
-`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping a product from the Home tab pushes `ProductDetailView` without leaving the tab).
+`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping an item from the Home tab pushes `ItemDetailView` without leaving the tab).
 
-| Tab | View | Status |
-|-----|------|--------|
-| Home | `HomeView` | Implemented |
-| Browse | Placeholder | Not implemented |
-| Visit List | `VisitListView` | In progress |
-| Favorites | `FavoritesView` | Implemented |
-| Profile | `ProfileView` | Implemented |
+| Tab | Tag | View | Status |
+|-----|-----|------|--------|
+| Home | `"home"` | `HomeView` | Implemented |
+| Browse | `"browse"` | Placeholder `Text` | Not implemented |
+| Bag | `"bag"` | `BagView` | Implemented (badge shows item count); planned replacement is VisitList (see below) |
+| Favorites | `"favorites"` | `FavoritesView` | Implemented |
+| Profile | `"profile"` | `ProfileView` | Implemented |
+
+Tab selection is managed by `TabState` (`Models/TabState.swift`) — an `ObservableObject` that tracks `currentTab` and `previousTab` as `String` values matching the tab tags above.
 
 ---
 
 ## ViewModels
 
 ### HomeViewModel
-Serves `HomeView`. Fetches all products and brands from Firestore on first load. After fetching products, it queries the current user's favorites subcollection and marks matching products with `isFavorite = true`. Results are cached in-memory — `fetchProducts()` early-returns if `products` is already populated.
+Serves `HomeView`. Fetches items and brands via `ItemRepository` (`CoveAPIItemRepository`). Items are cached in-memory with a 5-minute TTL; `fetchItems()` early-returns unless the cache is expired or `forceRefresh` is true. Also fetches personalized category cards from `GET /recommendations/categories` via `CoveAPIClient` (`fetchCategories()`), and records `category_tap` attention events when a card is tapped.
 
-### ProductDetailViewModel
-Serves `ProductDetailView`. Initialized with a `productId`, it runs three async fetches on init: the product itself, its type-specific details, and up to 5 similar products (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by product type.
+### ItemDetailViewModel
+Serves `ItemDetailView`. Initialized with an `itemId`, it runs three async fetches on init: the item itself, its type-specific details, and up to 5 similar items (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by item type.
 
-### VisitListViewModel
-Serves `VisitListView`. Manages the user's Visit List — vendors and products they intend to visit in person. Tracks visit status (`pending`, `visited`) and whether a purchase was made. Fetches similar product recommendations based on the categories of items in the list.
+### BagViewModel
+Serves `BagView`. Manages the user's bag — products they intend to purchase or revisit. Fetches product recommendations based on the categories of items in the bag.
+
+> **v1 note:** The Bag is a v1 stand-in. Because Cove does not handle fulfillment or transactions in v1, a full cart/checkout model isn't warranted. The planned replacement is **VisitList** — a saved list of items the user intends to visit or purchase, without requiring checkout infrastructure. VisitList will replace `Bag` and `BagViewModel` in a future phase.
 
 ### FavoritesViewModel
-Serves `FavoritesView`. Fetches the current user's favorited products from Firestore in batches of 30 (Firestore `in` query limit). Reads the `users/{uid}/favorites` subcollection to get product IDs, then fetches the corresponding product documents and decodes them by `categoryId` into the correct concrete type. Publishes `favorites: [any Product]` and `isLoading`.
+Serves `FavoritesView`. Fetches the current user's favorited items via the `FavoritesRepository` and `ItemRepository` protocols (backed by `CoveAPIFavoritesRepository` and `CoveAPIItemRepository`). Reads favorite item IDs from `cove-user`, then hydrates each one by fetching the corresponding item from `cove-item`. Publishes `favorites: [any Item]` and `isLoading`.
 
 ### ProfileViewModel
-Serves `ProfileView`. Lightweight — all data is derived from `Auth.auth().currentUser` (display name, initials, photo URL, member since date). No Firestore reads, no local state mutations.
+Serves `ProfileView`. Lightweight — all data is derived from `Auth.auth().currentUser` (display name, initials, photo URL, member since date). No repository calls, no local state mutations.
 
 ---
 
@@ -134,17 +157,20 @@ Injected at the root via `.environmentObject`. Owns:
 - `authState` — drives the root UI split between auth flow and main app
 - All sign-in/sign-out methods for every auth provider
 
-### VisitList
-Injected into `MainView` and its children via `.environmentObject`. Owns:
-- `items: [VisitListItem]` — vendors and products the user wants to visit in person
-- `categories: [String]` — categoryIds of items in the list, used to fetch recommendations
+### Bag
+`Bag` (`Models/Bag.swift`) is injected at the root (`CoveApp`) via `.environmentObject` and available throughout the app. Owns:
+- `items: [BagItem]` — products the user has added to their bag
+- `totalItems: Int` — computed count used to badge the Bag tab
+- `categories: [String]` — categoryIds of items in the bag, used to fetch recommendations in `BagViewModel`
+
+**Planned replacement — VisitList:** `Bag` will be superseded by `VisitList` in a future phase. Since v1 does not include fulfillment or transaction processing, a lightweight "visit list" (items the user wants to remember or visit in person) is a better fit than a purchase cart. `VisitList` will replace `Bag`, `BagItem`, and `BagViewModel`; the tab icon and global state injection point will carry over.
 
 ### FavoritesStore
 Injected at the root (`CoveApp`) via `.environmentObject` and available throughout the entire app. Owns:
-- `favoriteIds: Set<String>` — the set of favorited product IDs for the current user
+- `favoriteIds: Set<String>` — the set of favorited item IDs for the current user
 - `isTogglingFavorite: Bool` — prevents concurrent toggle operations
 - Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
-- `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
+- `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to `cove-user` via `CoveAPIFavoritesRepository` (`POST`/`DELETE /users/me/favorites/{itemId}`)
 - Used by `LikeButton` to read and mutate favorite state across all views
 
 ---
@@ -153,19 +179,17 @@ Injected at the root (`CoveApp`) via `.environmentObject` and available througho
 
 The app has two completely separate networking tracks. They never share code.
 
+```mermaid
+flowchart LR
+    subgraph fb["Firebase SDK · Google-managed"]
+        FA["FirebaseAuth<br/>auth token issuance only"]
+    end
+    subgraph gw["cove-api gateway · K3s homelab via Cloudflare Tunnel"]
+        Client["CoveAPIClient"] --> API["cove-api"]
+    end
 ```
-Firebase SDK                        cove-api gateway
-(Google-managed infrastructure)     (K3s homelab, Cloudflare Tunnel)
 
-FirebaseAuth  ─────────────────►  Auth token issuance only
-FirebaseFirestore ─────────────►  Structured data (Phase 2; Firestore retired in Phase 3)
-FirebaseStorage ───────────────►  (retired as of Phase 2 — unlinked from Xcode target)
-
-                                  CoveAPIClient ──────────────────►  cove-api
-                                  (all gateway calls go here,
-                                   including image loading via
-                                   CoveAPIImageRepository)
-```
+`CoveAPIClient` is the sole path to the gateway — all calls go through it, including image loading via `CoveAPIImageRepository`. The two tracks never share code; the Firebase ID token issued on the left is attached as a `Bearer` header to requests on the right.
 
 ### APIEnvironment
 
@@ -193,26 +217,12 @@ This means TestFlight builds hit staging automatically; App Store builds hit pro
 
 **How the generation works:**
 
-```
-services/cove-api/api/openapi.yaml          ← backend source of truth
-        │
-        │  manual copy when spec changes:
-        │  cp services/cove-api/api/openapi.yaml \
-        │     apps/ios/Cove/Networking/Generated/openapi.yaml
-        ▼
-Cove/Networking/Generated/
-  openapi.yaml                          ← iOS copy of the spec
-  openapi-generator-config.yaml         ← instructs plugin: generate types + client
-        │
-        │  ⌘B triggers the OpenAPIGenerator build plugin
-        ▼
-DerivedData/.../GeneratedSources/       ← never checked in, never edited
-  Types.swift                           ← Components.Schemas.* structs
-  Client.swift                          ← one typed method per API operation
-        │
-        │  compiled into the app binary alongside hand-written code
-        ▼
-Cove/Networking/CoveAPIClient.swift     ← thin wrapper, what ViewModels call
+```mermaid
+flowchart TD
+    SRC["services/cove-api/api/openapi.yaml<br/>backend source of truth"]
+    SRC -->|"manual copy when spec changes<br/>cp … → Networking/Generated/openapi.yaml"| COPY["Cove/Networking/Generated/<br/>openapi.yaml — iOS copy of the spec<br/>openapi-generator-config.yaml — types + client"]
+    COPY -->|"⌘B triggers the OpenAPIGenerator build plugin"| GEN["DerivedData/.../GeneratedSources/<br/>Types.swift — Components.Schemas.* structs<br/>Client.swift — one typed method per operation<br/>(never checked in, never edited)"]
+    GEN -->|"compiled into the app binary"| WRAP["Cove/Networking/CoveAPIClient.swift<br/>thin wrapper — what ViewModels call"]
 ```
 
 The generated files live in DerivedData and are never committed. They recompile automatically whenever `openapi.yaml` changes.
@@ -242,16 +252,14 @@ let health = try await CoveAPIClient.shared.health()
 
 A `ClientMiddleware` that runs on every outgoing request to cove-api. It fetches the current Firebase user's ID token and injects it as a Bearer header before forwarding the request.
 
-```
-CoveAPIClient.shared.health()
-    │
-    ├─ FirebaseAuthMiddleware.intercept(...)
-    │    ├─ Auth.auth().currentUser? → get ID token
-    │    └─ request.headerFields[.authorization] = "Bearer <token>"
-    │
-    ├─ URLSessionTransport sends HTTP request to staging-api.coveapp.dev
-    │
-    └─ response decoded into Components.Schemas.HealthResponse
+```mermaid
+flowchart TD
+    Call["CoveAPIClient.shared.health()"]
+    Call --> MW["FirebaseAuthMiddleware.intercept(...)"]
+    MW --> Tok["Auth.auth().currentUser? → get ID token"]
+    Tok --> Hdr["request.headerFields[.authorization] = Bearer {token}"]
+    Hdr --> Send["URLSessionTransport → staging-api.coveapp.dev"]
+    Send --> Resp["response decoded into<br/>Components.Schemas.HealthResponse"]
 ```
 
 Routes that opt out of auth (e.g. `GET /health`) receive the header anyway — the gateway ignores it. This keeps the middleware unconditional with no per-route branching.
@@ -276,139 +284,84 @@ When a new route is added to cove-api:
 
 ### ImageRepository — protocol and active implementation
 
-Image loading is abstracted behind the `ImageRepository` protocol. All views access it through the SwiftUI environment; `CoveApp` injects the concrete implementation at the root.
+Image loading is abstracted behind the `ImageRepository` protocol (`Networking/Repositories/ImageRepository.swift`). Views access it through the SwiftUI environment. The environment key defaults to `CoveAPIImageRepository()`, and `CoveApp` also injects it explicitly on `MainView()` when auth state is `.loggedIn`.
 
 ```swift
 // Protocol — key-based: takes the Garage object key directly
-protocol ImageRepository {
+protocol ImageRepository: Sendable {
     func imageURL(for key: String) async throws -> URL
 }
-
-// Injection at the app root (CoveApp.swift)
-ContentView()
-    .environment(\.imageRepository, CoveAPIImageRepository())
 ```
+
+The environment key provides a default of `CoveAPIImageRepository()`, so views receive the correct implementation without explicit injection at each call site. Tests and Previews override it with a mock via `.environment(\.imageRepository, mock)`.
 
 **`CoveAPIImageRepository`** is the active implementation. It:
 1. Strips the `images/` prefix from the Garage key to get the bare filename
-2. Calls `CoveAPIClient.shared.imageURL(filename:width:height:)` — the `GET /images/{filename}/url` gateway endpoint
+2. Calls `api.imageURL(filename:width:height:)` on the injected `CoveAPIClient` (defaults to `.shared`) — the `GET /images/{filename}/url` gateway endpoint
 3. Returns the signed imgproxy URL ready for `AsyncImage`
 
 `FirebaseImageRepository` was removed in Phase 2. There are no remaining references to Firebase Storage in the iOS codebase.
 
 ---
 
-## Product Type System
+## Item Type System
 
-Products in Firestore share a common `categoryId` field. The app uses this to decode into the correct Swift type at runtime.
+The app uses a polymorphic `Item` protocol to represent different kinds of discoverable items (coffee, music, apparel). Each concrete type carries type-specific `info` and `details` structs that power the type-specific tabs in `ItemDetailView`.
 
-### Type Mapping
-
-```swift
-enum ProductTypes: String {
-    case coffee  = "8JbKssVf2zw8ryq1pace"
-    case music   = "JzzwWDRpp2B5zG4TNdWx"
-    case apparel = "s97tOnvbfrNtoe2VaNRQ"
-}
-```
+`ProductTypes.swift` and `FirebaseProductRepository` were both removed in Phase 3. Categories are now served as data from `GET /categories` on cove-api; items are fetched via `CoveAPIItemRepository`.
 
 ### Protocol Hierarchy
 
 ```
-Product (protocol)
-├── CoffeeProduct   → info: CoffeeInfo  { name, roastery }
-├── MusicProduct    → info: MusicInfo   { artist, album }
-└── ApparelProduct  → info: ApparelInfo { brand, name }
+Item (protocol)
+├── CoffeeItem   → info: CoffeeInfo  { name, roastery }
+├── MusicItem    → info: MusicInfo   { artist, album }
+└── ApparelItem  → info: ApparelInfo { brand, name }
 
-ProductDetails (protocol)
-├── CoffeeProductDetails   → description, about, origin: [OriginInfo]
-├── MusicProductDetails    → description, about, tracklist: [Track]
-└── ApparelProductDetails  → description, about, specifications: [Specification]
+ItemDetails (protocol)
+├── CoffeeItemDetails   → description, about, origin: [OriginInfo]
+├── MusicItemDetails    → description, about, tracklist: [Track]
+└── ApparelItemDetails  → description, about, specifications: [Specification]
 ```
 
-### Decoding Strategy
-
-ViewModels read the raw `categoryId` from each Firestore document before decoding:
-
-```swift
-let categoryId = document["categoryId"] as? String
-if categoryId == ProductTypes.coffee.rawValue {
-    let product = try document.data(as: CoffeeProduct.self)
-} else if categoryId == ProductTypes.music.rawValue {
-    let product = try document.data(as: MusicProduct.self)
-} // ...
-```
-
-`ProductDetailView` and `ProductCardView` then type-cast `any Product` back to the concrete type to access type-specific fields (e.g., `(product as? CoffeeProduct)?.info.roastery`).
-
----
-
-## Firebase Data Model
-
-### Collections
-
-| Collection | Purpose |
-|------------|---------|
-| `products` | All product listings |
-| `product_details` | Type-specific product details (keyed by `productDetailsId`) |
-| `brands` | Brand/store info shown in the Home "Stores" section |
-| `users/{uid}/favorites` | Per-user favorited product IDs |
-
-### Product Document Structure
-
-```
-products/{productId}
-  ├── categoryId: String          // Maps to ProductTypes enum
-  ├── defaultPrice: Float
-  ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
-  ├── productDetailsId: String    // Foreign key to product_details
-  ├── isFavorite: Bool?           // Set client-side after favorites query
-  ├── createdAt: Timestamp
-  └── info: { ... }              // Type-specific nested object
-```
-
-Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Phase 2 it holds a Garage object key (`images/<sha256>.webp`). The same key format applies to `brands.imageURL`.
-
-### Image Loading
-
-Product images are loaded via the `ImageRepository` protocol injected into the SwiftUI environment. All image-loading views (`ProductCardView`, `ProductRowView`, `ProductDetailView`, `HomeView` brand logos) call `imageRepository.imageURL(for:)` with the Garage object key from Firestore, then pass the resulting signed URL to `AsyncImage`. Firebase Storage is no longer used.
+ViewModels and repositories work against `any Item` and `any ItemDetails`. Views type-cast to the concrete type to access type-specific fields (e.g., `(item as? CoffeeItem)?.info.roastery`).
 
 ---
 
 ## Key Data Flows
 
-### App Launch → Products Displayed
+### App Launch → Items Displayed
 
 ```
 1. CoveApp checks authState → .loggedIn
 2. MainView shown with HomeView in first tab
-3. HomeView.onAppear → viewModel.fetchProducts()
-4. Firestore query: collection("products").getDocuments()
-5. Each doc decoded by categoryId → CoffeeProduct / MusicProduct / ApparelProduct
-6. Favorites query: users/{uid}/favorites where productId in fetchedIds
-7. Matching products marked isFavorite = true
-8. products array published → HomeView renders ProductCardView grid
+3. HomeView.onAppear → viewModel.fetchItems() + viewModel.fetchBrands() + viewModel.fetchCategories() + favoritesStore.loadFavorites()
+4. CoveAPIItemRepository → GET /items (via CoveAPIClient)
+5. Each item decoded by type → CoffeeItem / MusicItem / ApparelItem
+6. items array published → HomeView renders ItemCard grid
+7. brands array published → HomeView renders brand logo row
+8. categories array published → HomeView renders CategoryCard scroll row
 ```
 
-### Product Tap → Detail View
+### Item Tap → Detail View
 
 ```
-1. User taps ProductCardView
-2. NavigationLink(value: Path.product(id:)) fires
-3. TabNavigationStack routes to ProductDetailView(productId:)
-4. ViewModel init → async fetch: product + details + similar products
+1. User taps ItemCard
+2. NavigationLink(value: Path.item(id:)) fires
+3. TabNavigationStack routes to ItemDetailView(itemId:)
+4. ViewModel init → async fetch: item + details + similar items
 5. UI renders with type-specific tabs
 ```
 
-### Add to Visit List
+### Add to Bag
 
 ```
-1. User taps "Add to Visit List" in ProductDetailView or vendor page
-2. Check if item already in visitList.items
-   ├── Yes → no-op (already tracked)
-   └── No  → append new VisitListItem with status = .pending
-3. visitList.categories updated with product's categoryId
-4. VisitListView onChange → VisitListViewModel.fetchSimilarProducts(categories:)
+1. User taps "Add to Bag" in ItemDetailView
+2. Check if item already in bag.items
+   ├── Yes → no-op or increment quantity
+   └── No  → append new BagItem
+3. bag.categories updated with product's categoryId
+4. BagView badge on tab updates via bag.totalItems
 ```
 
 ### Sign Out
@@ -427,10 +380,46 @@ Product images are loaded via the `ImageRepository` protocol injected into the S
 
 | Feature | Location |
 |---------|----------|
-| Browse tab | Placeholder `Text` in MainView |
-| Search | TextField in HomeView is present but not connected |
-| Visit status update | Mark a visit as completed / purchased in VisitListView |
-| Reviews | NavigationLink exists in ProductDetailView but no destination |
-| Profile editing | ProfileRowView items are not wired up |
-| Notifications | Bell icon in HomeView has no action |
-| Apple Sign-In | Auth method referenced but not implemented |
+| Browse tab | Placeholder `Text` in `MainView` |
+| Search | `TextField` in `HomeView` is present but not connected |
+| Bag actions | Add/remove items wired up; purchase confirmation not implemented |
+| VisitList | Planned replacement for `Bag` — lightweight saved-items list without checkout; replaces `Bag`, `BagItem`, and `BagViewModel` |
+| Reviews | `NavigationLink` exists in `ItemDetailView` but no destination |
+| Profile editing | `ProfileRowView` items are not wired up |
+| Notifications | Bell icon in `HomeView` has no action |
+| Apple Sign-In | `AuthMethod.apple` referenced but sign-in flow not implemented |
+
+---
+
+
+## Firebase Data Model (historical)
+
+> **Retired in Phase 3.** Firestore is no longer used for structured data. This section is preserved for reference when reviewing git history or understanding legacy code.
+
+### Collections
+
+| Collection | Purpose |
+|------------|---------|
+| `products` | All product listings |
+| `product_details` | Type-specific product details (keyed by `productDetailsId`) |
+| `brands` | Brand/store info shown in the Home "Stores" section |
+| `users/{uid}/favorites` | Per-user favorited product IDs |
+
+### Product Document Structure
+
+```
+products/{productId}
+  ├── categoryId: String          // Firestore-era field; replaced by ltree category path in Phase 3
+  ├── defaultPrice: Float
+  ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
+  ├── productDetailsId: String    // Foreign key to product_details
+  ├── isFavorite: Bool?           // Set client-side after favorites query
+  ├── createdAt: Timestamp
+  └── info: { ... }              // Type-specific nested object
+```
+
+Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Phase 2 it holds a Garage object key (`images/<sha256>.webp`). The same key format applies to `brands.imageURL`.
+
+### Image Loading
+
+Product images were loaded from Firestore document keys and resolved to signed imgproxy URLs via `CoveAPIImageRepository`. Firebase Storage was retired in Phase 2; `FirebaseImageRepository` is removed.

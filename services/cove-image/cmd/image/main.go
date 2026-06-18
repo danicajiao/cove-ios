@@ -15,7 +15,7 @@ import (
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/go-chi/chi/v5"
 
-	"github.com/danicajiao/cove/services/cove-image/internal/imgproxy"
+	"github.com/danicajiao/cove/packages/imgproxy"
 	"github.com/danicajiao/cove/services/cove-image/internal/normalize"
 	"github.com/danicajiao/cove/services/cove-image/internal/storage"
 )

@@ -34,14 +34,11 @@ func main() {
 	// /i/* proxies to imgproxy unauthenticated — imgproxy validates its own
 	// HMAC-SHA256 URL signature, so a Firebase token is not required here.
 	// This allows Cloudflare to cache image responses without needing a token.
-	imgproxyURL := os.Getenv("IMGPROXY_URL")
-	if imgproxyURL == "" {
-		imgproxyURL = "http://imgproxy:8080"
-	}
+	imgproxyURL := envOr("IMGPROXY_URL", "http://imgproxy:8080")
 	r.Handle("/i/*", imgproxyHandler(imgproxyURL))
 
 	// Initialise Firebase and wire protected routes only when credentials are
-	// provided.  Without FIREBASE_CREDENTIALS_PATH the server still starts and
+	// provided. Without FIREBASE_CREDENTIALS_PATH the server still starts and
 	// /health works; all other routes return 401.
 	credPath := os.Getenv("FIREBASE_CREDENTIALS_PATH")
 	if credPath != "" {
@@ -57,24 +54,39 @@ func main() {
 			log.Fatalf("failed to initialise Firebase Auth client: %v", err)
 		}
 
-		// cove-image URL — defaults to the in-cluster Service name, which
-		// resolves within the same namespace without a full DNS path.
-		coveImageURL := os.Getenv("COVE_IMAGE_URL")
-		if coveImageURL == "" {
-			coveImageURL = "http://cove-image:8080"
-		}
+		// Internal service URLs — default to the in-cluster Service names,
+		// which resolve within the same Kubernetes namespace without a full
+		// DNS path (e.g. http://cove-item:8080 resolves to
+		// cove-item.cove-staging.svc.cluster.local in staging).
+		coveImageURL := envOr("COVE_IMAGE_URL", "http://cove-image:8080")
+		coveItemURL := envOr("COVE_ITEM_URL", "http://cove-item:8080")
+		coveUserURL := envOr("COVE_USER_URL", "http://cove-user:8080")
 
 		// All routes except /health and /i/* are protected by Firebase
-		// ID-token validation.
+		// ID-token validation. The verified UID is injected as X-Cove-Uid so
+		// downstream services can trust the identity without re-validating
+		// the token themselves.
 		r.Group(func(r chi.Router) {
 			r.Use(covauth.Middleware(authClient))
 
-			// /images and /images/* proxy to cove-image. The authenticated
-			// UID is injected as X-Cove-Uid so cove-image can trust it
-			// without re-validating the Firebase token itself.
-			imgHandler := coveImageHandler(coveImageURL)
+			// cove-image: signed imgproxy URL generation.
+			imgHandler := uidProxy("cove-image", coveImageURL)
 			r.Handle("/images", imgHandler)
 			r.Handle("/images/*", imgHandler)
+
+			// cove-item: discovery, category tree, item/maker/storefront detail.
+			itemHandler := uidProxy("cove-item", coveItemURL)
+			r.Handle("/discovery", itemHandler)
+			r.Handle("/categories", itemHandler)
+			r.Handle("/items/*", itemHandler)
+			r.Handle("/makers/*", itemHandler)
+			r.Handle("/storefronts/*", itemHandler)
+
+			// cove-user: profile, favorites, follows, interests, attention
+			// events, and personalized category recommendations.
+			userHandler := uidProxy("cove-user", coveUserURL)
+			r.Handle("/users/*", userHandler)
+			r.Handle("/recommendations/*", userHandler)
 		})
 
 		log.Println("Firebase Auth initialised — protected routes active")
@@ -82,10 +94,7 @@ func main() {
 		log.Println("FIREBASE_CREDENTIALS_PATH not set — protected routes disabled (local dev mode)")
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := envOr("PORT", "8080")
 
 	log.Printf("cove-api listening on :%s", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
@@ -93,27 +102,31 @@ func main() {
 	}
 }
 
-// coveImageHandler returns a reverse proxy handler for cove-image.
-//
-// The handler injects the authenticated Firebase UID as X-Cove-Uid so
-// cove-image can trust it without re-validating the token. The full request
-// path is forwarded unchanged so cove-image's own router handles dispatch
-// (e.g. POST /images vs GET /images/{filename}/url).
-func coveImageHandler(targetURL string) http.Handler {
+// envOr returns the value of the named environment variable, or def if it
+// is unset or empty.
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
+// uidProxy returns an http.Handler that reverse-proxies all requests to the
+// given upstream URL, injecting the verified Firebase UID as X-Cove-Uid so
+// the upstream service can trust the identity without re-validating the token.
+func uidProxy(name, targetURL string) http.Handler {
 	target, err := url.Parse(targetURL)
 	if err != nil {
-		log.Fatalf("invalid COVE_IMAGE_URL %q: %v", targetURL, err)
+		log.Fatalf("invalid upstream URL for %s %q: %v", name, targetURL, err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("ERROR: cove-image proxy: %v", err)
+		log.Printf("ERROR: %s proxy: %v", name, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadGateway)
-		_, _ = w.Write([]byte(`{"error":"image service unavailable"}`))
+		_, _ = w.Write([]byte(`{"error":"upstream service unavailable"}`))
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Propagate the verified UID. cove-image rejects requests without
-		// this header — safe because cove-image is not externally reachable.
 		if uid, ok := covauth.UIDFromContext(r.Context()); ok {
 			r.Header.Set("X-Cove-Uid", uid)
 		}
@@ -142,7 +155,7 @@ func imgproxyHandler(targetURL string) http.Handler {
 }
 
 // healthHandler returns 200 with a JSON body identifying the service and the
-// Git commit SHA of the running build.  It is intentionally unauthenticated
+// Git commit SHA of the running build. It is intentionally unauthenticated
 // so Kubernetes liveness/readiness probes and the iOS smoke test can reach it
 // without a token.
 func healthHandler(w http.ResponseWriter, _ *http.Request) {

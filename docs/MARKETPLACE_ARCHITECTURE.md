@@ -1,16 +1,17 @@
 # Marketplace Architecture
 
-> **Status:** Canonical data-model + services document. Reflects the trust-layer direction (May 2026). The app currently uses Firebase (Firestore + Auth + Storage); this describes the target Postgres-backed model Cove is migrating to. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
+> **Status:** Canonical data-model + services document (June 2026). Phase 3 is complete — `cove-item` and `cove-user` are deployed to `cove-staging` (prod promotion follows the integration-branch merge to `main`) and the iOS app calls them via the cove-api gateway. Firebase Firestore and Storage have been retired. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
 
 ## Contents
 
 - [Overview](#overview)
 - [The core reframe: the trust layer is the product](#the-core-reframe-the-trust-layer-is-the-product)
-- [Entity model: maker, storefront, product](#entity-model-maker-storefront-product)
+- [Entity model: maker, storefront, item](#entity-model-maker-storefront-item)
 - [Services](#services)
 - [Single Postgres cluster, schemas per service](#single-postgres-cluster-schemas-per-service)
 - [The trust signal system](#the-trust-signal-system)
 - [Composite trust scoring](#composite-trust-scoring)
+- [Personalized ranking via signal-preference alignment](#personalized-ranking-via-signal-preference-alignment)
 - [Geospatial: the local availability gate](#geospatial-the-local-availability-gate)
 - [Categories and facets](#categories-and-facets)
 - [Database schema](#database-schema)
@@ -63,7 +64,7 @@ This is why the model below centers the *maker + place graph and trust layer* ra
 
 ---
 
-## Entity model: maker, storefront, product
+## Entity model: maker, storefront, item
 
 Cove separates **who makes** a thing from **where you find it** — *"Cove tells you who near you makes or sells it."*
 
@@ -71,7 +72,7 @@ Cove separates **who makes** a thing from **where you find it** — *"Cove tells
 |---|---|---|---|
 | **maker** | Who produces it — a company *or* an individual | Provenance signals (B Corp, 1% for the Planet) + **tier** (Verified Business / Individual Lister) | No — can be national |
 | **storefront** | Where to find it — `type`: shop / gallery / studio / market / taproom | Local signals (Living Wage, Community Verified) + **location** | **Yes — must be local** |
-| **product** | What a user searches for | Its own signals (USDA Organic); **made by** one maker, **available at** many storefronts | Via its storefronts |
+| **item** | What a user searches for | Its own signals (USDA Organic); **made by** one maker, **available at** many storefronts | Via its storefronts |
 
 "Storefront" is the internal entity name; a `type` enum carries the specifics (a market stall and a gallery are both storefronts of different types). The consumer-facing label is **"Where to find it,"** so the word never has to read as warm marketing copy.
 
@@ -79,8 +80,8 @@ Cove separates **who makes** a thing from **where you find it** — *"Cove tells
 
 It correctly handles real cases and reframes the "national chains" concern:
 
-- **A local boutique selling Patagonia.** Storefront = the boutique (`type: shop`, local, its own signals). Maker = Patagonia (B Corp, national). The product carries Patagonia's maker trust *on top of* the boutique's local trust.
-- **An individual potter.** Maker = the potter (Individual Lister tier, her provenance signals). She's available at her **studio** (`type: studio`, by appointment), a **gallery** (`type: gallery`, someone else's), and the **Saturday market** (`type: market`, a shared place). One maker, one product, many storefronts.
+- **A local boutique selling Patagonia.** Storefront = the boutique (`type: shop`, local, its own signals). Maker = Patagonia (B Corp, national). The item carries Patagonia's maker trust *on top of* the boutique's local trust.
+- **An individual potter.** Maker = the potter (Individual Lister tier, her provenance signals). She's available at her **studio** (`type: studio`, by appointment), a **gallery** (`type: gallery`, someone else's), and the **Saturday market** (`type: market`, a shared place). One maker, one item, many storefronts.
 - **Patagonia's own RiNo store.** Surfaces *because* it has a local storefront AND genuine signals — not excluded for being national.
 - **Walmart.** Has local stores too, but no meaningful trust signals, so the ranking buries it.
 
@@ -97,12 +98,12 @@ A storefront may be operated by the maker themselves (a potter's studio, New Bel
 | Service | Path | Responsibility |
 |---|---|---|
 | `cove-api` | `services/cove-api/` | Single ingress (BFF gateway). Validates Firebase ID tokens, routes to backend services, forwards UID via `X-Cove-Uid`. |
-| `cove-product` | `services/cove-product/` | The discovery surface: makers, storefronts, products, availability, categories, trust signals, scoring, and the discovery query. Reads the whole graph. |
-| `cove-user` | `services/cove-user/` | User profiles, favorites, follows. |
+| `cove-item` | `services/cove-item/` | Item ingestion, category catalog, and the discovery endpoint (`GET /discovery`). Reads the `catalog` and `directory` schemas. |
+| `cove-user` | `services/cove-user/` | User profiles, interest management, `GET /recommendations/categories` (top-up algorithm), `POST /users/me/events` (attention events). |
 | `cove-image` | `services/cove-image/` | Authenticated image uploads to Garage and signed-URL fetch via imgproxy. Stateless. |
 | `cove-directory` | `services/cove-directory/` (future) | Self-serve onboarding, maker/storefront profile management, signal verification. Takes over writes to the `directory` schema when it ships. |
 
-**v1 service ownership note:** `cove-product` owns the entire discovery surface for v1, including the `directory` schema (makers + storefronts) which is seeded once during migration and read by `cove-product` for discovery. When `cove-directory` ships (onboarding), it takes over writes to `directory` via a permissions flip — `cove-product` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern.
+**v1 service ownership note:** `cove-item` owns the discovery surface for v1, including reading the `directory` schema (makers + storefronts) which is seeded once during migration. When `cove-directory` ships (onboarding), it takes over writes to `directory` via a permissions flip — `cove-item` keeps SELECT for discovery. This mirrors the read-only pre-positioning pattern.
 
 The iOS app uses `swift-openapi-generator` to produce a typed Swift client per service. ViewModels never construct URLs or call `URLSession` directly — they consume repository protocols backed by the generated clients (see [iOS App Architecture](IOS_APP_ARCHITECTURE.md)).
 
@@ -114,33 +115,61 @@ All v1 services share one CNPG `Cluster` (`cove-db`) and one database (`cove`), 
 
 | Schema | Owning service | Tables |
 |---|---|---|
-| `directory` | `cove-directory` (future); read-only from `cove-product` in v1 | `makers`, `storefronts` |
-| `product` | `cove-product` | `categories`, `products`, `availability`, `media`, `signals`, `entity_signals` |
-| `user` | `cove-user` | `users`, `favorites`, `follows` |
+| `directory` | `cove-directory` (future); read-only from `cove-item` in v1 | `makers`, `storefronts` |
+| `catalog` | `cove-item` | `categories`, `items`, `availability`, `media`, `signals`, `entity_signals` |
+| `profile` | `cove-user` | `users`, `favorites`, `follows`, `interests`, `events` |
 
 ### Why one cluster, not one per service
 
-The microservices orthodoxy is "one database per service" for failure isolation and team autonomy. None of those preconditions apply at Cove's v1 scale (one developer, single-node K3s, one product surface). What does apply is the cost of giving up referential integrity, JOINs, and atomic writes — and the **discovery query alone JOINs five tables across two schemas** (`product`'s products + availability + signals, `directory`'s makers + storefronts). Pull in favorites and follows and the relational graph spans all three schemas. One cluster with schemas keeps logical service ownership while preserving Postgres's relational guarantees across the whole graph. Splitting later is a known, low-risk migration.
+The microservices orthodoxy is "one database per service" for failure isolation and team autonomy. None of those preconditions apply at Cove's v1 scale (one developer, single-node K3s, one product surface). What does apply is the cost of giving up referential integrity, JOINs, and atomic writes — and the **discovery query alone JOINs five tables across two schemas** (`catalog`'s items + availability + signals, `directory`'s makers + storefronts). Pull in favorites and follows and the relational graph spans all three schemas. One cluster with schemas keeps logical service ownership while preserving Postgres's relational guarantees across the whole graph. Splitting later is a known, low-risk migration.
 
 ### Cross-schema foreign keys
 
 The relational graph spans all three schemas, enforced by real FKs with `ON DELETE CASCADE`:
 
-```
-product.products.maker_id            ──►  directory.makers(id)
-product.availability.product_id      ──►  product.products(id)
-product.availability.storefront_id   ──►  directory.storefronts(id)
-directory.storefronts.operated_by_maker_id  ──►  directory.makers(id)
-product.entity_signals.{maker_id|storefront_id|product_id}  ──►  the referenced entity
-user.favorites.product_id            ──►  product.products(id)
-user.follows.{maker_id|storefront_id}  ──►  the referenced entity
+```mermaid
+flowchart LR
+    subgraph directory["directory schema"]
+        makers[(makers)]
+        storefronts[(storefronts)]
+    end
+    subgraph catalog["catalog schema"]
+        items[(items)]
+        availability[(availability)]
+        categories[(categories)]
+        signals[(signals)]
+        entity_signals[(entity_signals)]
+    end
+    subgraph profile["profile schema"]
+        users[(users)]
+        favorites[(favorites)]
+        follows[(follows)]
+        interests[(interests)]
+    end
+
+    items -->|maker_id| makers
+    items -->|category_id| categories
+    storefronts -->|"operated_by_maker_id (nullable)"| makers
+    availability -->|item_id| items
+    availability -->|storefront_id| storefronts
+    entity_signals -->|signal_id| signals
+    entity_signals -.->|"polymorphic: exactly one of<br/>maker_id / storefront_id / item_id"| makers
+    entity_signals -.-> storefronts
+    entity_signals -.-> items
+    favorites -->|user_id| users
+    favorites -->|item_id| items
+    follows -->|user_id| users
+    follows -.->|"one of maker_id / storefront_id"| makers
+    follows -.-> storefronts
+    interests -->|user_id| users
+    interests -->|category_id| categories
 ```
 
 ---
 
 ## The trust signal system
 
-Signals attach at **three levels** — maker, storefront, and product. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
+Signals attach at **three levels** — maker, storefront, and item. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
 
 ### Worked example: New Belgium Brewing
 
@@ -151,24 +180,24 @@ Maker: New Belgium Brewing
 Storefront: New Belgium Taproom (RiNo, type: taproom, operated by the maker)
   └─ signal: Living Wage Certified     ← local-place-level (has the location)
 
-Product: "The Purist Clean Lager"  (made by New Belgium)
-  └─ signal: USDA Organic              ← product-level (this beer only)
+Item: "The Purist Clean Lager"  (made by New Belgium)
+  └─ signal: USDA Organic              ← item-level (this beer only)
 
-Product: "Fat Tire"  (made by New Belgium)
-  └─ (no organic signal)               ← same maker, no product-level cert
+Item: "Fat Tire"  (made by New Belgium)
+  └─ (no organic signal)               ← same maker, no item-level cert
 ```
 
-Discovering "Purist Clean Lager" yields **B Corp (from the maker) + Living Wage (from the storefront) + USDA Organic (from the product)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Product-level signals differentiate products from the same maker.
+Discovering "Purist Clean Lager" yields **B Corp (from the maker) + Living Wage (from the storefront) + USDA Organic (from the item)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Item-level signals differentiate items from the same maker.
 
 ### Signal taxonomy
 
 | Signal | Verification method | Typical level |
 |---|---|---|
 | B Corp Certified | Cross-reference B Lab directory | maker |
-| USDA Organic | Cross-reference USDA directory | product (sometimes maker) |
-| Fair Trade Certified | Cross-reference issuing body | product / maker |
+| USDA Organic | Cross-reference USDA directory | item (sometimes maker) |
+| Fair Trade Certified | Cross-reference issuing body | item / maker |
 | 1% for the Planet | Cross-reference member directory | maker |
-| Colorado Proud | CO Dept. of Agriculture (location-tied) | maker / product |
+| Colorado Proud | CO Dept. of Agriculture (location-tied) | maker / item |
 | Living Wage Certified | Cross-reference Living Wage directory | storefront / maker |
 | Community Verified | Community vouching (softer signal) | storefront / maker |
 | DUNS-verified ("Verified Business" tier) | DUNS number lookup | maker (drives `tier`) |
@@ -179,35 +208,40 @@ The taxonomy is defined once; attachments use an **exclusive arc** — three nul
 
 ```sql
 -- Reference taxonomy — one row per signal type
-CREATE TABLE product.signals (
-    id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    code                text NOT NULL UNIQUE,    -- 'b_corp', 'usda_organic', ...
-    name                text NOT NULL,
+CREATE TABLE catalog.signals (
+    id                  uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    code                text    NOT NULL UNIQUE,    -- 'b_corp', 'usda_organic', ...
+    name                text    NOT NULL,
     description         text,
-    verification_method text NOT NULL,           -- 'directory_crossref' | 'duns' | 'community_vouch'
-    weight              numeric NOT NULL DEFAULT 1    -- contribution to the trust score
+    verification_method text    NOT NULL,           -- 'directory_crossref' | 'duns' | 'community_vouch'
+    weight              numeric NOT NULL DEFAULT 1, -- contribution to the trust score
+    has_expiry          boolean NOT NULL DEFAULT false,
+    is_active           boolean NOT NULL DEFAULT true
 );
 
 -- Polymorphic attachment — links a signal to exactly one entity
-CREATE TABLE product.entity_signals (
-    id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    signal_id     uuid NOT NULL REFERENCES product.signals(id),
-    maker_id      uuid REFERENCES directory.makers(id)         ON DELETE CASCADE,
-    storefront_id uuid REFERENCES directory.storefronts(id)    ON DELETE CASCADE,
-    product_id    uuid REFERENCES product.products(id)         ON DELETE CASCADE,
-    status        text NOT NULL DEFAULT 'pending',  -- 'verified' | 'pending' | 'community_vouched'
-    verified_at   timestamptz,
-    verified_via  text,                             -- directory URL, DUNS #, voucher reference
-    created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK (num_nonnulls(maker_id, storefront_id, product_id) = 1)
+CREATE TABLE catalog.entity_signals (
+    id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    signal_id       uuid        NOT NULL REFERENCES catalog.signals(id),
+    maker_id        uuid        REFERENCES directory.makers(id)      ON DELETE CASCADE,
+    storefront_id   uuid        REFERENCES directory.storefronts(id) ON DELETE CASCADE,
+    item_id         uuid        REFERENCES catalog.items(id)         ON DELETE CASCADE,
+    status          text        NOT NULL DEFAULT 'pending',  -- 'verified' | 'pending' | 'community_vouched'
+    verified_at     timestamptz,
+    verified_via    text,                             -- directory URL, DUNS #, voucher reference
+    cert_number     text,
+    cert_expires_at timestamptz,
+    verified_by     text,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    CHECK (num_nonnulls(maker_id, storefront_id, item_id) = 1)
 );
 
-CREATE INDEX ON product.entity_signals (maker_id);
-CREATE INDEX ON product.entity_signals (storefront_id);
-CREATE INDEX ON product.entity_signals (product_id);
+CREATE INDEX ON catalog.entity_signals (maker_id);
+CREATE INDEX ON catalog.entity_signals (storefront_id);
+CREATE INDEX ON catalog.entity_signals (item_id);
 ```
 
-Adding a new signal type (e.g. "Certified Plastic Negative") is a single `INSERT` into `product.signals` — no schema change.
+Adding a new signal type (e.g. "Certified Plastic Negative") is a single `INSERT` into `catalog.signals` — no schema change.
 
 ---
 
@@ -216,37 +250,139 @@ Adding a new signal type (e.g. "Certified Plastic Negative") is a single `INSERT
 A discovery result aggregates trust across the three levels:
 
 ```
-result_trust_score(product, maker, storefront) =
+result_trust_score(item, maker, storefront) =
       maker.trust_score          -- materialized from maker signals (B Corp, etc.)
     + storefront.trust_score     -- materialized from storefront signals (Living Wage, etc.)
-    + Σ product's own signals    -- USDA Organic, etc. — usually 0–2, added at query time
+    + Σ item's own signals       -- USDA Organic, etc. — usually 0–2, added at query time
 ```
 
-**Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the product's own signals live.
+**Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the item's own signals live.
 
 The brief's "rewards breadth and diversity of trust signals rather than any single credential" is a refinement of *how* the sum works — diminishing returns on stacking similar signals, a bonus for spanning categories — and the `maker.tier` (Individual Lister vs Verified Business) shifts the weighting (Individual Listers lean more on community vouching). **Start with flat additive weights**; tune the function later. This does not block the schema.
 
 ---
 
-## Geospatial: the local availability gate
+## Personalized ranking via signal-preference alignment
 
-Location is doubly mandatory — it is both the proximity dimension of discovery *and* the integrity gate: all storefronts require a verifiable local address within the Denver metro area, which prevents national chains from self-listing as local and diluting the trust layer.
+> **Status: post-v1 ideation.** The schema scaffolding (`profile.interests`, `catalog.signals.weight`) is already in place. The preference→signal mapping and the boosted scoring formula are not yet implemented.
 
-The standard for radius search on Postgres is **PostGIS** — a `geography` column with a **GiST index**, queried with `ST_DWithin`. (Not application-level geohashing; PostGIS computes true great-circle distance and avoids geohash boundary problems.)
+### The problem
+
+Two users search for the same thing — "specialty coffee near me." One cares deeply about ethical supply chains; the other cares about environmental certifications. The flat trust score returns the same ranked list for both. Personalized ranking amplifies signals that match a user's stated values, surfacing more relevant results without changing the underlying verification system.
+
+### Signal dimensions
+
+B Corp is a holistic cert — it covers Workers, Community, Environment, Customers, and Governance. It is **not** an "ethical trading" signal specifically. Fair Trade is the most direct signal for ethical supply chains (fair prices to producers, no exploitative sourcing). Mapping user preferences to signals requires understanding what each signal actually certifies:
+
+| User preference | Most relevant signals | Partially relevant |
+|---|---|---|
+| Ethical trading / fair sourcing | `fair_trade` | `b_corp` (community/customers dimension) |
+| Environmental | `usda_organic`, `one_pct_planet` | `b_corp` (environment dimension) |
+| Supports workers / living wages | `living_wage` | `b_corp` (workers dimension) |
+| Community / local impact | `colorado_proud` | `b_corp` (community dimension), `one_pct_planet` |
+
+B Corp overlaps with many preferences because it is multi-dimensional. A user who says "I care about everything" gets the same boost from B Corp as someone who says "I care about environment" — until the mapping is made preference-specific.
+
+### Approach A — Preference → signal relevance table (recommended for v1 personalization)
+
+A lookup table maps each user preference tag to signal codes with a relevance weight (0–1). The personalized score replaces the flat `signal.weight` with `signal.weight × relevance`:
 
 ```sql
--- storefront location (lon/lat); SRID 4326 = WGS84
-ALTER TABLE directory.storefronts ADD COLUMN location geography(Point, 4326);
+CREATE TABLE catalog.preference_signal_weights (
+    preference_tag  text    NOT NULL,  -- matches values in profile.interests
+    signal_code     text    NOT NULL REFERENCES catalog.signals(code),
+    relevance       numeric NOT NULL CHECK (relevance BETWEEN 0 AND 1),
+    PRIMARY KEY (preference_tag, signal_code)
+);
+
+-- Example rows
+INSERT INTO catalog.preference_signal_weights VALUES
+    ('ethical_trading', 'fair_trade',   1.0),
+    ('ethical_trading', 'b_corp',       0.7),
+    ('ethical_trading', 'one_pct_planet', 0.4),
+    ('environmental',   'usda_organic', 1.0),
+    ('environmental',   'one_pct_planet', 0.9),
+    ('environmental',   'b_corp',       0.8),
+    ('supports_workers','living_wage',  1.0),
+    ('supports_workers','b_corp',       0.6);
+```
+
+Scoring formula at query time:
+
+```sql
+-- Personalized trust score for a maker, given a user's preference tags
+SELECT
+    m.name,
+    SUM(s.weight * COALESCE(psw.relevance, 0)) AS personalized_score
+FROM directory.makers m
+JOIN catalog.entity_signals es ON es.maker_id = m.id AND es.status = 'verified'
+JOIN catalog.signals s ON s.id = es.signal_id
+LEFT JOIN catalog.preference_signal_weights psw
+    ON psw.signal_code = s.code
+    AND psw.preference_tag = ANY($user_preference_tags)
+WHERE m.id = $maker_id
+GROUP BY m.id;
+```
+
+Onyx Coffee Lab example with user preference `ethical_trading`:
+- B Corp (weight 3) × relevance 0.7 = **2.1** personalized score
+- If Onyx also had Fair Trade (weight 2) × relevance 1.0 = +2.0 → **4.1 total**
+
+### Approach B — Signal dimensions array (more scalable, no per-pair maintenance)
+
+Tag each signal with the values dimensions it covers. User preferences select dimensions; scoring is the overlap between user-selected dimensions and signal dimensions. New signals automatically fit when tagged correctly — no mapping table update needed.
+
+```sql
+ALTER TABLE catalog.signals ADD COLUMN dimensions text[] NOT NULL DEFAULT '{}';
+
+-- B Corp covers all five dimensions
+UPDATE catalog.signals SET dimensions = '{environmental, labor, community, governance, ethical_trading}' WHERE code = 'b_corp';
+UPDATE catalog.signals SET dimensions = '{ethical_trading, labor}' WHERE code = 'fair_trade';
+UPDATE catalog.signals SET dimensions = '{labor}'                   WHERE code = 'living_wage';
+UPDATE catalog.signals SET dimensions = '{environmental}'          WHERE code = 'usda_organic';
+UPDATE catalog.signals SET dimensions = '{environmental, community}' WHERE code = 'one_pct_planet';
+UPDATE catalog.signals SET dimensions = '{community}'              WHERE code = 'colorado_proud';
+```
+
+Tradeoff vs. Approach A: simpler to maintain, but loses the per-pair relevance granularity (you can't say "fair_trade is more directly 'ethical trading' than b_corp is").
+
+### How other companies handle this
+
+- **Good On You** (fashion sustainability app — closest analog to Cove): Rates brands on Labor, Environment, and Animal. Users can filter or sort by dimension. Simple tag-overlap scoring at small catalog scale — no ML.
+- **Etsy**: Tag matching + engagement signals. Personalization is additive on top of a base relevance score; explicit preferences seed it, behavior refines it.
+- **Spotify/Netflix**: Collaborative filtering — "users like you also liked X." Only meaningful once behavioral data exists (what makers users viewed, saved, purchased from). Overkill until Cove has that data.
+
+### Evolution path
+
+1. **Now (v1):** flat additive trust score — `SUM(signal.weight)` for verified signals. No preference amplification.
+2. **v1 personalization:** add `catalog.preference_signal_weights`; score the discovery query with `signal.weight × relevance` against `profile.interests`. The discovery query gains a `$user_preference_tags` param.
+3. **Behavioral blend:** add `profile.events` attention signals (item views, dwell time, saves) as implicit preference data. Blend explicit `profile.interests` weight + implicit engagement count.
+4. **Eventually:** ML ranking layer — collaborative filtering on the blended signal. Only worthwhile when the catalog and user base are large enough to produce meaningful co-engagement data.
+
+Steps 2–4 are additive — no existing tables change.
+
+---
+
+## Geospatial: the local availability gate
+
+Location is the proximity dimension of discovery and the integrity gate for physical listings: storefronts with a verifiable local address within the Denver metro area appear in radius search; online-only storefronts (`type: 'online'`) set no location and are excluded from proximity queries. This prevents national chains from self-listing as local and diluting the trust layer.
+
+Both `directory.makers` and `directory.storefronts` carry a nullable `geography(Point,4326)` column with a GiST index (from `migrations/000002_directory.up.sql`). The PostGIS extension is enabled in `migrations/000001_setup.up.sql`.
+
+```sql
+-- location is nullable — physical places set it, online-only storefronts do not
+location geography(Point,4326)
+-- GiST index on both makers and storefronts
 CREATE INDEX ON directory.storefronts USING GIST (location);
+CREATE INDEX ON directory.makers      USING GIST (location);
 
 -- "storefronts within 20 miles of Denver" — 20 mi = 32186.9 meters
 SELECT * FROM directory.storefronts
-WHERE ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9);
+WHERE location IS NOT NULL
+  AND ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9);
 ```
 
-> **Infra note:** PostGIS is not bundled in vanilla Postgres images the way `ltree` is. CNPG must be configured to load the PostGIS extension before Phase 3 schema work (see [Open items](#open-items)).
-
-See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs `geometry`, `ST_DWithin`, the meters-vs-miles gotcha).
+PostGIS computes true great-circle distance and avoids geohash boundary problems. See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs `geometry`, `ST_DWithin`, the meters-vs-miles gotcha).
 
 ---
 
@@ -259,43 +395,65 @@ See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs 
 Categories nest arbitrarily deep (`food.produce.vegetables`) and need fast "everything in this subtree" queries. Postgres's `ltree` extension stores the root-to-leaf path in one column:
 
 ```sql
-CREATE TABLE product.categories (
-    id   uuid  PRIMARY KEY DEFAULT gen_random_uuid(),
-    name text  NOT NULL,
-    path ltree NOT NULL UNIQUE                       -- e.g. 'food.produce.vegetables'
+CREATE TABLE catalog.categories (
+    id      uuid    PRIMARY KEY DEFAULT gen_random_uuid(),
+    name    text    NOT NULL,
+    path    ltree   NOT NULL UNIQUE,                  -- e.g. 'food.produce.vegetables'
+    is_leaf boolean NOT NULL DEFAULT false
 );
 
-CREATE INDEX ON product.categories USING GIST  (path);
-CREATE INDEX ON product.categories USING BTREE (path);
+CREATE INDEX ON catalog.categories USING GIST  (path);
+CREATE INDEX ON catalog.categories USING BTREE (path);
 ```
 
 Labels must be `[A-Za-z0-9_]+`, so a display name like "Cheese & Dairy" maps to `cheese_and_dairy` for the path while the user-facing label lives in `name`. `ltree` gives one column the work of a `parent_id`/`ancestors`/`level` denormalization, with built-in operators for every traversal (`<@` descendants, `@>` ancestors, `~` lquery patterns). See [Postgres Primer](POSTGRES_PRIMER.md) for the operator reference.
+
+### Leaf enforcement
+
+Items may only be assigned to **leaf categories** — nodes with no children. This is enforced at three layers:
+
+| Layer | Mechanism | What it catches |
+|---|---|---|
+| `catalog.items.category_id` FK | `REFERENCES catalog.categories(id)` (default `RESTRICT`) | Deletion of a category that has items |
+| `items_enforce_leaf_category` trigger | `BEFORE INSERT OR UPDATE` on `catalog.items` | Assignment to a non-leaf category |
+| `categories_prevent_non_leaf_delete` trigger | `BEFORE DELETE` on `catalog.categories` | Deletion of a category that still has children |
+
+Two maintenance triggers keep `is_leaf` accurate automatically:
+
+- **`categories_mark_parent_non_leaf`** (`AFTER INSERT`) — when a new category is inserted, its direct parent is marked `is_leaf = false`.
+- **`categories_recheck_parent_leaf`** (`AFTER DELETE`) — when a leaf category is deleted, its parent is re-evaluated; if no siblings remain it flips back to `is_leaf = true`.
+
+These are defined in migrations `000005` and `000006`. The v1 seed (`000004`) inserts all 242 nodes; the backfill in `000005` sets `is_leaf = false` on all non-leaf nodes so the column is consistent from the start.
+
+See [Category Taxonomy](CATEGORY_TAXONOMY.md) for the full v1 tree and operational runbook.
 
 ### Category cards and personalization
 
 The homepage surfaces **category cards** — browse-mode entry points into the discovery surface. Cards are personalized per user via a two-phase model:
 
-1. **Onboarding (explicit signal):** the user picks interest categories during first launch. Stored as `user.interests` rows. Cards are seeded from these picks.
-2. **Behavioral (implicit signal):** as the user browses, attention events (taps, product views, dwell time) are recorded in `user.events`. The recommendation query blends explicit interests + engagement count to reorder cards over time.
+1. **Onboarding (explicit signal):** the user picks interest categories during first launch. Stored as `profile.interests` rows. Cards are seeded from these picks.
+2. **Behavioral (implicit signal):** as the user browses, attention events (taps, item views, dwell time) are recorded in `profile.events`. The recommendation query blends explicit interests + engagement count to reorder cards over time.
 
 The iOS app fetches cards from `GET /recommendations/categories` (owned by `cove-user`). The endpoint returns the same shape regardless of phase — the ranking logic evolves without any iOS changes. Category-scoped discovery is triggered by tapping a card: `GET /discovery?category=food.coffee&lat=...`.
 
 ### Facets and filters, not categories
 
-> **Categories define *what* a product is. Attributes define *how it differs from others in the same category*.**
+> **Categories define *what* an item is. Attributes define *how it differs from others in the same category*.**
 
-When a new way to slice the catalog appears — gender, dietary preference, season, region — it goes on the product as an **attribute**, not as a new branch of the category tree. The naive alternative (Men > Clothing > Shirts, Women > Clothing > Shirts, …) collapses the moment a product is unisex, you want "All Shirts," or you add a fourth gender label.
+Gender is a first-class category dimension in the apparel tree (`apparel.mens`, `apparel.womens`, `apparel.unisex`) rather than a JSONB attribute, because it drives dedicated search paths and category browsing. Users navigate to Men's, Women's, or Unisex directly — it isn't a filter applied after the fact.
 
-The pattern: one category tree for *what a product is*; JSONB `attributes` (GIN-indexed) for filter facets used at query time.
+For other slices that don't warrant their own tree branch — dietary preference, season, region — use JSONB `attributes` (GIN-indexed) as filter facets applied at query time.
+
+The pattern: one category tree for *what an item is*; JSONB `attributes` for filter facets that don't merit their own branch.
 
 ```sql
--- Gender as attribute, not category branch
-SELECT * FROM product.products
-WHERE category_id = (SELECT id FROM product.categories WHERE path = 'apparel.clothing.shirts')
-  AND attributes @> '{"gender": "men"}';
+-- Dietary preference as attribute facet
+SELECT * FROM catalog.items
+WHERE category_id = (SELECT id FROM catalog.categories WHERE path = 'food.condiments.hot_sauce')
+  AND attributes @> '{"dietary": "vegan"}';
 ```
 
-> **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose product traits that only filter (gender, season) live in `attributes`.
+> **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose item traits that only filter (dietary preference, season) live in `attributes`.
 
 ---
 
@@ -310,31 +468,31 @@ CREATE EXTENSION IF NOT EXISTS ltree;
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE SCHEMA directory;
-CREATE SCHEMA product;
-CREATE SCHEMA "user";   -- quoted: reserved word in some contexts
+CREATE SCHEMA catalog;
+CREATE SCHEMA profile;
 
 -- v1 service roles. cove_directory is NOT created yet — the directory schema
--- exists but cove-product reads it until cove-directory ships.
-CREATE ROLE cove_product LOGIN PASSWORD :'product_password';
-CREATE ROLE cove_user    LOGIN PASSWORD :'user_password';
+-- exists but cove-item reads it until cove-directory ships.
+CREATE ROLE cove_item LOGIN PASSWORD :'item_password';
+CREATE ROLE cove_user LOGIN PASSWORD :'user_password';
 
-GRANT USAGE ON SCHEMA product  TO cove_product;
-GRANT USAGE ON SCHEMA "user"   TO cove_user;
+GRANT USAGE ON SCHEMA catalog  TO cove_item;
+GRANT USAGE ON SCHEMA profile  TO cove_user;
 
--- cove_product reads + references the directory graph for discovery
-GRANT USAGE      ON SCHEMA directory                          TO cove_product;
-GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_product;
-GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_product;
+-- cove_item reads + references the directory graph for discovery
+GRANT USAGE      ON SCHEMA directory                          TO cove_item;
+GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_item;
+GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_item;
 
--- cove_user references products + the directory graph for favorites/follows
-GRANT USAGE      ON SCHEMA product, directory                 TO cove_user;
-GRANT SELECT     ON product.products                          TO cove_user;
+-- cove_user references items + the directory graph for favorites/follows
+GRANT USAGE      ON SCHEMA catalog, directory                 TO cove_user;
+GRANT SELECT     ON catalog.items                             TO cove_user;
 GRANT SELECT     ON directory.makers, directory.storefronts   TO cove_user;
-GRANT REFERENCES ON product.products                          TO cove_user;
+GRANT REFERENCES ON catalog.items                             TO cove_user;
 GRANT REFERENCES ON directory.makers, directory.storefronts   TO cove_user;
 
-ALTER ROLE cove_product SET search_path = product, directory, public;
-ALTER ROLE cove_user    SET search_path = "user", public;
+ALTER ROLE cove_item SET search_path = catalog, directory, public;
+ALTER ROLE cove_user SET search_path = profile, public;
 ```
 
 ### `directory` schema
@@ -369,18 +527,18 @@ CREATE INDEX ON directory.makers      (trust_score DESC);
 CREATE INDEX ON directory.storefronts (trust_score DESC);
 ```
 
-### `product` schema
+### `catalog` schema
 
 ```sql
-CREATE TABLE product.products (
+CREATE TABLE catalog.items (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    maker_id    uuid        NOT NULL REFERENCES directory.makers(id),   -- the maker
-    category_id uuid        NOT NULL REFERENCES product.categories(id),
+    maker_id    uuid        NOT NULL REFERENCES directory.makers(id),
+    category_id uuid        NOT NULL REFERENCES catalog.categories(id),
     name        text        NOT NULL,
     description text,
-    price_cents integer,                          -- nullable: informational; no transactions in v1
-    attributes  jsonb       NOT NULL DEFAULT '{}', -- filter facets (gender, season, ...)
-    details     jsonb       NOT NULL DEFAULT '{}', -- long-form display data (materials, notes)
+    price_cents integer,                             -- nullable: informational; no transactions in v1
+    attributes  jsonb       NOT NULL DEFAULT '{}',   -- filter facets (dietary preference, season, ...)
+    details     jsonb       NOT NULL DEFAULT '{}',   -- long-form display data (materials, notes)
     search_vec  tsvector    GENERATED ALWAYS AS (
         to_tsvector('english', coalesce(name, '') || ' ' || coalesce(description, ''))
     ) STORED,
@@ -388,107 +546,110 @@ CREATE TABLE product.products (
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON product.products USING GIN (search_vec);
-CREATE INDEX ON product.products USING GIN (attributes);
-CREATE INDEX ON product.products (category_id) WHERE is_active = true;
-CREATE INDEX ON product.products (maker_id);
+CREATE INDEX ON catalog.items USING GIN (search_vec);
+CREATE INDEX ON catalog.items USING GIN (attributes);
+CREATE INDEX ON catalog.items (category_id) WHERE is_active = true;
+CREATE INDEX ON catalog.items (maker_id);
 
--- Where each product is available: many-to-many product ↔ storefront.
+-- Where each item is available: many-to-many item ↔ storefront.
 -- A maker's mug can be at her studio AND a gallery AND the Saturday market.
-CREATE TABLE product.availability (
-    product_id    uuid        NOT NULL REFERENCES product.products(id)       ON DELETE CASCADE,
-    storefront_id uuid        NOT NULL REFERENCES directory.storefronts(id)  ON DELETE CASCADE,
-    created_at    timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (product_id, storefront_id)
+CREATE TABLE catalog.availability (
+    item_id        uuid        NOT NULL REFERENCES catalog.items(id)         ON DELETE CASCADE,
+    storefront_id  uuid        NOT NULL REFERENCES directory.storefronts(id) ON DELETE CASCADE,
+    listing_source text,
+    listing_url    text,
+    is_active      boolean     NOT NULL DEFAULT true,
+    created_at     timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (item_id, storefront_id)
 );
 
-CREATE INDEX ON product.availability (storefront_id);
+CREATE INDEX ON catalog.availability (storefront_id);
 
 -- categories, signals, entity_signals defined in their sections above.
 
--- Images. Polymorphic: maker logos, storefront photos, product images.
+-- Images. Polymorphic: maker logos, storefront photos, item images.
 -- See docs/MEDIA_ARCHITECTURE.md for the storage + serving pipeline.
-CREATE TABLE product.media (
+CREATE TABLE catalog.media (
     id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     maker_id      uuid REFERENCES directory.makers(id)        ON DELETE CASCADE,
     storefront_id uuid REFERENCES directory.storefronts(id)   ON DELETE CASCADE,
-    product_id    uuid REFERENCES product.products(id)        ON DELETE CASCADE,
-    media_key     text        NOT NULL,             -- Garage cove-media object key (content-addressed)
-    role          text        NOT NULL DEFAULT 'gallery',   -- 'primary' | 'gallery' | 'logo'
+    item_id       uuid REFERENCES catalog.items(id)           ON DELETE CASCADE,
+    media_key     text        NOT NULL,              -- Garage cove-media object key (content-addressed)
+    role          text        NOT NULL DEFAULT 'gallery',    -- 'primary' | 'gallery' | 'logo'
     sort_order    integer     NOT NULL DEFAULT 0,
     alt_text      text,
     width         integer     NOT NULL,
     height        integer     NOT NULL,
     created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK (num_nonnulls(maker_id, storefront_id, product_id) = 1)
+    CHECK (num_nonnulls(maker_id, storefront_id, item_id) = 1)
 );
 
-CREATE INDEX ON product.media (product_id, sort_order);
-CREATE INDEX ON product.media (storefront_id);
-CREATE INDEX ON product.media (maker_id);
+CREATE INDEX ON catalog.media (item_id, sort_order);
+CREATE INDEX ON catalog.media (storefront_id);
+CREATE INDEX ON catalog.media (maker_id);
 ```
 
-### `user` schema
+### `profile` schema
 
 ```sql
-CREATE TABLE "user".users (
-    uid        text        PRIMARY KEY,             -- Firebase Auth UID
-    username   text        NOT NULL,
-    email      text        NOT NULL UNIQUE,
+CREATE TABLE profile.users (
+    id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    auth_uid   text        NOT NULL UNIQUE,         -- Firebase Auth UID
+    username   text        NOT NULL UNIQUE,
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE "user".favorites (
-    uid        text        NOT NULL REFERENCES "user".users(uid)    ON DELETE CASCADE,
-    product_id uuid        NOT NULL REFERENCES product.products(id) ON DELETE CASCADE,
+CREATE TABLE profile.favorites (
+    user_id    uuid        NOT NULL REFERENCES profile.users(id)  ON DELETE CASCADE,
+    item_id    uuid        NOT NULL REFERENCES catalog.items(id)  ON DELETE CASCADE,
     created_at timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (uid, product_id)
+    PRIMARY KEY (user_id, item_id)
 );
 
-CREATE INDEX ON "user".favorites (uid, created_at DESC);
+CREATE INDEX ON profile.favorites (user_id, created_at DESC);
 
 -- Follows can target a maker OR a storefront (exclusive arc).
-CREATE TABLE "user".follows (
-    uid           text        NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
+CREATE TABLE profile.follows (
+    user_id       uuid        NOT NULL REFERENCES profile.users(id)        ON DELETE CASCADE,
     maker_id      uuid REFERENCES directory.makers(id)       ON DELETE CASCADE,
     storefront_id uuid REFERENCES directory.storefronts(id)  ON DELETE CASCADE,
     created_at    timestamptz NOT NULL DEFAULT now(),
     CHECK (num_nonnulls(maker_id, storefront_id) = 1)
 );
 
-CREATE INDEX ON "user".follows (uid, created_at DESC);
+CREATE INDEX ON profile.follows (user_id, created_at DESC);
 
 -- Onboarding interest picks — explicit category preferences, editable later in settings.
-CREATE TABLE "user".interests (
-    uid         text NOT NULL REFERENCES "user".users(uid)        ON DELETE CASCADE,
-    category_id uuid NOT NULL REFERENCES product.categories(id),
+CREATE TABLE profile.interests (
+    user_id     uuid NOT NULL REFERENCES profile.users(id)         ON DELETE CASCADE,
+    category_id uuid NOT NULL REFERENCES catalog.categories(id),
     created_at  timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (uid, category_id)
+    PRIMARY KEY (user_id, category_id)
 );
 
-CREATE INDEX ON "user".interests (uid);
+CREATE INDEX ON profile.interests (user_id);
 
 -- Attention events — implicit behavioral signals for recommendation ranking.
--- event_type: 'category_tap' | 'product_view' | 'result_dwell' | 'search'
-CREATE TABLE "user".events (
+-- event_type: 'category_tap' | 'item_view' | 'result_dwell' | 'search'
+CREATE TABLE profile.events (
     id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    uid         text        NOT NULL REFERENCES "user".users(uid) ON DELETE CASCADE,
+    user_id     uuid        NOT NULL REFERENCES profile.users(id) ON DELETE CASCADE,
     event_type  text        NOT NULL,
-    category_id uuid REFERENCES product.categories(id),
-    product_id  uuid REFERENCES product.products(id),
+    category_id uuid REFERENCES catalog.categories(id),
+    item_id     uuid REFERENCES catalog.items(id),
     metadata    jsonb       NOT NULL DEFAULT '{}', -- dwell_ms, search_query, scroll_depth, etc.
     created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX ON "user".events (uid, created_at DESC);
-CREATE INDEX ON "user".events (uid, category_id) WHERE category_id IS NOT NULL;
+CREATE INDEX ON profile.events (user_id, created_at DESC);
+CREATE INDEX ON profile.events (user_id, category_id) WHERE category_id IS NOT NULL;
 ```
 
 ---
 
 ## The discovery query
 
-The discovery query is the product. "handmade ceramics near me" composes **three index types in one statement** — proximity (GiST), relevance (GIN full-text), and trust (materialized scores) — blended into a single ranking. Because a product is available at many storefronts, it joins through `availability` and collapses to the best (nearest, highest-trust) result per product with `DISTINCT ON`:
+The discovery query is the product. "handmade ceramics near me" composes **three index types in one statement** — proximity (GiST), relevance (GIN full-text), and trust (materialized scores) — blended into a single ranking. Because an item is available at many storefronts, it joins through `availability` and collapses to the best (nearest, highest-trust) result per item with `DISTINCT ON`:
 
 ```sql
 SELECT DISTINCT ON (p.id)
@@ -498,10 +659,10 @@ SELECT DISTINCT ON (p.id)
     s.type AS storefront_type,
     ST_Distance(s.location, $loc)            AS distance_m,
     ts_rank(p.search_vec, q)                 AS relevance,
-    m.trust_score + s.trust_score            AS base_trust   -- product signals added in app
-FROM product.products p
+    m.trust_score + s.trust_score            AS base_trust   -- item signals added in app
+FROM catalog.items p
 JOIN directory.makers       m ON m.id = p.maker_id
-JOIN product.availability   a ON a.product_id = p.id
+JOIN catalog.availability   a ON a.item_id = p.id
 JOIN directory.storefronts  s ON s.id = a.storefront_id,
      websearch_to_tsquery('english', $query) q
 WHERE p.is_active
@@ -515,32 +676,33 @@ ORDER BY p.id, (
 -- outer query re-sorts the DISTINCT ON results by the same blended score for the final ranking
 ```
 
-That blended score is Cove's secret sauce. Yelp ranks by ad spend, Google by review volume; Cove ranks by **trust + proximity + relevance** — the thing competitors cannot cheaply copy, because it requires rebuilding the incentive structure. (A product available at several nearby storefronts collapses to one result via `DISTINCT ON (p.id)` keeping the best storefront; the response can still list all nearby storefronts under "Where to find it.")
+That blended score is Cove's secret sauce. Yelp ranks by ad spend, Google by review volume; Cove ranks by **trust + proximity + relevance** — the thing competitors cannot cheaply copy, because it requires rebuilding the incentive structure. (An item available at several nearby storefronts collapses to one result via `DISTINCT ON (p.id)` keeping the best storefront; the response can still list all nearby storefronts under "Where to find it.")
 
 ---
 
 ## Request flow
 
+```mermaid
+sequenceDiagram
+    participant iOS as iOS app
+    participant CF as Cloudflare Tunnel<br/>api.coveapp.dev
+    participant API as cove-api
+    participant Item as cove-item
+    iOS->>CF: GET /discovery?q=ceramics&lat=..&lon=..&radius=20mi<br/>Authorization: Bearer {Firebase ID Token}
+    CF->>API: forward request
+    API->>API: validate Firebase ID token
+    API->>Item: route /discovery · inject X-Cove-Uid
+    Item->>Item: discovery query<br/>items ⋈ makers ⋈ availability ⋈ storefronts<br/>(trust + proximity + relevance)
+    Item->>Item: resolve signals · sign imgproxy URLs for media
+    Item-->>iOS: HTTP 200 — results
 ```
-iOS app
-   │  GET /discovery?q=ceramics&lat=..&lon=..&radius=20mi
-   │  Authorization: Bearer <Firebase ID Token>
-   ▼
-api.coveapp.dev  (Cloudflare Tunnel)
-   ▼
-cove-api  (validates token, injects X-Cove-Uid, routes /discovery, /products/* → cove-product)
-   ▼
-cove-product
-   │  Runs the discovery query (products ⋈ makers ⋈ availability ⋈ storefronts; trust + proximity + relevance)
-   │  Resolves each result's signals; signs imgproxy URLs for media (see MEDIA_ARCHITECTURE.md)
-   ▼
-HTTP 200 → iOS app
-```
+
+Media URLs in the response are short-lived signed imgproxy URLs — see [Media Architecture](MEDIA_ARCHITECTURE.md).
 
 ```swift
 // ViewModels never see this layer. The generated client is consumed by
-// CoveAPIProductRepository, which conforms to the ProductRepository protocol.
-let response = try await productClient.discover(.init(query: .init(q: "ceramics", lat: lat, lon: lon, radius: 20)))
+// CoveAPIItemRepository, which conforms to the ItemRepository protocol.
+let response = try await itemClient.discover(.init(query: .init(q: "ceramics", lat: lat, lon: lon, radius: 20)))
 let results = try response.ok.body.json
 ```
 
@@ -548,32 +710,9 @@ let results = try response.ok.body.json
 
 ## iOS networking layer
 
-ViewModels depend on repository protocols. Each protocol has a Firebase implementation (current) and a Remote implementation (post-migration target). Swapping one for the other is a one-line change at the DI site; ViewModels are untouched. This is the point of the Phase 0 repository abstraction (#222–#227).
+ViewModels never call the network directly. They depend on repository protocols (`ItemRepository`, `UserRepository`, `FavoritesRepository`, `ImageRepository`) whose active implementations are backed by the generated `CoveAPIClient` (`CoveAPIItemRepository`, `CoveAPIUserRepository`, `CoveAPIFavoritesRepository`, `CoveAPIImageRepository`). The abstraction was introduced in Phase 0 (#222–#227) to swap Firebase implementations for REST-backed ones at the DI site without touching ViewModels. See [iOS App Architecture](IOS_APP_ARCHITECTURE.md) for the full repository layer, the generated-client pipeline, and `FirebaseAuthMiddleware`.
 
-```
-ProductRepository (protocol)        ← HomeViewModel, ProductViewModel, discovery
-├── FirebaseProductRepository        ← current (Firestore)
-└── CoveAPIProductRepository         ← target (cove-product REST API)
-
-UserRepository (protocol)            ← ProfileViewModel
-├── FirebaseUserRepository           ← current
-└── CoveAPIUserRepository            ← target (cove-user)
-
-FavoritesRepository (protocol)       ← FavoritesViewModel, FavoritesStore
-├── FirebaseFavoritesRepository      ← current
-└── CoveAPIFavoritesRepository       ← target (cove-user)
-
-ImageRepository (protocol)           ← ProductCardView, image-loading sites
-├── FirebaseImageRepository          ← current (Firebase Storage)
-└── CoveAPIImageRepository           ← target (cove-image + imgproxy)
-```
-
-**`ProductTypes.swift` is replaced by API-driven categories.** The current file (`apps/ios/Cove/Enums/ProductTypes.swift`) hardcodes three Firestore document IDs as a Swift enum — a Firebase-era artifact. In the target architecture:
-- The onboarding screen fetches the category tree from `GET /categories` and lets the user pick leaf nodes
-- The homepage fetches `GET /recommendations/categories` to render personalized category cards
-- Tapping a card triggers `GET /discovery?category=<path>&lat=...`
-
-No Swift enum, no hardcoded IDs. Categories are data from the API.
+**Categories are API-driven** — the Firestore-era `ProductTypes.swift` enum (three hardcoded document IDs) was removed in Phase 3. `InterestOnboardingView` reads the tree from `GET /categories` and writes picks to `profile.interests` via `POST /users/me/interests`; the homepage renders `CategoryCard`s from `GET /recommendations/categories`; tapping one triggers `GET /discovery?category=<path>&lat=...` into `CategoryResultsView`.
 
 ---
 
@@ -592,25 +731,57 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 ## What is deliberately not modeled
 
 - **Orders, payments, inventory, fulfillment** — Cove connects, it does not transact (v1 scope)
-- **Product variants / SKUs** — over-built for a no-transaction discovery app; a product is "what a maker makes," not a purchasable SKU
+- **Item variants / SKUs** — over-built for a no-transaction discovery app; an item is "what a maker makes," not a purchasable SKU
 - **Sophisticated trust scoring** — start flat-additive; add diversity/diminishing-returns tuning later
 - **pgvector / semantic search** — Postgres full-text (`tsvector`/GIN) is sufficient for v1 keyword discovery; vector embeddings become relevant when AI-assisted discovery is scoped (leave room, don't build now)
-- **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the product↔storefront link in v1, schedule metadata comes later
+- **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the item↔storefront link in v1, schedule metadata comes later
 - **Reviews, ratings, social feed** — out of scope
 - **Multi-currency, historical pricing** — `price_cents` is informational USD
+- **Maker/storefront admin roles** — v1 data is seeded manually; self-serve ownership and role management ships with `cove-directory`. See below.
+
+### Maker/storefront ownership and admin roles (future: `cove-directory`)
+
+In mature marketplaces (DoorDash for Merchants, Etsy seller portal, Airbnb host dashboard), the supply side is managed by the makers and storefront operators themselves — not by the platform team. A restaurant owner logs into a merchant portal and manages their own menu, photos, and hours. Cove follows the same model: `cove-directory` is the maker/storefront management portal.
+
+In v1, `directory` data is seeded once via migrations and managed by Cove internally. When `cove-directory` ships, the following additive migration lands:
+
+```sql
+-- Links a platform user to a maker or storefront with a named role.
+-- Exclusive arc: a membership is to either a maker or a storefront, not both.
+CREATE TABLE profile.memberships (
+    uid           text        NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)                      ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)                 ON DELETE CASCADE,
+    role          text        NOT NULL, -- 'owner' | 'admin' | 'staff'
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    CHECK (num_nonnulls(maker_id, storefront_id) = 1)
+);
+
+CREATE INDEX ON profile.memberships (uid);
+CREATE INDEX ON profile.memberships (maker_id);
+CREATE INDEX ON profile.memberships (storefront_id);
+```
+
+This is additive — no existing tables change. `cove-directory` gets `SELECT, INSERT, UPDATE, DELETE` on `profile.memberships` and write access to `directory` (the permissions flip described in the services table above).
+
+Platform-level admin (Cove internal staff who can manage any listing) is handled separately via a `is_platform_admin` flag on `profile.users` or a dedicated internal tooling layer — not via `profile.memberships`.
 
 ---
 
 ## Open items
 
-To reconcile before the Phase 3 epic is re-planned:
+Items resolved in Phase 3:
 
-1. **Service ownership** — confirm `cove-product` owning the full discovery surface (incl. `directory` reads) for v1, with `cove-directory` taking over `directory` writes later.
-2. **PostGIS in CNPG** — confirm the extension can be provisioned on the homelab Postgres before Phase 3.
-3. **Trust score recomputation** — for v1 it's seeded once; define the trigger/job model for when signals change post-onboarding.
-4. **Discovery and category API shape** — finalize in OpenAPI specs: `/discovery` query params + response (including multi-storefront "Where to find it" per result); `GET /categories` (browsable tree, owned by `cove-product`); `GET /recommendations/categories` (personalized homepage cards, owned by `cove-user`); `POST /users/me/events` (attention event ingest, owned by `cove-user`).
+1. ~~**Service ownership**~~ — resolved: `cove-item` owns the discovery surface; `cove-directory` will take over `directory` writes when it ships.
+2. ~~**PostGIS in CNPG**~~ — resolved: PostGIS extension provisioned on `cove-db` in Phase 3.
+3. ~~**Discovery and category API shape**~~ — resolved in OpenAPI specs: `GET /discovery` (cove-item), `GET /categories` (cove-item), `GET /recommendations/categories` (cove-user), `POST /users/me/events` (cove-user).
+
+Items still open:
+
+4. **Trust score recomputation** — for v1 it is seeded once at seed time; define the trigger/job model for when signals change post-onboarding.
 5. **Independent-storefront tier** — `tier` lives on `maker`. A registered independent storefront (a boutique that resells, with no maker of its own) earns trust via its signals, not a tier; revisit if storefronts need their own tier.
 6. **`details` on products vs a separate table** — folded into a `details` JSONB column here; split back out only if payloads get large enough to hurt list queries.
+7. **`user_flags` column** — `profile.user_flags` migration was added in Phase 3; document its purpose and usage once defined.
 
 ---
 
@@ -620,6 +791,7 @@ To reconcile before the Phase 3 epic is re-planned:
 - [Postgres Primer](POSTGRES_PRIMER.md) — indexes (B-tree, GIN, GiST), JSONB, FTS, ltree, PostGIS
 - [Media Architecture](MEDIA_ARCHITECTURE.md) — image storage, transformation, serving, signed URLs
 - [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — iOS app structure, ViewModels, repository layer
+- [Category Taxonomy](CATEGORY_TAXONOMY.md) — full v1 tree, design principles, add/remove runbook
 - Product Brief v1.0 — the trust layer, the wedge, the signal taxonomy
 
 ---
@@ -628,10 +800,11 @@ To reconcile before the Phase 3 epic is re-planned:
 
 - **Version 1.0** (Nov 2025) — Initial architecture. Hybrid SQL + NoSQL with a GraphQL API layer.
 - **Version 2.0** (May 2026) — Locked stack from Phase 0 epic. REST over GraphQL, all data to Postgres, repository abstraction, v1 entities.
-- **Version 3.0** (May 2026) — Phase 0 alignment. Garage (not MinIO) object storage, monorepo service locations, `product_variants`/`product_details`, removed Visit List.
+- **Version 3.0** (May 2026) — Phase 0 alignment. Garage (not MinIO) object storage, monorepo service locations, `item_variants`/`item_details`, removed Visit List.
 - **Version 3.1** (May 2026) — Single shared cluster (`cove-db`) with schemas-per-service; cross-schema FKs.
 - **Version 3.2** (May 2026) — `vendor` schema pre-positioned for a future `cove-vendor` service.
 - **Version 3.3** (May 2026) — Product media split into a `product_media` child table.
 - **Version 4.0** (May 2026) — **Trust-layer reframe.** Split the old `vendor` into a maker + place graph; the trust layer became the core (polymorphic signal taxonomy + composite scoring); added PostGIS geospatial discovery and the trust+proximity+relevance ranking query. Dropped `product_variants` (no transactions). Folded `product_details` into a `details` column and `product_media` into a polymorphic `media` table. Absorbed the trust-layer and category/facet content from the now-retired `TRUST_LAYER_ARCHITECTURE.md` and `CATEGORY_AND_PRODUCT_ARCHITECTURE.md`; this document is now the single canonical data-model reference.
 - **Version 4.1** (May 2026) — **Terminology + individual-maker support.** `brand` → `maker` (covers a person or a company); the supply-side schema/service became `directory` / `cove-directory` (retiring the ambiguous "vendor"); `storefront` kept as the internal name with a `type` enum (shop/gallery/studio/market/taproom) and "Where to find it" as the consumer label; `tier` (Verified Business / Individual Lister) moved onto `maker`; added `operated_by_maker_id` for maker-run storefronts. Replaced the single `storefront_id` on products with a many-to-many `availability` join so one maker's product can be sold at many storefronts (studio + gallery + market) — the individual-artist case from the brief.
-- **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `user.interests` and `user.events` tables to the `user` schema. Documented `ProductTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
+- **Version 4.2** (May 2026) — **Category depth + personalization.** Capped v1 taxonomy at 3 levels (`root.mid.leaf`). Added homepage category cards with a two-phase personalization model (onboarding explicit interests → behavioral attention metrics). Added `interests` and `events` tables to the `profile` schema. Documented `ProductTypes.swift` replacement by API-driven categories. Expanded Open item 4 to cover `/categories`, `/recommendations/categories`, and `/users/me/events` endpoints.
+- **Version 5.0** (June 2026) — **Phase 3 alignment.** Renamed `cove-product` → `cove-item` to reflect what shipped (item ingestion + discovery endpoint). Renamed schemas: `product` → `catalog`, `user` → `profile`; `products` table → `items`; `product_id` FKs → `item_id`; `uid` PK → surrogate `id uuid` + `auth_uid`. Updated `cove-user` responsibilities to include `GET /recommendations/categories` and `POST /users/me/events`. Noted `profile.user_flags` migration. Closed Open items 1–3 (service ownership, PostGIS, API shape). Updated iOS networking layer: Firebase implementations removed, CoveAPI implementations active. Documented Phase 3 iOS scope (InterestOnboardingView, CategoryCard, CategoryResultsView).

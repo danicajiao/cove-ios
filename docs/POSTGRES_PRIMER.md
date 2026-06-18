@@ -22,9 +22,9 @@ Assumed starting point: comfortable with Firestore, new to relational databases.
 
 ## The database layout
 
-Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema (`directory`, `product`, `user`). This primer covers the Postgres *mechanics* those schemas rely on; the **canonical schema, entities, and service ownership live in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** — refer there for the actual table definitions. The examples below are illustrative.
+Cove runs one CNPG `Cluster` (`cove-db`) hosting a single database (`cove`). Inside that database, each service owns its own schema (`directory`, `catalog`, `user`). This primer covers the Postgres *mechanics* those schemas rely on; the **canonical schema, entities, and service ownership live in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** — refer there for the actual table definitions. The examples below are illustrative.
 
-Each service connects with a Postgres role whose `search_path` is set to its own schema, so application queries stay unqualified — `SELECT * FROM products` inside `cove-product` works without ever typing `product.products`. Cross-schema references (e.g., `user.favorites` → `product.products`, `product.products.maker_id` → `directory.makers`) use real foreign keys, since all schemas live in the same database.
+Each service connects with a Postgres role whose `search_path` is set to its own schema, so application queries stay unqualified — `SELECT * FROM items` inside `cove-item` works without ever typing `catalog.items`. Cross-schema references (e.g., `user.favorites` → `catalog.items`, `catalog.items.maker_id` → `directory.makers`) use real foreign keys, since all schemas live in the same database.
 
 ### Why one cluster, not one per service
 
@@ -47,9 +47,9 @@ Compare to Firestore:
 A Postgres **schema** is a namespace inside a database — a way to group tables, functions, and types. Every database starts with a `public` schema.
 
 ```sql
--- These are equivalent inside the `product` database:
-SELECT * FROM products;
-SELECT * FROM public.products;
+-- These are equivalent inside the `catalog` schema:
+SELECT * FROM items;
+SELECT * FROM public.items;
 ```
 
 `search_path` is the ordered list of schemas Postgres checks when you use an unqualified name. The default is `public` first:
@@ -59,23 +59,23 @@ SHOW search_path;
 -- "$user", public
 ```
 
-**How Cove uses this:** CNPG provisions the `cove` database, then bootstrap migrations create the per-service schemas plus a role per service, each with its `search_path` scoped to its own schema (so application queries stay unqualified — `SELECT * FROM products` resolves inside `cove-product`). Extensions like `ltree` and `postgis` live in `public` so they're reachable from any schema. The full bootstrap (schemas, roles, cross-schema grants) is in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); the mechanic to understand here is `search_path`:
+**How Cove uses this:** CNPG provisions the `cove` database, then bootstrap migrations create the per-service schemas plus a role per service, each with its `search_path` scoped to its own schema (so application queries stay unqualified — `SELECT * FROM items` resolves inside `cove-item`). Extensions like `ltree` and `postgis` live in `public` so they're reachable from any schema. The full bootstrap (schemas, roles, cross-schema grants) is in [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md); the mechanic to understand here is `search_path`:
 
 ```sql
 -- A role whose unqualified queries resolve against its own schema first
-ALTER ROLE cove_product SET search_path = product, business, public;
+ALTER ROLE cove_item SET search_path = catalog, public;
 ```
 
 Cross-schema foreign keys are the unlock that makes the single-cluster model practical:
 
 ```sql
 -- A favorite that physically lives in the `user` schema but references
--- a row in the `product` schema. Postgres enforces this — INSERT fails
--- if the product doesn't exist; deleting the product CASCADEs the favorite.
+-- a row in the `catalog` schema. Postgres enforces this — INSERT fails
+-- if the item doesn't exist; deleting the item CASCADEs the favorite.
 CREATE TABLE "user".favorites (
-    uid        text NOT NULL REFERENCES "user".users(uid)      ON DELETE CASCADE,
-    product_id uuid NOT NULL REFERENCES product.products(id)   ON DELETE CASCADE,
-    PRIMARY KEY (uid, product_id)
+    uid     text NOT NULL REFERENCES "user".users(uid)    ON DELETE CASCADE,
+    item_id uuid NOT NULL REFERENCES catalog.items(id)   ON DELETE CASCADE,
+    PRIMARY KEY (uid, item_id)
 );
 ```
 
@@ -91,14 +91,14 @@ B-tree handles equality, range queries, and sorting. It's what you get with a pl
 
 ```sql
 -- Good: equality and range on a scalar column
-CREATE INDEX ON products (category_id);
-CREATE INDEX ON products (price_cents);
-CREATE INDEX ON products (created_at DESC);
+CREATE INDEX ON items (category_id);
+CREATE INDEX ON items (price_cents);
+CREATE INDEX ON items (created_at DESC);
 
 -- Postgres uses the index for:
-SELECT * FROM products WHERE category_id = $1;
-SELECT * FROM products WHERE price_cents BETWEEN 1000 AND 5000;
-SELECT * FROM products ORDER BY created_at DESC LIMIT 20;
+SELECT * FROM items WHERE category_id = $1;
+SELECT * FROM items WHERE price_cents BETWEEN 1000 AND 5000;
+SELECT * FROM items ORDER BY created_at DESC LIMIT 20;
 ```
 
 B-tree cannot index inside JSONB values or full-text vectors — use GIN for those.
@@ -113,14 +113,14 @@ GIN indexes the *contents* of a composite value — every key in a JSONB object,
 
 ```sql
 -- Index JSONB attributes for containment queries
-CREATE INDEX ON products USING GIN (attributes);
+CREATE INDEX ON items USING GIN (attributes);
 
 -- Index the full-text search vector
-CREATE INDEX ON products USING GIN (search_vec);
+CREATE INDEX ON items USING GIN (search_vec);
 
 -- Postgres uses the index for:
-SELECT * FROM products WHERE attributes @> '{"diet": "organic"}';
-SELECT * FROM products WHERE search_vec @@ to_tsquery('english', 'honey');
+SELECT * FROM items WHERE attributes @> '{"diet": "organic"}';
+SELECT * FROM items WHERE search_vec @@ to_tsquery('english', 'honey');
 ```
 
 ### Partial indexes
@@ -128,8 +128,8 @@ SELECT * FROM products WHERE search_vec @@ to_tsquery('english', 'honey');
 A partial index only covers rows that match a `WHERE` clause. Smaller, faster, and the right tool when a large fraction of rows are irrelevant to most queries.
 
 ```sql
--- Only index active products — inactive ones are never shown to users
-CREATE INDEX ON products (category_id) WHERE is_active = true;
+-- Only index active items — inactive ones are never shown to users
+CREATE INDEX ON items (category_id) WHERE is_active = true;
 
 -- Only index unread notifications
 CREATE INDEX ON notifications (user_id, created_at DESC) WHERE read_at IS NULL;
@@ -139,10 +139,10 @@ The query must include the same condition to use the index:
 
 ```sql
 -- Uses the partial index
-SELECT * FROM products WHERE category_id = $1 AND is_active = true;
+SELECT * FROM items WHERE category_id = $1 AND is_active = true;
 
 -- Falls back to seq scan — condition doesn't match the partial index filter
-SELECT * FROM products WHERE category_id = $1;
+SELECT * FROM items WHERE category_id = $1;
 ```
 
 ---
@@ -154,7 +154,7 @@ SELECT * FROM products WHERE category_id = $1;
 ```sql
 EXPLAIN ANALYZE
 SELECT p.id, p.name, p.price_cents
-FROM products p
+FROM items p
 WHERE p.category_id = 'abc123'
   AND p.is_active = true
 ORDER BY p.price_cents
@@ -165,7 +165,7 @@ Example output:
 
 ```
 Limit  (cost=0.43..18.64 rows=20 width=48) (actual time=0.051..0.142 rows=20 loops=1)
-  ->  Index Scan using products_category_id_idx on products p
+  ->  Index Scan using items_category_id_idx on items p
         (cost=0.43..91.20 rows=100 width=48) (actual time=0.049..0.131 rows=20 loops=1)
         Index Cond: (category_id = 'abc123'::uuid)
         Filter: (is_active = true)
@@ -179,7 +179,7 @@ Execution Time: 0.2 ms
 |---|---|
 | `cost=X..Y` | Planner estimate. First number = startup cost, second = total cost. Arbitrary units. |
 | `actual time=X..Y` | Real wall-clock milliseconds. First = first row, second = all rows. |
-| `rows=N` | Estimated (in cost) vs actual (in actual time) row count. Big gaps here mean stale statistics — run `ANALYZE products`. |
+| `rows=N` | Estimated (in cost) vs actual (in actual time) row count. Big gaps here mean stale statistics — run `ANALYZE items`. |
 | `loops=N` | How many times this node ran. Multiply `actual time` by `loops` for true cost. |
 | `Index Scan` | Used an index — good. |
 | `Seq Scan` | Scanned the full table. Fine on small tables; investigate on large ones. |
@@ -190,13 +190,13 @@ Execution Time: 0.2 ms
 
 ```sql
 -- High rows estimate vs actual: run ANALYZE
-ANALYZE products;
+ANALYZE items;
 
 -- Seq Scan on a large table: missing index
-CREATE INDEX ON products (producer_id);
+CREATE INDEX ON items (producer_id);
 
 -- Index Scan but Filter removes most rows: wrong index or need partial index
-CREATE INDEX ON products (producer_id) WHERE is_active = true;
+CREATE INDEX ON items (producer_id) WHERE is_active = true;
 ```
 
 ---
@@ -206,15 +206,15 @@ CREATE INDEX ON products (producer_id) WHERE is_active = true;
 A **transaction** is a group of operations that either all succeed or all fail. In Postgres, every statement runs inside a transaction — even bare `INSERT`/`UPDATE` statements are auto-committed.
 
 ```sql
--- Explicit transaction: reserve a product and create a notification atomically
+-- Explicit transaction: reserve an item and create a notification atomically
 BEGIN;
 
-UPDATE products
+UPDATE items
 SET reserved_by = $1, reserved_at = now()
 WHERE id = $2 AND reserved_by IS NULL;
 
 INSERT INTO notifications (user_id, type, payload)
-VALUES ($1, 'reservation_confirmed', jsonb_build_object('product_id', $2));
+VALUES ($1, 'reservation_confirmed', jsonb_build_object('item_id', $2));
 
 COMMIT;  -- both writes land, or neither does
 ```
@@ -234,13 +234,13 @@ Isolation controls what a transaction can see from concurrent transactions. Post
 **Read committed is almost always right for Cove.** The main exception is multi-step read-then-write operations where consistency across reads matters:
 
 ```sql
--- Repeatable read: ensure the product count doesn't change between the
+-- Repeatable read: ensure the item count doesn't change between the
 -- check and the insert
 BEGIN ISOLATION LEVEL REPEATABLE READ;
 
-SELECT count(*) FROM products WHERE producer_id = $1;
+SELECT count(*) FROM items WHERE producer_id = $1;
 -- ... application logic based on the count ...
-INSERT INTO products (...) VALUES (...);
+INSERT INTO items (...) VALUES (...);
 
 COMMIT;
 ```
@@ -253,12 +253,12 @@ A transaction holds locks and prevents Postgres from vacuuming dead rows for its
 
 ## JSONB
 
-JSONB stores JSON as a binary decomposed structure — indexed, queryable, and faster than `json` (which stores raw text). Use it for attributes that vary by product type so the `products` table doesn't need 50 nullable columns.
+JSONB stores JSON as a binary decomposed structure — indexed, queryable, and faster than `json` (which stores raw text). Use it for attributes that vary by item type so the `items` table doesn't need 50 nullable columns.
 
 ```sql
--- products table: fixed columns for things every product has,
+-- items table: fixed columns for things every item has,
 -- JSONB for the rest
-CREATE TABLE products (
+CREATE TABLE items (
     id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name        text NOT NULL,
     price_cents integer NOT NULL,
@@ -283,28 +283,28 @@ CREATE TABLE products (
 | `attributes ? 'weight_g'` | `boolean` | Does the key exist? |
 
 ```sql
--- All organic products (GIN index on attributes makes this fast)
-SELECT * FROM products WHERE attributes @> '{"diet": "organic"}';
+-- All organic items (GIN index on attributes makes this fast)
+SELECT * FROM items WHERE attributes @> '{"diet": "organic"}';
 
--- Products under 300g (cast the text value to integer for comparison)
-SELECT * FROM products WHERE (attributes ->> 'weight_g')::integer < 300;
+-- Items under 300g (cast the text value to integer for comparison)
+SELECT * FROM items WHERE (attributes ->> 'weight_g')::integer < 300;
 
--- Products that have a flower_source attribute at all
-SELECT * FROM products WHERE attributes ? 'flower_source';
+-- Items that have a flower_source attribute at all
+SELECT * FROM items WHERE attributes ? 'flower_source';
 
 -- Build a JSONB object in a query
 SELECT jsonb_build_object(
     'id', id,
     'name', name,
     'diet', attributes ->> 'diet'
-) FROM products;
+) FROM items;
 ```
 
 ### GIN index on JSONB
 
 ```sql
 -- Covers all @> containment queries and ? key-exists queries
-CREATE INDEX ON products USING GIN (attributes);
+CREATE INDEX ON items USING GIN (attributes);
 ```
 
 ### JSONB vs a normalized table
@@ -330,7 +330,7 @@ Postgres has built-in full-text search. `tsvector` is a pre-processed representa
 Store the search vector as a generated column so it stays in sync with the source columns automatically:
 
 ```sql
-ALTER TABLE products ADD COLUMN search_vec tsvector
+ALTER TABLE items ADD COLUMN search_vec tsvector
     GENERATED ALWAYS AS (
         to_tsvector('english',
             coalesce(name, '') || ' ' ||
@@ -338,31 +338,31 @@ ALTER TABLE products ADD COLUMN search_vec tsvector
         )
     ) STORED;
 
-CREATE INDEX ON products USING GIN (search_vec);
+CREATE INDEX ON items USING GIN (search_vec);
 ```
 
 ### Querying
 
 ```sql
 -- Simple word search
-SELECT id, name FROM products
+SELECT id, name FROM items
 WHERE search_vec @@ to_tsquery('english', 'honey');
 
 -- AND: both words must appear
-SELECT id, name FROM products
+SELECT id, name FROM items
 WHERE search_vec @@ to_tsquery('english', 'raw & honey');
 
 -- OR: either word
-SELECT id, name FROM products
+SELECT id, name FROM items
 WHERE search_vec @@ to_tsquery('english', 'honey | jam');
 
 -- Prefix match (useful for autocomplete)
-SELECT id, name FROM products
+SELECT id, name FROM items
 WHERE search_vec @@ to_tsquery('english', 'hon:*');
 
 -- Ranked results — ts_rank scores how well a document matches
 SELECT id, name, ts_rank(search_vec, query) AS rank
-FROM products, to_tsquery('english', 'organic & honey') query
+FROM items, to_tsquery('english', 'organic & honey') query
 WHERE search_vec @@ query
 ORDER BY rank DESC
 LIMIT 10;
@@ -374,7 +374,7 @@ For user-typed search strings, `websearch_to_tsquery` is more forgiving than `to
 
 ```sql
 -- Handles "raw honey" as a phrase, "organic -processed" as negation
-SELECT id, name FROM products
+SELECT id, name FROM items
 WHERE search_vec @@ websearch_to_tsquery('english', $1);
 ```
 
@@ -404,9 +404,9 @@ CREATE TABLE categories (
 CREATE INDEX ON categories USING GIST (path);
 CREATE INDEX ON categories USING BTREE (path);
 
--- Products reference categories by id, not by path
+-- Items reference categories by id, not by path
 -- (path can change on rename; id never changes)
-ALTER TABLE products ADD CONSTRAINT fk_category
+ALTER TABLE items ADD CONSTRAINT fk_category
     FOREIGN KEY (category_id) REFERENCES categories(id);
 ```
 
@@ -442,9 +442,9 @@ SELECT * FROM categories WHERE path <@ 'produce';
 -- Direct children of produce only (one level deeper)
 SELECT * FROM categories WHERE path ~ 'produce.*{1}';
 
--- All products in any vegetable subcategory
+-- All items in any vegetable subcategory
 SELECT p.*
-FROM products p
+FROM items p
 JOIN categories c ON c.id = p.category_id
 WHERE c.path <@ 'produce.vegetables';
 
@@ -537,7 +537,7 @@ WHERE (attributes ->> 'weight_g')::integer < 300
 -- Full-text search (needs GIN index on search_vec)
 WHERE search_vec @@ websearch_to_tsquery('english', $1)
 
--- All products in a category subtree (needs GIST index on path)
+-- All items in a category subtree (needs GIST index on path)
 JOIN categories c ON c.id = p.category_id WHERE c.path <@ 'produce'
 
 -- Direct children of a category
@@ -550,7 +550,7 @@ WHERE ST_DWithin(location, ST_MakePoint($lon, $lat)::geography, 32186.9)
 EXPLAIN ANALYZE SELECT ...
 
 -- Refresh statistics after large data loads
-ANALYZE products;
+ANALYZE items;
 ```
 
 ---
@@ -561,7 +561,7 @@ Quick lookups for terms used throughout. For full context, see the corresponding
 
 **B-tree** — The default Postgres index type. Used for equality, range queries, and sorting on scalar columns. Created with a plain `CREATE INDEX`.
 
-**Cross-schema FK** — A foreign key whose target column lives in a different schema in the same database (e.g. `"user".favorites.product_id` → `product.products(id)`). Works natively; foundational to Cove's single-cluster-schemas-per-service topology.
+**Cross-schema FK** — A foreign key whose target column lives in a different schema in the same database (e.g. `"user".favorites.item_id` → `catalog.items(id)`). Works natively; foundational to Cove's single-cluster-schemas-per-service topology.
 
 **EXPLAIN ANALYZE** — A Postgres command that runs a query and reports the actual execution plan with wall-clock timings. The first tool to reach for when a query is slower than expected.
 
@@ -581,17 +581,17 @@ Quick lookups for terms used throughout. For full context, see the corresponding
 
 **ltree** — Postgres extension that stores hierarchical labels as a single dot-separated column (`food.produce.honey`). Operators include `<@` (is descendant of), `@>` (is ancestor of), `~` (matches lquery pattern), `nlevel()` (depth).
 
-**Partial index** — An index with a `WHERE` clause covering only matching rows. Smaller, faster, and the right tool when most rows are irrelevant to most queries (e.g., active products only).
+**Partial index** — An index with a `WHERE` clause covering only matching rows. Smaller, faster, and the right tool when most rows are irrelevant to most queries (e.g., active items only).
 
 **Read committed** — Postgres's default isolation level. Each statement sees a fresh snapshot of committed data. Two reads of the same row in one transaction may return different values if another transaction committed in between.
 
 **Repeatable read** — An isolation level where the entire transaction sees the snapshot taken at its start. Use when you need consistency across multiple reads in one transaction.
 
-**Role** — A Postgres "user" with login and permission grants. Services connect as their own role (`cove_product`, `cove_user`) so schema ownership is enforced at the database level.
+**Role** — A Postgres "user" with login and permission grants. Services connect as their own role (`cove_item`, `cove_user`) so schema ownership is enforced at the database level.
 
-**Schema** — A namespace inside a Postgres database that groups tables, functions, and types. Cove uses one schema per service (`directory`, `product`, `user`) within a single `cove` database.
+**Schema** — A namespace inside a Postgres database that groups tables, functions, and types. Cove uses one schema per service (`directory`, `catalog`, `user`) within a single `cove` database.
 
-**search_path** — Ordered list of schemas Postgres checks for unqualified names. Each service's role has its own schema first, so application queries stay unqualified (`SELECT * FROM products` works inside `cove-product` because `search_path = product, public`).
+**search_path** — Ordered list of schemas Postgres checks for unqualified names. Each service's role has its own schema first, so application queries stay unqualified (`SELECT * FROM items` works inside `cove-item` because `search_path = catalog, public`).
 
 **Serializable** — The strictest isolation level — transactions behave as if they ran one at a time. Rarely needed; comes with occasional retry on conflict.
 

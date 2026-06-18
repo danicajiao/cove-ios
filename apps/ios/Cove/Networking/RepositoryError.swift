@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Errors thrown by `ProductRepository`, `UserRepository`, `ImageRepository`,
+/// Errors thrown by `ItemRepository`, `UserRepository`, `ImageRepository`,
 /// and other repository protocol implementations.
 ///
 /// Repository errors are transport-agnostic — callers (ViewModels) never need

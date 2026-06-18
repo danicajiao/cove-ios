@@ -9,19 +9,19 @@ import FirebaseAuth
 
 @MainActor
 class FavoritesViewModel: ObservableObject {
-    @Published var favorites: [any Product] = []
+    @Published var favorites: [any Item] = []
     @Published var isLoading: Bool = false
     @Published var favoriteCount: Int = 0
 
     private let favoritesRepository: FavoritesRepository
-    private let productRepository: ProductRepository
+    private let itemRepository: ItemRepository
 
     init(
-        favoritesRepository: FavoritesRepository = FirebaseFavoritesRepository(),
-        productRepository: ProductRepository = FirebaseProductRepository()
+        favoritesRepository: FavoritesRepository = CoveAPIFavoritesRepository(),
+        itemRepository: ItemRepository = CoveAPIItemRepository()
     ) {
         self.favoritesRepository = favoritesRepository
-        self.productRepository = productRepository
+        self.itemRepository = itemRepository
     }
 
     func fetchFavorites() async throws {
@@ -34,16 +34,16 @@ class FavoritesViewModel: ObservableObject {
         defer { isLoading = false }
 
         let favoriteRefs = try await favoritesRepository.listFavorites(uid: uid)
-        let productIds = favoriteRefs.map(\.productId)
+        let itemIds = favoriteRefs.map(\.itemId)
 
-        guard !productIds.isEmpty else {
+        guard !itemIds.isEmpty else {
             favorites = []
             favoriteCount = 0
             return
         }
 
-        let fetchedProducts = try await productRepository.fetchProducts(withIds: productIds)
-        favorites = fetchedProducts
-        favoriteCount = fetchedProducts.count
+        let fetchedItems = try await itemRepository.fetchItems(withIds: itemIds)
+        favorites = fetchedItems
+        favoriteCount = fetchedItems.count
     }
 }

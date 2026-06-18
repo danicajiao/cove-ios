@@ -64,14 +64,14 @@ The `<REPO>` prefix is always ALL CAPS and identifies which repo's issue tracker
 |---|---|
 | `feature/` | New screens or user-facing functionality |
 | `enhancement/` | Improvements to existing features |
-| `bug/` | Bug fixes |
+| `bugfix/` | Bug fixes |
 | `docs/` | Documentation-only changes |
-| `chore/` | Maintenance, config, tooling |
+| `chore/` | Refactoring, cleanup, config, tooling |
 
 Examples — with issue:
 - `feature/COVE-137-profile-view-model`
 - `enhancement/COVE-66-improve-tab-navigation`
-- `bug/COVE-3-fix-login-crash`
+- `bugfix/COVE-3-fix-login-crash`
 
 Examples — no issue (off-cycle fixes):
 - `docs/update-readme`
@@ -152,7 +152,7 @@ cp services/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi
 - **Views** (`apps/ios/Cove/Views/`, `apps/ios/Cove/Components/`): SwiftUI only, no business logic
 - **ViewModels** (`apps/ios/Cove/View Models/`): `ObservableObject`, marked `@MainActor`, one per major view
 - **Models** (`apps/ios/Cove/Models/`): Data structures and global state (e.g. `AppState`, `Bag`)
-- **Enums** (`apps/ios/Cove/Enums/`): Shared enum types (`ProductTypes`); note that `AuthState`, `AuthMethod`, and `Path` are currently defined in `Models/AppState.swift`
+- **Enums** (`apps/ios/Cove/Enums/`): Shared enum types (`ProductTypes` — Firestore era, removed in Phase 3; `AuthPath`); note that `AuthState`, `AuthMethod`, and `Path` are defined in `Models/AppState.swift`
 - **Styles** (`apps/ios/Cove/Styles/`): Custom `PrimitiveButtonStyle` implementations
 
 ### Naming
@@ -339,19 +339,25 @@ gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
 
 Do not open the PR if any AC item is unmet — finish the work first. Skip this step for off-cycle branches that have no associated issue.
 
-### Post-merge AC comment
+### Post-merge AC verification
 
-After the user confirms a PR is merged, fetch the issue's AC, verify each item against the work that was done, and post a comment on the issue summarizing the result.
+After the user confirms a PR is merged, perform these steps **in order**:
+
+1. **Check the AC boxes in the issue body.** Fetch the issue, mark every satisfied item `[x]`, leave unmet or deferred items `[ ]`, and write the updated body back with `gh issue edit --body-file`.
+
+2. **Post the AC comment.** Write a comment listing each AC item with ✅ or ❌ and a brief note on how it was verified.
 
 ```bash
-# Fetch AC
+# 1. Fetch current issue body, edit checkboxes, write back
 gh issue view <issue-number> --repo danicajiao/cove --json body -q .body
+# ... update [ ] → [x] for satisfied items ...
+gh issue edit <issue-number> --repo danicajiao/cove --body-file /tmp/issue-body.md
 
-# Post the comment
+# 2. Post the verification comment
 gh issue comment <issue-number> --repo danicajiao/cove --body-file /tmp/ac-comment.md
 ```
 
-The comment should list each AC item with ✅ or ❌ and a brief note on how it was verified. Skip for off-cycle PRs with no associated issue.
+The comment should list each AC item with ✅ or ❌ and a brief note on how it was verified. Skip both steps for off-cycle PRs with no associated issue.
 
 ### Pull request and issue linking
 
@@ -390,6 +396,6 @@ The `github-project-planner` agent should wire these after creating sub-issues, 
 
 | Sub-issue labels | Handled by |
 |---|---|
-| `ui/ux` + `figma` | `swiftui-engineer` |
+| `ios` (matches a Figma design when also `ui/ux`) | `swiftui-engineer` |
 | `docs` | `documentation-maintainer` |
 | planning / epics | `github-project-planner` |

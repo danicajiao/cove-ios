@@ -28,14 +28,12 @@ enum APIEnvironment {
     // MARK: - Base URL
 
     var baseURL: URL {
-        switch self {
-        case .staging:
-            // swiftlint:disable:next force_unwrapping
-            URL(string: "https://staging-api.coveapp.dev")!
-        case .production:
-            // swiftlint:disable:next force_unwrapping
-            URL(string: "https://api.coveapp.dev")!
+        let raw = switch self {
+        case .staging: "https://staging-api.coveapp.dev"
+        case .production: "https://api.coveapp.dev"
         }
+        guard let url = URL(string: raw) else { preconditionFailure("Invalid base URL") }
+        return url
     }
 
     // MARK: - Current environment

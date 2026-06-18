@@ -309,50 +309,27 @@ The environment key provides a default of `CoveAPIImageRepository()`, so views r
 
 ---
 
-## Product Type System
+## Item Type System
 
-Products in Firestore share a common `categoryId` field. The app uses this to decode into the correct Swift type at runtime.
+The app uses a polymorphic `Item` protocol to represent different kinds of discoverable items (coffee, music, apparel). Each concrete type carries type-specific `info` and `details` structs that power the type-specific tabs in `ItemDetailView`.
 
-`ProductTypes.swift` (`Enums/ProductTypes.swift`) is a Firestore-era enum that maps human-readable category names to their Firestore document IDs. It is used exclusively by `FirebaseProductRepository` to dispatch decoding. In Phase 3 this file will be removed and categories will be served as data from `GET /categories` on `cove-api`.
-
-### Type Mapping
-
-```swift
-enum ProductTypes: String {
-    case coffee  = "8JbKssVf2zw8ryq1pace"
-    case music   = "JzzwWDRpp2B5zG4TNdWx"
-    case apparel = "s97tOnvbfrNtoe2VaNRQ"
-}
-```
+`ProductTypes.swift` and `FirebaseProductRepository` were both removed in Phase 3. Categories are now served as data from `GET /categories` on cove-api; items are fetched via `CoveAPIItemRepository`.
 
 ### Protocol Hierarchy
 
 ```
-Product (protocol)
-├── CoffeeProduct   → info: CoffeeInfo  { name, roastery }
-├── MusicProduct    → info: MusicInfo   { artist, album }
-└── ApparelProduct  → info: ApparelInfo { brand, name }
+Item (protocol)
+├── CoffeeItem   → info: CoffeeInfo  { name, roastery }
+├── MusicItem    → info: MusicInfo   { artist, album }
+└── ApparelItem  → info: ApparelInfo { brand, name }
 
-ProductDetails (protocol)
-├── CoffeeProductDetails   → description, about, origin: [OriginInfo]
-├── MusicProductDetails    → description, about, tracklist: [Track]
-└── ApparelProductDetails  → description, about, specifications: [Specification]
+ItemDetails (protocol)
+├── CoffeeItemDetails   → description, about, origin: [OriginInfo]
+├── MusicItemDetails    → description, about, tracklist: [Track]
+└── ApparelItemDetails  → description, about, specifications: [Specification]
 ```
 
-### Decoding Strategy
-
-ViewModels read the raw `categoryId` from each Firestore document before decoding:
-
-```swift
-let categoryId = document["categoryId"] as? String
-if categoryId == ProductTypes.coffee.rawValue {
-    let product = try document.data(as: CoffeeProduct.self)
-} else if categoryId == ProductTypes.music.rawValue {
-    let product = try document.data(as: MusicProduct.self)
-} // ...
-```
-
-`ProductDetailView` and `ProductCardView` then type-cast `any Product` back to the concrete type to access type-specific fields (e.g., `(product as? CoffeeProduct)?.info.roastery`).
+ViewModels and repositories work against `any Item` and `any ItemDetails`. Views type-cast to the concrete type to access type-specific fields (e.g., `(item as? CoffeeItem)?.info.roastery`).
 
 ---
 

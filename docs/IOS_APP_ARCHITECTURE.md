@@ -39,7 +39,7 @@ apps/ios/Cove/
 ├── View Models/          # Business logic (HomeViewModel, FavoritesViewModel, etc.)
 ├── Views/                # SwiftUI views organized by feature
 │   ├── Profile/          # ProfileHeaderView, StatsRowView, ProfileRowView
-│   └── ...               # HomeView, BagView, ProductDetailView, auth views
+│   └── ...               # HomeView, BagView, ItemDetailView, auth views
 ├── Components/           # Reusable UI components (ItemCard, CategoryCard, LikeButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
 ├── Enums/                # AuthPath (ProductTypes removed in Phase 3)
@@ -94,7 +94,7 @@ enum Path: Hashable {
     case signup
     case main
     case home
-    case product(id: String)
+    case item(id: String)
 }
 ```
 
@@ -102,7 +102,7 @@ enum Path: Hashable {
 
 ## Tab Structure
 
-`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping a product from the Home tab pushes `ProductDetailView` without leaving the tab).
+`MainView` hosts a `TabView` with 5 tabs. Each tab is wrapped in a `TabNavigationStack` to support in-tab navigation (e.g., tapping an item from the Home tab pushes `ItemDetailView` without leaving the tab).
 
 | Tab | Tag | View | Status |
 |-----|-----|------|--------|
@@ -121,8 +121,8 @@ Tab selection is managed by `TabState` (`Models/TabState.swift`) — an `Observa
 ### HomeViewModel
 Serves `HomeView`. Fetches items and brands via `ItemRepository` (`CoveAPIItemRepository`). Items are cached in-memory with a 5-minute TTL; `fetchItems()` early-returns unless the cache is expired or `forceRefresh` is true. Also fetches personalized category cards from `GET /recommendations/categories` via `CoveAPIClient` (`fetchCategories()`), and records `category_tap` attention events when a card is tapped.
 
-### ProductDetailViewModel
-Serves `ProductDetailView`. Initialized with a `productId`, it runs three async fetches on init: the product itself, its type-specific details, and up to 5 similar products (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by product type.
+### ItemDetailViewModel
+Serves `ItemDetailView`. Initialized with an `itemId`, it runs three async fetches on init: the item itself, its type-specific details, and up to 5 similar items (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by item type.
 
 ### BagViewModel
 Serves `BagView`. Manages the user's bag — products they intend to purchase or revisit. Fetches product recommendations based on the categories of items in the bag.
@@ -350,8 +350,8 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 
 ```
 1. User taps ProductCard
-2. NavigationLink(value: Path.product(id:)) fires
-3. TabNavigationStack routes to ProductDetailView(productId:)
+2. NavigationLink(value: Path.item(id:)) fires
+3. TabNavigationStack routes to ItemDetailView(itemId:)
 4. ViewModel init → async fetch: product + details + similar products
 5. UI renders with type-specific tabs
 ```
@@ -359,7 +359,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 ### Add to Bag
 
 ```
-1. User taps "Add to Bag" in ProductDetailView
+1. User taps "Add to Bag" in ItemDetailView
 2. Check if item already in bag.items
    ├── Yes → no-op or increment quantity
    └── No  → append new BagItem
@@ -387,7 +387,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 | Search | `TextField` in `HomeView` is present but not connected |
 | Bag actions | Add/remove items wired up; purchase confirmation not implemented |
 | VisitList | Planned replacement for `Bag` — lightweight saved-items list without checkout; replaces `Bag`, `BagItem`, and `BagViewModel` |
-| Reviews | `NavigationLink` exists in `ProductDetailView` but no destination |
+| Reviews | `NavigationLink` exists in `ItemDetailView` but no destination |
 | Profile editing | `ProfileRowView` items are not wired up |
 | Notifications | Bell icon in `HomeView` has no action |
 | Apple Sign-In | `AuthMethod.apple` referenced but sign-in flow not implemented |

@@ -52,18 +52,31 @@ apps/ios/Cove/
 
 ### Auth-Driven Routing
 
-`CoveApp` is the root of the app. It reads `AppState.authState` to decide which UI to show:
+`CoveApp` is the root of the app. It switches on `AppState.authState` (four cases) to decide which UI to show:
 
 ```mermaid
 flowchart TD
-    CoveApp["CoveApp (root)<br/>reads AppState.authState"]
-    CoveApp -->|".loggedIn"| Main["MainView<br/>(tab bar)"]
-    CoveApp -->|".loggedOut"| Auth["NavigationStack<br/>(auth flow)"]
+    CoveApp["CoveApp (root)<br/>switches on AppState.authState"]
+    CoveApp -->|".loggedOut"| Auth["auth flow"]
     Auth -->|"network available"| Welcome["WelcomeView"]
     Auth -->|"no network"| Splash["SplashView"]
+    CoveApp -->|".needsUsernameOnboarding"| UN["UsernameOnboardingView"]
+    CoveApp -->|".needsInterestOnboarding"| IO["InterestOnboardingView"]
+    CoveApp -->|".loggedIn"| Main["MainView (tab bar)"]
+    UN -.->|"username set"| IO
+    IO -.->|"interests_onboarded"| Main
 ```
 
-`AppState` holds `@Published var authState: AuthState`. When a user successfully signs in, `authState` flips to `.loggedIn`, which triggers `CoveApp` to rebuild and show `MainView`. Auth navigation is owned locally by `CoveApp` via `@State private var authPath: [AuthPath]`, which is reset to `[]` via `.onChange(of: appState.authState)` on logout.
+`AppState` holds `@Published var authState: AuthState` (`.loggedOut`, `.needsUsernameOnboarding`, `.needsInterestOnboarding`, `.loggedIn`). Auth navigation is owned locally by `CoveApp` via `@State private var authPath: [AuthPath]`, which is reset to `[]` via `.onChange(of: appState.authState)` on logout.
+
+### Post-sign-in onboarding
+
+After Firebase sign-in, `AppState` gates entry into the app on two `cove-user`-backed checks before reaching `.loggedIn`:
+
+1. **Username** — if the signed-in user has no username, `authState` becomes `.needsUsernameOnboarding` and `UsernameOnboardingView` collects one (persisted via `cove-user`, `POST /users/me`).
+2. **Interests** — `AppState` then loads the profile and reads the `interests_onboarded` flag. If `false`, `authState` becomes `.needsInterestOnboarding` and `InterestOnboardingView` fetches the category tree (`GET /categories`), lets the user pick leaf categories, and saves them via `PUT /users/me/interests` (which sets `interests_onboarded`). If already onboarded, it goes straight to `.loggedIn`.
+
+Once both checks pass, `authState` flips to `.loggedIn` and `MainView` is shown.
 
 ### Supported Auth Methods
 
@@ -157,7 +170,7 @@ Injected at the root (`CoveApp`) via `.environmentObject` and available througho
 - `favoriteIds: Set<String>` — the set of favorited item IDs for the current user
 - `isTogglingFavorite: Bool` — prevents concurrent toggle operations
 - Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
-- `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
+- `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to `cove-user` via `CoveAPIFavoritesRepository` (`POST`/`DELETE /users/me/favorites/{itemId}`)
 - Used by `LikeButton` to read and mutate favorite state across all views
 
 ---

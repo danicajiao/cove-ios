@@ -388,7 +388,7 @@ CREATE TABLE catalog.items (
     name        text        NOT NULL,
     description text,
     price_cents integer,                             -- nullable: informational; no transactions in v1
-    attributes  jsonb       NOT NULL DEFAULT '{}',   -- filter facets (gender, season, ...)
+    attributes  jsonb       NOT NULL DEFAULT '{}',   -- filter facets (dietary preference, season, ...)
     details     jsonb       NOT NULL DEFAULT '{}',   -- long-form display data (materials, notes)
     search_vec  tsvector    GENERATED ALWAYS AS (
         to_tsvector('english', coalesce(name, '') || ' ' || coalesce(description, ''))

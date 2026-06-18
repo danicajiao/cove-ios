@@ -4,7 +4,6 @@
 
 ## Contents
 
-- [Goals](#goals)
 - [Architecture](#architecture)
 - [Platform layer (installed, Phase 0)](#platform-layer-installed-phase-0)
 - [Repo structure](#repo-structure)
@@ -17,16 +16,9 @@
 
 ---
 
-## Goals
-
-- Remove reliance on Firebase for data and storage (Auth stays — it's the hardest to replace and provides the most value)
-- Host compute on a personal K3s machine to eliminate backend costs during development
-- GitOps everything — every infrastructure change is a PR, Argo CD reconciles from `main`
-- Manifests written for K3s run on GKE unchanged if the cluster ever needs to move to the cloud
-
----
-
 ## Architecture
+
+> The backend runs on a personal K3s cluster (zero hosting cost), exposed via Cloudflare Tunnel, managed GitOps with Argo CD. Manifests are written to run on GKE unchanged if the cluster needs to move to the cloud.
 
 ```
 iOS App

@@ -346,13 +346,13 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 8. categories array published → HomeView renders CategoryCard scroll row
 ```
 
-### Product Tap → Detail View
+### Item Tap → Detail View
 
 ```
-1. User taps ProductCard
+1. User taps ItemCard
 2. NavigationLink(value: Path.item(id:)) fires
 3. TabNavigationStack routes to ItemDetailView(itemId:)
-4. ViewModel init → async fetch: product + details + similar products
+4. ViewModel init → async fetch: item + details + similar items
 5. UI renders with type-specific tabs
 ```
 

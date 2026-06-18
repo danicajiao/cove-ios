@@ -40,7 +40,7 @@ apps/ios/Cove/
 ├── Views/                # SwiftUI views organized by feature
 │   ├── Profile/          # ProfileHeaderView, StatsRowView, ProfileRowView
 │   └── ...               # HomeView, BagView, ProductDetailView, auth views
-├── Components/           # Reusable UI components (ProductCard, LikeButton, SmallCategoryButton, etc.)
+├── Components/           # Reusable UI components (ItemCard, CategoryCard, LikeButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
 ├── Enums/                # AuthPath (ProductTypes removed in Phase 3)
 ├── Constants/            # Design token constants (Spacing.swift, Radius.swift)
@@ -119,7 +119,7 @@ Tab selection is managed by `TabState` (`Models/TabState.swift`) — an `Observa
 ## ViewModels
 
 ### HomeViewModel
-Serves `HomeView`. Fetches all products and brands via the `ProductRepository` protocol (currently backed by `FirebaseProductRepository`). Products are cached in-memory with a 5-minute TTL; `fetchProducts()` early-returns unless the cache is expired or `forceRefresh` is true. Also publishes a static `categories` list used by the `SmallCategoryButton` row, and an `origins` list for display purposes.
+Serves `HomeView`. Fetches items and brands via `ItemRepository` (`CoveAPIItemRepository`). Items are cached in-memory with a 5-minute TTL; `fetchItems()` early-returns unless the cache is expired or `forceRefresh` is true. Also fetches personalized category cards from `GET /recommendations/categories` via `CoveAPIClient` (`fetchCategories()`), and records `category_tap` attention events when a card is tapped.
 
 ### ProductDetailViewModel
 Serves `ProductDetailView`. Initialized with a `productId`, it runs three async fetches on init: the product itself, its type-specific details, and up to 5 similar products (same `categoryId`). Also manages `detailSelection` — the currently active tab (Description / Origin / Tracklist / Specifications / About), which varies by product type.
@@ -130,7 +130,7 @@ Serves `BagView`. Manages the user's bag — products they intend to purchase or
 > **v1 note:** The Bag is a v1 stand-in. Because Cove does not handle fulfillment or transactions in v1, a full cart/checkout model isn't warranted. The planned replacement is **VisitList** — a saved list of items the user intends to visit or purchase, without requiring checkout infrastructure. VisitList will replace `Bag` and `BagViewModel` in a future phase.
 
 ### FavoritesViewModel
-Serves `FavoritesView`. Fetches the current user's favorited products via the `FavoritesRepository` and `ProductRepository` protocols (currently backed by Firebase). Reads favorite product IDs, then hydrates each one by fetching the corresponding product document. Publishes `favorites: [any Product]` and `isLoading`.
+Serves `FavoritesView`. Fetches the current user's favorited items via the `FavoritesRepository` and `ItemRepository` protocols (backed by `CoveAPIFavoritesRepository` and `CoveAPIItemRepository`). Reads favorite item IDs from `cove-user`, then hydrates each one by fetching the corresponding item from `cove-item`. Publishes `favorites: [any Item]` and `isLoading`.
 
 ### ProfileViewModel
 Serves `ProfileView`. Lightweight — all data is derived from `Auth.auth().currentUser` (display name, initials, photo URL, member since date). No repository calls, no local state mutations.
@@ -338,7 +338,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 ```
 1. CoveApp checks authState → .loggedIn
 2. MainView shown with HomeView in first tab
-3. HomeView.onAppear → viewModel.fetchProducts() + viewModel.fetchBrands() + viewModel.fetchCategories()
+3. HomeView.onAppear → viewModel.fetchItems() + viewModel.fetchBrands() + viewModel.fetchCategories()
 4. CoveAPIItemRepository → GET /items (via CoveAPIClient)
 5. Each item decoded by type → CoffeeItem / MusicItem / ApparelItem
 6. items array published → HomeView renders ItemCard grid

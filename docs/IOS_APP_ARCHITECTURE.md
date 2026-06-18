@@ -11,7 +11,7 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [ViewModels](#viewmodels)
 - [Global State](#global-state)
 - [Networking](#networking)
-- [Product Type System](#product-type-system)
+- [Item Type System](#item-type-system)
 - [Firebase Data Model](#firebase-data-model)
 - [Key Data Flows](#key-data-flows)
 - [Not Yet Implemented](#not-yet-implemented)
@@ -42,7 +42,7 @@ apps/ios/Cove/
 │   └── ...               # HomeView, BagView, ProductDetailView, auth views
 ├── Components/           # Reusable UI components (ProductCard, LikeButton, SmallCategoryButton, etc.)
 ├── Styles/               # Custom button styles and shadow modifiers
-├── Enums/                # ProductTypes (Firestore era), AuthPath
+├── Enums/                # AuthPath (ProductTypes removed in Phase 3)
 ├── Constants/            # Design token constants (Spacing.swift, Radius.swift)
 └── Resources/            # Assets, fonts (Gazpacho, Lato), Rive animations
 ```
@@ -348,7 +348,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 
 ```
 products/{productId}
-  ├── categoryId: String          // Maps to ProductTypes enum
+  ├── categoryId: String          // Firestore-era field; replaced by ltree category path in Phase 3
   ├── defaultPrice: Float
   ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
   ├── productDetailsId: String    // Foreign key to product_details
@@ -440,7 +440,7 @@ Phase 3 replaces Firestore with the Postgres-backed `cove-api` gateway for all s
 | Favorites | `FirebaseFavoritesRepository` (Firestore) | `CoveAPIFavoritesRepository` (cove-user REST) |
 | Images | `CoveAPIImageRepository` (already migrated) | No change |
 | Categories | Hardcoded in `HomeViewModel.categories` + `SmallCategoryButton` | `GET /categories` from cove-api; `CategoryCard` component replaces `SmallCategoryButton` |
-| Product types | `ProductTypes.swift` (Firestore document IDs) | Removed; categories are API data |
+| Product types | `ProductTypes.swift` (Firestore document IDs) | ✅ Removed in Phase 3; categories served as data from `GET /categories` |
 
 ### Stub implementations
 

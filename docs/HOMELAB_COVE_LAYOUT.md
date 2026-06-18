@@ -20,7 +20,7 @@ homelab/
 │   ├── gaming/
 │   │   └── minecraft/                    # separate tenant, not Cove
 │   └── cove/
-│       ├── base/                         # cove-api (Phase 1, deployed); cove-image + imgproxy (Phase 2, deployed); cove-item, cove-user in Phase 3
+│       ├── base/                         # cove-api (P1), cove-image + imgproxy (P2), cove-item + cove-user (P3), cove-db (CNPG cluster); each in its own subdir
 │       └── overlays/
 │           ├── staging/                  # → cove-staging namespace
 │           └── prod/                     # → cove-prod namespace
@@ -37,8 +37,10 @@ homelab/
     ├── root.yaml                         # applied directly; not listed in kustomization.yaml
     ├── kustomization.yaml                # lists every child Application below
     ├── argocd-self.yaml
+    ├── cert-manager.yaml
     ├── external-secrets.yaml
     ├── cnpg.yaml
+    ├── cnpg-barman-plugin.yaml
     ├── garage.yaml
     ├── kube-prometheus-stack.yaml
     ├── loki.yaml
@@ -55,15 +57,15 @@ homelab/
 
 Backend services live in the `danicajiao/cove` monorepo under `services/cove-<name>/`, **not** in separate repos. The `ci-services.yml` workflow builds each service's container image and pushes it to GAR; `homelab` declares how those images run.
 
-| Service | Path in `danicajiao/cove` | Phase | Sub-issue |
-|---|---|---|---|
-| `cove-api` | `services/cove-api/` | 1 (deployed) | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
-| `cove-image` | `services/cove-image/` | 2 (deployed) | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
-| `imgproxy` | cluster platform component (no source in this repo) | 2 (deployed) | — |
-| `cove-item` | `services/cove-item/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
-| `cove-user` | `services/cove-user/` | 3 | [danicajiao/cove#250](https://github.com/danicajiao/cove/issues/250) |
+| Service | Path in `danicajiao/cove` | Phase | Deployment | Implementation issue |
+|---|---|---|---|---|
+| `cove-api` | `services/cove-api/` | 1 | staging + prod | [danicajiao/cove#229](https://github.com/danicajiao/cove/issues/229) |
+| `cove-image` | `services/cove-image/` | 2 | staging + prod | [danicajiao/cove#238](https://github.com/danicajiao/cove/issues/238) |
+| `imgproxy` | upstream image; HMAC signing helper in `packages/imgproxy/` | 2 | staging + prod | — |
+| `cove-item` | `services/cove-item/` | 3 | staging (prod on merge to `main`) | [danicajiao/cove#321](https://github.com/danicajiao/cove/issues/321) |
+| `cove-user` | `services/cove-user/` | 3 | staging (prod on merge to `main`) | [danicajiao/cove#322](https://github.com/danicajiao/cove/issues/322) |
 
-`cove-api` shipped in Phase 1. `cove-image` and `imgproxy` shipped in Phase 2. The remaining services are added under the same convention as each phase begins.
+`cove-api` shipped in Phase 1; `cove-image` and `imgproxy` in Phase 2; `cove-item` and `cove-user` in Phase 3 (live in `cove-staging`, promoted to `cove-prod` when the Phase 3 integration branch merges to `main`). The `cove-api` and `cove-image` issue links predate the monorepo decision and reference the original separate-repo planning tickets.
 
 ## Runbooks
 
@@ -72,7 +74,13 @@ Operational docs live in [`homelab/docs/`](https://github.com/danicajiao/homelab
 | Runbook | Covers |
 |---|---|
 | `argocd-install.md` | Argo CD bootstrap, app-of-apps pattern, day-2 ops |
-| (more added per Phase 0 sub-issue) | |
+| `cnpg-install.md` | CloudNativePG operator install and cluster provisioning |
+| `external-secrets-install.md` | External Secrets Operator setup and secret stores |
+| `garage-install.md` | Garage S3-compatible object storage install |
+| `kube-prometheus-stack-install.md` | Prometheus + Grafana monitoring stack |
+| `loki-install.md` | Loki log aggregation install |
+| `node-setup.md` | K3s node provisioning and prerequisites |
+| `commands.md` | Common cluster operations cheat sheet |
 
 ## See also
 

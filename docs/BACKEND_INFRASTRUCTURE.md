@@ -1,6 +1,6 @@
 # Backend Infrastructure
 
-> **Status:** Phases 0–3 complete. The cluster is fully bootstrapped and running. `cove-api`, `cove-image`, `cove-item`, and `cove-user` are deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. Firebase Storage and Firestore have been retired; all structured data is served from Postgres via the cove-api gateway.
+> **Status:** Phases 0–3 complete. The cluster is fully bootstrapped and running. All four services run in `cove-staging` behind the Cloudflare Tunnel. `cove-api` and `cove-image` are also live in `cove-prod`; `cove-item` and `cove-user` are still pinned to `sha-placeholder` in the prod overlay and promote to `cove-prod` automatically once the Phase 3 integration branch merges to `main` (`ci-services.yml` opens a homelab PR bumping the prod tags). Firebase Storage and Firestore have been retired; all structured data is served from Postgres via the cove-api gateway.
 
 ## Contents
 
@@ -338,7 +338,7 @@ See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical sc
 
 - Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `catalog`, and `profile`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
 - `profile.user_flags` migration added to `cove-db`
-- Deploy `cove-item` (item ingestion, `GET /discovery` endpoint) and `cove-user` (user profiles, interests, `GET /recommendations/categories`, `POST /users/me/events`) to `cove-staging`
+- Deploy `cove-item` (item ingestion, `GET /discovery` endpoint) and `cove-user` (user profiles, interests, `GET /recommendations/categories`, `POST /users/me/events`) to `cove-staging`; the prod overlay keeps both at `sha-placeholder` until the integration branch merges to `main`, at which point `ci-services.yml` promotes them to `cove-prod`
 - Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows, interests)
 - iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/recommendations/*`, `api.coveapp.dev/users/*`, and `api.coveapp.dev/categories`
 - Firestore retired upon completion

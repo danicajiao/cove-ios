@@ -1,6 +1,6 @@
 # Marketplace Architecture
 
-> **Status:** Canonical data-model + services document (June 2026). Phase 3 is complete — `cove-item` and `cove-user` are deployed and the iOS app calls them via the cove-api gateway. Firebase Firestore and Storage have been retired. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
+> **Status:** Canonical data-model + services document (June 2026). Phase 3 is complete — `cove-item` and `cove-user` are deployed to `cove-staging` (prod promotion follows the integration-branch merge to `main`) and the iOS app calls them via the cove-api gateway. Firebase Firestore and Storage have been retired. For cluster and phase plan see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md); for Postgres mechanics see [Postgres Primer](POSTGRES_PRIMER.md); for the image pipeline see [Media Architecture](MEDIA_ARCHITECTURE.md).
 
 ## Contents
 

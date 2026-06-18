@@ -334,7 +334,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 ### Phase 3 — Data services ✅ complete
 
-See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals) and [MARKETPLACE_ARCHITECTURE.md](MARKETPLACE_ARCHITECTURE.md) for the full data model.
+See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals) and full data model.
 
 - Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
 - `profile.user_flags` migration added to `cove-db`

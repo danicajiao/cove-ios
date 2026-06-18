@@ -225,9 +225,9 @@ These go in **Variables** (not Secrets) in GitHub → Settings → Secrets and v
 
 ## Token validation strategy
 
-**Decision: Option A — trust the gateway, propagate UID via header.**
+**Decision: trust the gateway, propagate UID via header.**
 
-`cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-product`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
+`cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-item`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
 
 ```
 iOS App
@@ -237,7 +237,7 @@ cove-api
   │  validates token via Firebase Admin SDK
   │  X-Cove-Uid: <uid>          ← injected, Bearer token stripped
   ▼
-cove-image / cove-product / cove-user
+cove-image / cove-item / cove-user
      reads X-Cove-Uid from header, no Firebase SDK required
 ```
 
@@ -284,7 +284,7 @@ Revisit if any of the following change:
 - The cluster moves to multi-tenant infrastructure (GKE, shared node pools)
 - A security audit flags lateral movement risk within the cluster
 
-At that point Option C (internal JWT signed with a cluster secret) provides defence-in-depth without the Firebase Admin SDK cost of Option B.
+At that point, replacing the `X-Cove-Uid` header with an internal JWT signed by a cluster secret provides defence-in-depth without requiring the Firebase Admin SDK in every downstream service.
 
 ---
 

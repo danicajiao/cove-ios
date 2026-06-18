@@ -14,7 +14,6 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [Item Type System](#item-type-system)
 - [Key Data Flows](#key-data-flows)
 - [Not Yet Implemented](#not-yet-implemented)
-- [Phase 3 migration: what changes](#phase-3-migration-what-changes)
 - [Firebase Data Model (historical)](#firebase-data-model-historical)
 
 ---
@@ -24,7 +23,7 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 Cove uses **MVVM (Model-View-ViewModel)** with SwiftUI. State is managed through a combination of `@StateObject`, `@EnvironmentObject`, and `@Published` properties.
 
 The app talks to two separate backends:
-- **Firebase** — Auth (sign-in) and Firestore (structured data). Accessed directly through the Firebase iOS SDK. Firebase Storage was retired in Phase 2.
+- **Firebase** — Auth (sign-in) only. Accessed directly through the Firebase iOS SDK. Firestore and Firebase Storage were retired in Phase 3.
 - **cove-api gateway** — the custom K3s-hosted backend. All calls go through `CoveAPIClient`, which is generated from the gateway's OpenAPI spec. Image loading goes through this path via `CoveAPIImageRepository`.
 
 ---

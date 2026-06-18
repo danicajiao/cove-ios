@@ -338,7 +338,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 ```
 1. CoveApp checks authState → .loggedIn
 2. MainView shown with HomeView in first tab
-3. HomeView.onAppear → viewModel.fetchItems() + viewModel.fetchBrands() + viewModel.fetchCategories()
+3. HomeView.onAppear → viewModel.fetchItems() + viewModel.fetchBrands() + viewModel.fetchCategories() + favoritesStore.loadFavorites()
 4. CoveAPIItemRepository → GET /items (via CoveAPIClient)
 5. Each item decoded by type → CoffeeItem / MusicItem / ApparelItem
 6. items array published → HomeView renders ItemCard grid

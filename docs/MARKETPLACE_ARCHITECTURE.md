@@ -235,23 +235,24 @@ The brief's "rewards breadth and diversity of trust signals rather than any sing
 
 ## Geospatial: the local availability gate
 
-Location is doubly mandatory — it is both the proximity dimension of discovery *and* the integrity gate: all storefronts require a verifiable local address within the Denver metro area, which prevents national chains from self-listing as local and diluting the trust layer.
+Location is the proximity dimension of discovery and the integrity gate for physical listings: storefronts with a verifiable local address within the Denver metro area appear in radius search; online-only storefronts (`type: 'online'`) set no location and are excluded from proximity queries. This prevents national chains from self-listing as local and diluting the trust layer.
 
-The standard for radius search on Postgres is **PostGIS** — a `geography` column with a **GiST index**, queried with `ST_DWithin`. (Not application-level geohashing; PostGIS computes true great-circle distance and avoids geohash boundary problems.)
+Both `directory.makers` and `directory.storefronts` carry a nullable `geography(Point,4326)` column with a GiST index (from `migrations/000002_directory.up.sql`). The PostGIS extension is enabled in `migrations/000001_setup.up.sql`.
 
 ```sql
--- storefront location (lon/lat); SRID 4326 = WGS84
-ALTER TABLE directory.storefronts ADD COLUMN location geography(Point, 4326);
+-- location is nullable — physical places set it, online-only storefronts do not
+location geography(Point,4326)
+-- GiST index on both makers and storefronts
 CREATE INDEX ON directory.storefronts USING GIST (location);
+CREATE INDEX ON directory.makers      USING GIST (location);
 
 -- "storefronts within 20 miles of Denver" — 20 mi = 32186.9 meters
 SELECT * FROM directory.storefronts
-WHERE ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9);
+WHERE location IS NOT NULL
+  AND ST_DWithin(location, ST_MakePoint(-104.99, 39.74)::geography, 32186.9);
 ```
 
-> **Infra note:** PostGIS is not bundled in vanilla Postgres images the way `ltree` is. CNPG must be configured to load the PostGIS extension before Phase 3 schema work (see [Open items](#open-items)).
-
-See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs `geometry`, `ST_DWithin`, the meters-vs-miles gotcha).
+PostGIS computes true great-circle distance and avoids geohash boundary problems. See [Postgres Primer](POSTGRES_PRIMER.md) for PostGIS mechanics (`geography` vs `geometry`, `ST_DWithin`, the meters-vs-miles gotcha).
 
 ---
 

@@ -12,10 +12,10 @@ This document covers the Cove iOS app's architecture — how it's structured, ho
 - [Global State](#global-state)
 - [Networking](#networking)
 - [Item Type System](#item-type-system)
-- [Firebase Data Model](#firebase-data-model)
 - [Key Data Flows](#key-data-flows)
 - [Not Yet Implemented](#not-yet-implemented)
 - [Phase 3 migration: what changes](#phase-3-migration-what-changes)
+- [Firebase Data Model (historical)](#firebase-data-model-historical)
 
 ---
 
@@ -333,38 +333,6 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 
 ---
 
-## Firebase Data Model
-
-### Collections
-
-| Collection | Purpose |
-|------------|---------|
-| `products` | All product listings |
-| `product_details` | Type-specific product details (keyed by `productDetailsId`) |
-| `brands` | Brand/store info shown in the Home "Stores" section |
-| `users/{uid}/favorites` | Per-user favorited product IDs |
-
-### Product Document Structure
-
-```
-products/{productId}
-  ├── categoryId: String          // Firestore-era field; replaced by ltree category path in Phase 3
-  ├── defaultPrice: Float
-  ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
-  ├── productDetailsId: String    // Foreign key to product_details
-  ├── isFavorite: Bool?           // Set client-side after favorites query
-  ├── createdAt: Timestamp
-  └── info: { ... }              // Type-specific nested object
-```
-
-Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Phase 2 it holds a Garage object key (`images/<sha256>.webp`). The same key format applies to `brands.imageURL`.
-
-### Image Loading
-
-Product images are loaded via the `ImageRepository` protocol injected into the SwiftUI environment. All image-loading views (`ProductCardView`, `ProductRowView`, `ProductDetailView`, `HomeView` brand logos) call `imageRepository.imageURL(for:)` with the Garage object key from Firestore, then pass the resulting signed URL to `AsyncImage`. Firebase Storage is no longer used.
-
----
-
 ## Key Data Flows
 
 ### App Launch → Products Displayed
@@ -453,3 +421,37 @@ The Phase 3 iOS scope also includes:
 - **`CategoryCard`** — replaces `SmallCategoryButton`; rendered from data returned by `GET /recommendations/categories`; tapping a card triggers `GET /discovery?category=<path>&lat=...`
 - **`CategoryResultsView`** — destination for category card taps; renders discovery results for a category
 - **`POST /users/me/events`** — attention events (`category_tap`, `product_view`, etc.) sent after each user interaction to power behavioral recommendation ranking
+
+---
+
+## Firebase Data Model (historical)
+
+> **Retired in Phase 3.** Firestore is no longer used for structured data. This section is preserved for reference when reviewing git history or understanding legacy code.
+
+### Collections
+
+| Collection | Purpose |
+|------------|---------|
+| `products` | All product listings |
+| `product_details` | Type-specific product details (keyed by `productDetailsId`) |
+| `brands` | Brand/store info shown in the Home "Stores" section |
+| `users/{uid}/favorites` | Per-user favorited product IDs |
+
+### Product Document Structure
+
+```
+products/{productId}
+  ├── categoryId: String          // Firestore-era field; replaced by ltree category path in Phase 3
+  ├── defaultPrice: Float
+  ├── defaultImageURL: String     // Garage object key, e.g. "images/<sha256>.webp"
+  ├── productDetailsId: String    // Foreign key to product_details
+  ├── isFavorite: Bool?           // Set client-side after favorites query
+  ├── createdAt: Timestamp
+  └── info: { ... }              // Type-specific nested object
+```
+
+Note: `defaultImageURL` previously held a Firebase Storage `gs://` URL. As of Phase 2 it holds a Garage object key (`images/<sha256>.webp`). The same key format applies to `brands.imageURL`.
+
+### Image Loading
+
+Product images were loaded from Firestore document keys and resolved to signed imgproxy URLs via `CoveAPIImageRepository`. Firebase Storage was retired in Phase 2; `FirebaseImageRepository` is removed.

@@ -171,8 +171,6 @@ Firebase SDK                        cove-api gateway
 (Google-managed infrastructure)     (K3s homelab, Cloudflare Tunnel)
 
 FirebaseAuth  ─────────────────►  Auth token issuance only
-FirebaseFirestore ─────────────►  Structured data (current; retired in Phase 3)
-FirebaseStorage ───────────────►  (retired in Phase 2 — unlinked from Xcode target)
 
                                   CoveAPIClient ──────────────────►  cove-api
                                   (all gateway calls go here,

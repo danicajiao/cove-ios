@@ -289,20 +289,22 @@ The iOS app fetches cards from `GET /recommendations/categories` (owned by `cove
 
 ### Facets and filters, not categories
 
-> **Categories define *what* a product is. Attributes define *how it differs from others in the same category*.**
+> **Categories define *what* an item is. Attributes define *how it differs from others in the same category*.**
 
-When a new way to slice the catalog appears — gender, dietary preference, season, region — it goes on the product as an **attribute**, not as a new branch of the category tree. The naive alternative (Men > Clothing > Shirts, Women > Clothing > Shirts, …) collapses the moment a product is unisex, you want "All Shirts," or you add a fourth gender label.
+Gender is a first-class category dimension in the apparel tree (`apparel.mens`, `apparel.womens`, `apparel.unisex`) rather than a JSONB attribute, because it drives dedicated search paths and category browsing. Users navigate to Men's, Women's, or Unisex directly — it isn't a filter applied after the fact.
 
-The pattern: one category tree for *what a product is*; JSONB `attributes` (GIN-indexed) for filter facets used at query time.
+For other slices that don't warrant their own tree branch — dietary preference, season, region — use JSONB `attributes` (GIN-indexed) as filter facets applied at query time.
+
+The pattern: one category tree for *what an item is*; JSONB `attributes` for filter facets that don't merit their own branch.
 
 ```sql
--- Gender as attribute, not category branch
+-- Dietary preference as attribute facet
 SELECT * FROM catalog.items
-WHERE category_id = (SELECT id FROM catalog.categories WHERE path = 'apparel.clothing.shirts')
-  AND attributes @> '{"gender": "men"}';
+WHERE category_id = (SELECT id FROM catalog.categories WHERE path = 'food.condiments.hot_sauce')
+  AND attributes @> '{"dietary": "vegan"}';
 ```
 
-> **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose product traits that only filter (gender, season) live in `attributes`.
+> **Note:** trust *signals* (B Corp, USDA Organic) are **not** facets — they live in the structured signal system above, because they drive ranking and need verification metadata. Loose item traits that only filter (dietary preference, season) live in `attributes`.
 
 ---
 

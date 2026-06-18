@@ -8,14 +8,16 @@ applications (the iOS app today, a web client later).
 |---|---|---|---|
 | `cove-api` | [`cove-api/`](cove-api/) | 1 | Deployed |
 | `cove-image` | [`cove-image/`](cove-image/) | 2 | Deployed |
-| `cove-item` | `cove-item/` | 3 | In progress |
-| `cove-user` | `cove-user/` | 3 | In progress |
+| `cove-item` | [`cove-item/`](cove-item/) | 3 | Deployed |
+| `cove-user` | [`cove-user/`](cove-user/) | 3 | Deployed |
 
 Each service owns its own `Dockerfile` and is built and pushed by the
 `ci-services.yml` GitHub Actions workflow on changes to its path. OpenAPI specs
 are the source of truth for request/response shapes:
 - `cove-api`: `services/cove-api/api/openapi.yaml`
 - `cove-image`: `services/cove-image/api/openapi.yaml`
+- `cove-item`: `services/cove-item/api/openapi.yaml`
+- `cove-user`: `services/cove-user/api/openapi.yaml`
 
 See [docs/BACKEND_INFRASTRUCTURE.md](../docs/BACKEND_INFRASTRUCTURE.md) for the
 full service map, naming convention, and migration phases.

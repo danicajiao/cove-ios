@@ -140,7 +140,7 @@ profile.follows.{maker_id|storefront_id}            ──►  the referenced en
 
 ## The trust signal system
 
-Signals attach at **three levels** — maker, storefront, and product. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
+Signals attach at **three levels** — maker, storefront, and item. This is **one signal taxonomy with one polymorphic attachment table**, not three separate systems.
 
 ### Worked example: New Belgium Brewing
 
@@ -151,24 +151,24 @@ Maker: New Belgium Brewing
 Storefront: New Belgium Taproom (RiNo, type: taproom, operated by the maker)
   └─ signal: Living Wage Certified     ← local-place-level (has the location)
 
-Product: "The Purist Clean Lager"  (made by New Belgium)
-  └─ signal: USDA Organic              ← product-level (this beer only)
+Item: "The Purist Clean Lager"  (made by New Belgium)
+  └─ signal: USDA Organic              ← item-level (this beer only)
 
-Product: "Fat Tire"  (made by New Belgium)
-  └─ (no organic signal)               ← same maker, no product-level cert
+Item: "Fat Tire"  (made by New Belgium)
+  └─ (no organic signal)               ← same maker, no item-level cert
 ```
 
-Discovering "Purist Clean Lager" yields **B Corp (from the maker) + Living Wage (from the storefront) + USDA Organic (from the product)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Product-level signals differentiate products from the same maker.
+Discovering "Purist Clean Lager" yields **B Corp (from the maker) + Living Wage (from the storefront) + USDA Organic (from the item)**. "Fat Tire" at the same taproom carries B Corp + Living Wage but not organic. Item-level signals differentiate items from the same maker.
 
 ### Signal taxonomy
 
 | Signal | Verification method | Typical level |
 |---|---|---|
 | B Corp Certified | Cross-reference B Lab directory | maker |
-| USDA Organic | Cross-reference USDA directory | product (sometimes maker) |
-| Fair Trade Certified | Cross-reference issuing body | product / maker |
+| USDA Organic | Cross-reference USDA directory | item (sometimes maker) |
+| Fair Trade Certified | Cross-reference issuing body | item / maker |
 | 1% for the Planet | Cross-reference member directory | maker |
-| Colorado Proud | CO Dept. of Agriculture (location-tied) | maker / product |
+| Colorado Proud | CO Dept. of Agriculture (location-tied) | maker / item |
 | Living Wage Certified | Cross-reference Living Wage directory | storefront / maker |
 | Community Verified | Community vouching (softer signal) | storefront / maker |
 | DUNS-verified ("Verified Business" tier) | DUNS number lookup | maker (drives `tier`) |

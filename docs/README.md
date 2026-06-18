@@ -15,9 +15,8 @@ Welcome to the documentation for the Cove iOS app.
 - **[App Architecture](IOS_APP_ARCHITECTURE.md)** - How the app is structured and how data flows
   - MVVM pattern and ViewModels
   - Authentication and navigation
-  - Repository abstraction layer (Firebase → cove-api migration path)
-  - Product type system (Firestore era; replaced by API-driven categories in Phase 3)
-  - Firebase data model and Firestore queries (current; Firestore retired in Phase 3)
+  - Repository abstraction layer (CoveAPI implementations)
+  - Firebase data model (historical; Firestore retired in Phase 3)
 
 ### CI/CD
 - **[CI/CD Workflows](CI_CD_WORKFLOWS.md)** - All workflows, versioning, and deployment
@@ -34,7 +33,7 @@ Welcome to the documentation for the Cove iOS app.
 
 ### Backend Architecture
 - **[Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)** - K3s cluster, the `cove-api` gateway, Cloudflare Tunnel, and migration phases (Phases 0–3 complete)
-- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - The canonical data model: maker/storefront/product entities, the trust signal system, composite scoring, geospatial discovery, schemas, and the discovery query
+- **[Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)** - The canonical data model: maker/storefront/item entities, the trust signal system, composite scoring, geospatial discovery, schemas, and the discovery query
 - **[Homelab Layout for Cove](HOMELAB_COVE_LAYOUT.md)** - Where Cove's backend services and platform operators live in the [`homelab`](https://github.com/danicajiao/homelab) repo
 
 ### Backend Reference
@@ -70,10 +69,10 @@ Welcome to the documentation for the Cove iOS app.
 ### I want to understand the backend infrastructure
 → Read [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md)
 
-### I want to understand the planned data layer
+### I want to understand the data layer
 → Read [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md)
 
-### I'm working on Phase 3 schema or service work
+### I'm working on schema or backend service work
 → Read [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the data model, then [Postgres Primer](POSTGRES_PRIMER.md) for Postgres mechanics
 
 ### I'm working on image uploads, serving, or anything imgproxy-related

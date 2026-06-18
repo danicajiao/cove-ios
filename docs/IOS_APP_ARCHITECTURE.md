@@ -287,7 +287,7 @@ When a new route is added to cove-api:
 
 ### ImageRepository — protocol and active implementation
 
-Image loading is abstracted behind the `ImageRepository` protocol (`Networking/Repositories/ImageRepository.swift`). Views access it through the SwiftUI environment; `CoveApp` injects the concrete implementation at the root via `\.imageRepository`.
+Image loading is abstracted behind the `ImageRepository` protocol (`Networking/Repositories/ImageRepository.swift`). Views access it through the SwiftUI environment. The environment key defaults to `CoveAPIImageRepository()`, and `CoveApp` also injects it explicitly on `MainView()` when auth state is `.loggedIn`.
 
 ```swift
 // Protocol — key-based: takes the Garage object key directly
@@ -300,7 +300,7 @@ The environment key provides a default of `CoveAPIImageRepository()`, so views r
 
 **`CoveAPIImageRepository`** is the active implementation. It:
 1. Strips the `images/` prefix from the Garage key to get the bare filename
-2. Calls `CoveAPIClient.shared.imageURL(filename:width:height:)` — the `GET /images/{filename}/url` gateway endpoint
+2. Calls `api.imageURL(filename:width:height:)` on the injected `CoveAPIClient` (defaults to `.shared`) — the `GET /images/{filename}/url` gateway endpoint
 3. Returns the signed imgproxy URL ready for `AsyncImage`
 
 `FirebaseImageRepository` was removed in Phase 2. There are no remaining references to Firebase Storage in the iOS codebase.

@@ -149,22 +149,24 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI.
 ### 5. CI - Services (`ci-services.yml`)
 
 **Triggers:**
-- Pull requests touching `services/cove-api/**`, `services/cove-image/**`, `services/cove-item/**`, or `services/cove-user/**`
+- Pull requests touching `services/cove-api/**`, `services/cove-image/**`, `services/cove-item/**`, `services/cove-user/**`, or `packages/imgproxy/**`
 - Pushes to `main` touching those paths
 - Manual `workflow_dispatch` (useful for bootstrapping GAR before an integration branch merges)
 
 **Concurrency:** Cancels in-progress runs for the same workflow + ref on new pushes.
 
-**Jobs:** One job per service — `cove-api`, `cove-image`, `cove-item`, and `cove-user` run in parallel.
+**Jobs:** Five jobs run in parallel — one per service (`cove-api`, `cove-image`, `cove-item`, `cove-user`) plus one for the shared `packages/imgproxy` module.
 
-**What each service job does:**
+**What each service job does (`cove-api`, `cove-image`, `cove-item`, `cove-user`):**
 
 1. Set up Go (version from `go.mod`)
 2. Run `go test ./...` and `go vet ./...`
-3. **On main / `workflow_dispatch` only:** Authenticate to GCP via Workload Identity Federation, configure Docker, build and push image to Google Artifact Registry as `sha-<full-commit-sha>`
+3. **On main / `workflow_dispatch` only:** Authenticate to GCP via Workload Identity Federation, configure Docker, build and push image to Google Artifact Registry (GAR) as `sha-<full-commit-sha>`
 4. **On PRs:** Build only (no push) — verifies the Dockerfile and that the service compiles
 
-After both service jobs succeed on main or `workflow_dispatch`, a third job (`bump-overlay-tags`) opens a PR against `danicajiao/homelab` that bumps the Kustomize overlay image tags to the new SHA. On main it updates both staging and prod overlays; on other branches (e.g. integration branch `workflow_dispatch`) it updates staging only.
+**`packages/imgproxy` job:** Runs `go test ./...` and `go vet ./...` on the shared imgproxy signing library. No Docker build or GAR push — `packages/imgproxy` is a Go module included in the build context of `cove-image` and `cove-item`, not a deployed service.
+
+After all five jobs succeed on main or `workflow_dispatch`, a sixth job (`bump-overlay-tags`) opens a PR against `danicajiao/homelab` that bumps the Kustomize overlay image tags to the new SHA. On main it updates both staging and prod overlays; on other branches (e.g. integration branch `workflow_dispatch`) it updates staging only.
 
 **Required variables (not secrets):** `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT` — see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for the one-time GCP setup.
 

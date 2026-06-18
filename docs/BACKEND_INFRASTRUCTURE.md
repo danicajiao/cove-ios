@@ -326,7 +326,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 - `cove-image` deployed to `cove-staging` and `cove-prod`
 - `POST /images` — accepts JPEG/PNG/WebP, normalizes to WebP quality 90, strips EXIF (including GPS), stores content-addressed object in Garage `cove-media` bucket (`images/<sha256>.webp`)
-- `GET /images/{filename}/url` — generates a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL); interim mechanism until `cove-product` embeds pre-signed URLs in Phase 3
+- `GET /images/{filename}/url` — generates a short-lived HMAC-SHA256 signed imgproxy URL (1 hr TTL); interim mechanism until `cove-item` embeds pre-signed URLs in Phase 3
 - `cove-api` proxies `/images/*` to `cove-image` and `/i/*` to imgproxy
 - iOS app loads all images via `CoveAPIClient.imageURL(filename:width:height:)` through the `ImageRepository` protocol; `CoveAPIImageRepository` is the active implementation
 - Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
@@ -336,7 +336,7 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 
 See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals) and full data model.
 
-- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `product`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
+- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `catalog`, and `profile`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
 - `profile.user_flags` migration added to `cove-db`
 - Deploy `cove-item` (item ingestion, `GET /discovery` endpoint) and `cove-user` (user profiles, interests, `GET /recommendations/categories`, `POST /users/me/events`) to `cove-staging`
 - Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows, interests)
@@ -351,7 +351,7 @@ Not yet planned in detail; tracked separately. Scope:
 - Self-serve onboarding flow (maker + storefront, business/individual verification)
 - Maker and storefront profile management; trust-signal verification
 - Producer-facing dashboard API (separate iOS/web surface)
-- Take ownership of the `directory` schema via a permissions flip — no schema migration, no data move; `cove-product` keeps SELECT for discovery reads
+- Take ownership of the `directory` schema via a permissions flip — no schema migration, no data move; `cove-item` keeps SELECT for discovery reads
 
 ---
 

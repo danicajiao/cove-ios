@@ -108,7 +108,7 @@ enum Path: Hashable {
 |-----|-----|------|--------|
 | Home | `"home"` | `HomeView` | Implemented |
 | Browse | `"browse"` | Placeholder `Text` | Not implemented |
-| Bag | `"bag"` | `BagView` | Implemented (badge shows item count) |
+| Bag | `"bag"` | `BagView` | Implemented (badge shows item count); planned replacement is VisitList (see below) |
 | Favorites | `"favorites"` | `FavoritesView` | Implemented |
 | Profile | `"profile"` | `ProfileView` | Implemented |
 
@@ -126,6 +126,8 @@ Serves `ProductDetailView`. Initialized with a `productId`, it runs three async 
 
 ### BagViewModel
 Serves `BagView`. Manages the user's bag — products they intend to purchase or revisit. Fetches product recommendations based on the categories of items in the bag.
+
+> **v1 note:** The Bag is a v1 stand-in. Because Cove does not handle fulfillment or transactions in v1, a full cart/checkout model isn't warranted. The planned replacement is **VisitList** — a saved list of items the user intends to visit or purchase, without requiring checkout infrastructure. VisitList will replace `Bag` and `BagViewModel` in a future phase.
 
 ### FavoritesViewModel
 Serves `FavoritesView`. Fetches the current user's favorited products via the `FavoritesRepository` and `ProductRepository` protocols (currently backed by Firebase). Reads favorite product IDs, then hydrates each one by fetching the corresponding product document. Publishes `favorites: [any Product]` and `isLoading`.
@@ -147,6 +149,8 @@ Injected at the root via `.environmentObject`. Owns:
 - `items: [BagItem]` — products the user has added to their bag
 - `totalItems: Int` — computed count used to badge the Bag tab
 - `categories: [String]` — categoryIds of items in the bag, used to fetch recommendations in `BagViewModel`
+
+**Planned replacement — VisitList:** `Bag` will be superseded by `VisitList` in a future phase. Since v1 does not include fulfillment or transaction processing, a lightweight "visit list" (items the user wants to remember or visit in person) is a better fit than a purchase cart. `VisitList` will replace `Bag`, `BagItem`, and `BagViewModel`; the tab icon and global state injection point will carry over.
 
 ### FavoritesStore
 Injected at the root (`CoveApp`) via `.environmentObject` and available throughout the entire app. Owns:
@@ -438,6 +442,7 @@ Product images are loaded via the `ImageRepository` protocol injected into the S
 | Browse tab | Placeholder `Text` in `MainView` |
 | Search | `TextField` in `HomeView` is present but not connected |
 | Bag actions | Add/remove items wired up; purchase confirmation not implemented |
+| VisitList | Planned replacement for `Bag` — lightweight saved-items list without checkout; replaces `Bag`, `BagItem`, and `BagViewModel` |
 | Reviews | `NavigationLink` exists in `ProductDetailView` but no destination |
 | Profile editing | `ProfileRowView` items are not wired up |
 | Notifications | Bell icon in `HomeView` has no action |

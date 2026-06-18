@@ -1,6 +1,6 @@
 # CI/CD Workflows Documentation
 
-This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and pushes, and OpenAPI spec linting.
+This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and image pushes to Google Artifact Registry (GAR), and OpenAPI spec linting.
 
 ## Architecture
 
@@ -205,7 +205,7 @@ The following secrets must be configured in your GitHub repository settings:
 ### GCP (services CI only)
 These are **variables** (not secrets) — non-sensitive identifiers stored under GitHub → Settings → Secrets and variables → Actions → **Variables** tab:
 - `WIF_PROVIDER`: Workload Identity Federation pool/provider path for GCP auth
-- `WIF_SERVICE_ACCOUNT`: Service account email that CI impersonates to push images to Artifact Registry
+- `WIF_SERVICE_ACCOUNT`: Service account email that CI impersonates to push images to Google Artifact Registry (GAR)
 
 **Note:** The `APPLE_TEAM_ID` secret mentioned in earlier documentation is not currently used by the workflows.
 

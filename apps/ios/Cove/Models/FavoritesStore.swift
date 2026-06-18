@@ -7,7 +7,7 @@
 
 import FirebaseAuth
 
-/// Global store that tracks which products the signed-in user has favourited.
+/// Global store that tracks which items the signed-in user has favourited.
 ///
 /// `FavoritesStore` owns the in-memory `favoriteIds` set and handles optimistic
 /// UI updates (toggling the heart before the write completes). Durable reads and
@@ -21,7 +21,7 @@ class FavoritesStore: ObservableObject {
     private var authListener: AuthStateDidChangeListenerHandle?
     private let repository: FavoritesRepository
 
-    init(repository: FavoritesRepository = FirebaseFavoritesRepository()) {
+    init(repository: FavoritesRepository = CoveAPIFavoritesRepository()) {
         self.repository = repository
         authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             Task { @MainActor in
@@ -40,21 +40,21 @@ class FavoritesStore: ObservableObject {
         }
     }
 
-    func isFavorite(_ productId: String) -> Bool {
-        favoriteIds.contains(productId)
+    func isFavorite(_ itemId: String) -> Bool {
+        favoriteIds.contains(itemId)
     }
 
     func loadFavorites() async {
         guard let user = Auth.auth().currentUser else { return }
         do {
             let favorites = try await repository.listFavorites(uid: user.uid)
-            favoriteIds = Set(favorites.map(\.productId))
+            favoriteIds = Set(favorites.map(\.itemId))
         } catch {
             print("Error loading favorites: \(error)")
         }
     }
 
-    func toggle(_ productId: String, categoryId: String) async {
+    func toggle(_ itemId: String, categoryId: String) async {
         guard let user = Auth.auth().currentUser else {
             print("FavoritesStore.toggle: no authenticated user, skipping")
             return
@@ -64,26 +64,26 @@ class FavoritesStore: ObservableObject {
         isTogglingFavorite = true
         defer { isTogglingFavorite = false }
 
-        let wasFavorite = favoriteIds.contains(productId)
+        let wasFavorite = favoriteIds.contains(itemId)
 
         if wasFavorite {
-            favoriteIds.remove(productId)
+            favoriteIds.remove(itemId)
         } else {
-            favoriteIds.insert(productId)
+            favoriteIds.insert(itemId)
         }
 
         do {
             if wasFavorite {
-                try await repository.remove(productId: productId, uid: user.uid)
+                try await repository.remove(itemId: itemId, uid: user.uid)
             } else {
-                try await repository.add(productId: productId, categoryId: categoryId, uid: user.uid)
+                try await repository.add(itemId: itemId, categoryId: categoryId, uid: user.uid)
             }
         } catch {
             print("Error toggling favorite: \(error)")
             if wasFavorite {
-                favoriteIds.insert(productId)
+                favoriteIds.insert(itemId)
             } else {
-                favoriteIds.remove(productId)
+                favoriteIds.remove(itemId)
             }
         }
     }

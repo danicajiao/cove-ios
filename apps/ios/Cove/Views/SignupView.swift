@@ -11,6 +11,7 @@ import SwiftUI
 struct SignupView: View {
     @EnvironmentObject private var appState: AppState
 
+    var onBack: () -> Void
     var onNavigateToLogin: () -> Void
 
     @State private var presentAlert = false
@@ -148,7 +149,7 @@ struct SignupView: View {
             .padding(Spacing.xl)
             .background(Color.Colors.Backgrounds.primary)
             .overlay(alignment: .topLeading) {
-                BackButton()
+                BackButton(action: onBack)
                     .padding(Spacing.xl)
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -169,7 +170,7 @@ struct SignupView: View {
 struct SignupView_Previews: PreviewProvider {
     static let appState = AppState()
     static var previews: some View {
-        SignupView(onNavigateToLogin: {})
+        SignupView(onBack: {}, onNavigateToLogin: {})
             .environmentObject(appState)
     }
 }

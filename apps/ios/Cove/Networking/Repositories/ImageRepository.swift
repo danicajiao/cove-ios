@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-/// Abstraction over product image resolution.
+/// Abstraction over item image resolution.
 ///
 /// Returns a `URL` the caller can hand directly to `AsyncImage` or use to
 /// fetch raw data. Implementations decide whether the URL points to a
@@ -21,7 +21,7 @@ protocol ImageRepository: Sendable {
     ///
     /// - Parameter key: The Garage object key, e.g. `"images/<sha256>.webp"`.
     ///   Callers pass the value stored in the Firestore model field directly
-    ///   (the `defaultImageURL` product field or `imageURL` brand field) —
+    ///   (the `defaultImageURL` item field or `imageURL` brand field) —
     ///   no stripping or transformation is needed before calling.
     /// - Returns: A `URL` suitable for passing to `AsyncImage(url:)`.
     /// - Throws: `RepositoryError.notFound` when no image exists for `key`,

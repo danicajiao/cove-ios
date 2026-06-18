@@ -1,15 +1,14 @@
 //
 //  Brand.swift
-//  Cove
 //
 //  Created by Daniel Cajiao on 3/28/23.
 //
 
-import FirebaseFirestore
+import Foundation
 
 struct Brand: Codable, Identifiable {
-    @DocumentID var id: String?
-    @ServerTimestamp var createdAt: Timestamp?
+    var id: String?
+    var createdAt: Date?
     var name: String
     var imageURL: String
 }

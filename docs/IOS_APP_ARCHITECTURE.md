@@ -153,7 +153,7 @@ Injected at the root via `.environmentObject`. Owns:
 
 ### FavoritesStore
 Injected at the root (`CoveApp`) via `.environmentObject` and available throughout the entire app. Owns:
-- `favoriteIds: Set<String>` — the set of favorited product IDs for the current user
+- `favoriteIds: Set<String>` — the set of favorited item IDs for the current user
 - `isTogglingFavorite: Bool` — prevents concurrent toggle operations
 - Listens to `Auth.auth().addStateDidChangeListener` to load favorites on sign-in and clear them on sign-out
 - `toggle(_:categoryId:)` — optimistically updates `favoriteIds` locally, then syncs to Firestore
@@ -332,7 +332,7 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 
 ## Key Data Flows
 
-### App Launch → Products Displayed
+### App Launch → Items Displayed
 
 ```
 1. CoveApp checks authState → .loggedIn

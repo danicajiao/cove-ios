@@ -1,0 +1,704 @@
+openapi: "3.1.0"
+
+info:
+  title: cove-user
+  version: "0.2.0"
+  description: |
+    User profile, favorites, follows, interests, attention events, and
+    personalized category recommendations for the Cove platform.
+
+    Authentication: this service does NOT validate Firebase tokens directly.
+    It trusts the X-Cove-Uid header injected by the upstream cove-api gateway.
+    All endpoints (except /health) reject requests missing this header.
+
+servers:
+  - url: http://cove-user.cove-user.svc.cluster.local:8080
+    description: In-cluster (default)
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check
+      description: |
+        Returns service name, status, and Git commit SHA.
+        Unauthenticated — used by Kubernetes liveness/readiness probes.
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /users/me:
+    get:
+      operationId: getMe
+      summary: Get authenticated user profile
+      description: |
+        Returns the profile for the authenticated user.
+        Returns 404 if the user has not yet been created via POST /users/me.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          description: Firebase UID injected by the upstream cove-api gateway.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMe
+      summary: Create authenticated user profile
+      description: |
+        Creates a profile row for the authenticated user. Called once after
+        Firebase Auth creates the account — the client supplies only the
+        username; uid is taken from X-Cove-Uid (injected by cove-api).
+        Returns 409 if the profile already exists (safe to retry).
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Missing or empty username
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: User profile already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/favorites:
+    get:
+      operationId: getFavorites
+      summary: List favorited items
+      description: |
+        Returns a paginated list of items the authenticated user has favorited.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results to return. Defaults to 25, max 100.
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+            minimum: 1
+        - name: offset
+          in: query
+          required: false
+          description: Number of results to skip. Defaults to 0.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: Paginated favorites list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoritesResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/favorites/{itemId}:
+    post:
+      operationId: addFavorite
+      summary: Add item to favorites
+      description: |
+        Adds an item to the authenticated user's favorites.
+        Returns 409 if the item is already favorited.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          description: Item UUID to favorite.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Item added to favorites
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Item already favorited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: removeFavorite
+      summary: Remove item from favorites
+      description: |
+        Removes an item from the authenticated user's favorites.
+        Returns 404 if the item is not currently favorited.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          description: Item UUID to unfavorite.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Item removed from favorites
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Favorite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/follows:
+    get:
+      operationId: getFollows
+      summary: List followed makers and storefronts
+      description: |
+        Returns the list of makers and storefronts the authenticated user follows.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Follows list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowsResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addFollow
+      summary: Follow a maker or storefront
+      description: |
+        Follows a maker or storefront. Exactly one of maker_id or storefront_id
+        must be provided. Returns 409 if already following.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFollowRequest"
+      responses:
+        "204":
+          description: Now following
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Already following
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/follows/{entityId}:
+    delete:
+      operationId: removeFollow
+      summary: Unfollow a maker or storefront
+      description: |
+        Unfollows an entity by UUID. Checks both maker and storefront tables.
+        Returns 404 if not currently following this entity.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: entityId
+          in: path
+          required: true
+          description: Maker or storefront UUID to unfollow.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Unfollowed
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Follow not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/interests:
+    get:
+      operationId: getInterests
+      summary: List interest categories
+      description: |
+        Returns the authenticated user's selected interest categories.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Interests list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestsResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: replaceInterests
+      summary: Replace interest categories
+      description: |
+        Replaces the full set of interest categories for the authenticated user.
+        Wraps DELETE + INSERT in a transaction. Returns 204 on success.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceInterestsRequest"
+      responses:
+        "204":
+          description: Interests replaced
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/events:
+    post:
+      operationId: ingestEvent
+      summary: Ingest an attention event
+      description: |
+        Records a behavioral attention event for the authenticated user.
+        Used as signal input for personalized category recommendations.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestEventRequest"
+      responses:
+        "204":
+          description: Event recorded
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /recommendations/categories:
+    get:
+      operationId: getRecommendedCategories
+      summary: Get personalized category recommendations
+      description: |
+        Returns personalized category cards for the authenticated user.
+
+        Algorithm:
+        1. If the user has interests, return those categories ordered by
+           engagement count in profile.events (last 30 days) descending.
+        2. If the user has no interests, fall back to all leaf categories
+           ordered by total event count across all users (last 30 days).
+        3. If no events exist at all, order alphabetically by name.
+      parameters:
+        - name: X-Cove-Uid
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recommended categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendedCategoriesResponse"
+        "401":
+          description: Missing or empty X-Cove-Uid header
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        service:
+          type: string
+          example: cove-user
+        status:
+          type: string
+          example: ok
+        commit:
+          type: string
+          example: abc1234
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: user profile not found
+
+    # ── User profile ─────────────────────────────────────────────────────────
+
+    UserProfile:
+      type: object
+      required: [uid, username, created_at]
+      properties:
+        uid:
+          type: string
+          description: Auth UID (provider-agnostic; Firebase UID in Phase 1+).
+          example: abc123
+        username:
+          type: string
+          example: johndoe
+        created_at:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: Desired display username. Must be non-empty after trimming whitespace.
+          example: johndoe
+
+    # ── Favorites ────────────────────────────────────────────────────────────
+
+    FavoriteItem:
+      type: object
+      required: [item_id, item_name, favorited_at]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        item_name:
+          type: string
+        price_cents:
+          type: integer
+          example: 2300
+        favorited_at:
+          type: string
+          format: date-time
+
+    FavoritesResponse:
+      type: object
+      required: [favorites, total]
+      properties:
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/FavoriteItem"
+        total:
+          type: integer
+          description: Total number of favorites (before pagination).
+          example: 42
+
+    # ── Follows ──────────────────────────────────────────────────────────────
+
+    Follow:
+      type: object
+      required: [entity_type, entity_id, entity_name, followed_at]
+      properties:
+        entity_type:
+          type: string
+          enum: [maker, storefront]
+        entity_id:
+          type: string
+          format: uuid
+        entity_name:
+          type: string
+        followed_at:
+          type: string
+          format: date-time
+
+    FollowsResponse:
+      type: object
+      required: [follows]
+      properties:
+        follows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Follow"
+
+    AddFollowRequest:
+      type: object
+      description: |
+        Exactly one of maker_id or storefront_id must be provided.
+      properties:
+        maker_id:
+          type: string
+          format: uuid
+        storefront_id:
+          type: string
+          format: uuid
+
+    # ── Interests ────────────────────────────────────────────────────────────
+
+    Interest:
+      type: object
+      required: [category_id, category_path, category_name, created_at]
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        category_path:
+          type: string
+          description: ltree path (dot-delimited).
+          example: food.coffee.whole_bean
+        category_name:
+          type: string
+          example: Whole Bean Coffee
+        created_at:
+          type: string
+          format: date-time
+
+    InterestsResponse:
+      type: object
+      required: [interests]
+      properties:
+        interests:
+          type: array
+          items:
+            $ref: "#/components/schemas/Interest"
+
+    ReplaceInterestsRequest:
+      type: object
+      required: [category_ids]
+      properties:
+        category_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ── Events ───────────────────────────────────────────────────────────────
+
+    IngestEventRequest:
+      type: object
+      required: [event_type]
+      properties:
+        event_type:
+          type: string
+          enum: [category_tap, item_view, result_dwell, search]
+        category_id:
+          type: string
+          format: uuid
+          description: Category involved in the event (optional).
+        item_id:
+          type: string
+          format: uuid
+          description: Item involved in the event (optional).
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Arbitrary event metadata.
+
+    # ── Recommendations ──────────────────────────────────────────────────────
+
+    RecommendedCategory:
+      type: object
+      required: [id, name, path]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Whole Bean Coffee
+        path:
+          type: string
+          description: ltree path (dot-delimited).
+          example: food.coffee.whole_bean
+
+    RecommendedCategoriesResponse:
+      type: object
+      required: [categories]
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecommendedCategory"

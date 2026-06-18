@@ -14,7 +14,7 @@ struct BagView: View {
 //    @State var total: Int = 0
 
     private func deleteItem(at indexSet: IndexSet) {
-        bag.bagProducts.remove(atOffsets: indexSet)
+        bag.bagItems.remove(atOffsets: indexSet)
         bag.categories.remove(atOffsets: indexSet)
     }
 
@@ -29,11 +29,11 @@ struct BagView: View {
                 }
                 .padding([.leading, .trailing], 20)
 
-                if bag.bagProducts.isEmpty {
+                if bag.bagItems.isEmpty {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.Colors.Fills.inverse)
                         .overlay {
-                            Text("Products you add to your bag can be found here!")
+                            Text("Items you add to your bag can be found here!")
                                 .multilineTextAlignment(.center)
                                 .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Text.primary)
@@ -44,8 +44,8 @@ struct BagView: View {
                         .padding([.leading, .trailing], 20)
                 } else {
                     List {
-                        ForEach(Array($bag.bagProducts.enumerated()), id: \.offset) { _, $bagProduct in
-                            ProductRow(bagProduct: $bagProduct)
+                        ForEach(Array($bag.bagItems.enumerated()), id: \.offset) { _, $bagItem in
+                            ItemRow(bagItem: $bagItem)
                                 .listRowInsets(EdgeInsets())
                         }
                         .onDelete(perform: deleteItem)
@@ -84,8 +84,8 @@ struct BagView: View {
                         .foregroundStyle(Color.Colors.Fills.quinary)
                 }
 
-                if !bag.bagProducts.isEmpty {
-                    Text("Other products you might like")
+                if !bag.bagItems.isEmpty {
+                    Text("Other items you might like")
                         .font(Font.custom("Lato-Bold", size: 18))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.leading, .trailing], 20)
@@ -94,8 +94,8 @@ struct BagView: View {
 
                     ScrollView(.horizontal) {
                         HStack(spacing: 20) {
-                            ForEach(viewModel.similarProducts, id: \.id) { product in
-                                ProductCard(product: product)
+                            ForEach(viewModel.similarItems, id: \.id) { item in
+                                ItemCard(item: item)
                             }
                         }
                         .padding(50)
@@ -136,21 +136,21 @@ struct BagView: View {
         .onAppear {
             bag.total = 0
             bag.totalItems = 0
-            for bagProduct in bag.bagProducts {
-                bag.total += Int(bagProduct.product.defaultPrice) * bagProduct.quantity
-                bag.totalItems += bagProduct.quantity
+            for bagItem in bag.bagItems {
+                bag.total += Int(bagItem.item.defaultPrice) * bagItem.quantity
+                bag.totalItems += bagItem.quantity
             }
         }
-        .onChange(of: bag.bagProducts) {
-            print("Bag product changed!")
+        .onChange(of: bag.bagItems) {
+            print("Bag item changed!")
             bag.total = 0
             bag.totalItems = 0
-            for bagProduct in bag.bagProducts {
-                bag.total += Int(bagProduct.product.defaultPrice) * bagProduct.quantity
-                bag.totalItems += bagProduct.quantity
+            for bagItem in bag.bagItems {
+                bag.total += Int(bagItem.item.defaultPrice) * bagItem.quantity
+                bag.totalItems += bagItem.quantity
             }
             Task {
-                try await viewModel.fetchSimilarProducts(categories: bag.categories)
+                try await viewModel.fetchSimilarItems(categories: bag.categories)
             }
         }
     }

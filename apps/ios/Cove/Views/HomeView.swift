@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject private var favoritesStore: FavoritesStore
 
     @State var search: String = ""
 
@@ -53,14 +54,28 @@ struct HomeView: View {
                 VStack {
                     SectionHeader(title: "Categories")
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Spacing.md) {
-                            ForEach(viewModel.categories, id: \.self) { category in
-                                SmallCategoryButton(category: category)
+                    if viewModel.isLoadingCategories {
+                        ProgressView()
+                            .frame(height: 80)
+                            .frame(maxWidth: .infinity)
+                    } else if viewModel.categories.isEmpty {
+                        Text("No categories yet")
+                            .font(Font.custom("Lato-Regular", size: 14))
+                            .foregroundStyle(Color.Colors.Text.tertiary)
+                            .frame(height: 80)
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: Spacing.md) {
+                                ForEach(viewModel.categories, id: \.id) { category in
+                                    CategoryCard(category: category) {
+                                        viewModel.recordCategoryTap(category)
+                                    }
+                                }
                             }
                         }
+                        .scrollClipDisabled()
                     }
-                    .scrollClipDisabled()
                 }
                 .padding(.horizontal, Spacing.xl)
 
@@ -73,14 +88,14 @@ struct HomeView: View {
                 VStack(spacing: Spacing.lg) {
                     SectionHeader(title: "Popular")
 
-                    if !viewModel.products.isEmpty {
+                    if !viewModel.items.isEmpty {
                         LazyVGrid(
                             columns: columns,
                             alignment: .center,
                             spacing: Spacing.xl
                         ) {
-                            ForEach(viewModel.products, id: \.id) { product in
-                                ProductCard(product: product)
+                            ForEach(viewModel.items, id: \.id) { item in
+                                ItemCard(item: item)
                             }
                         }
                     }
@@ -124,14 +139,16 @@ struct HomeView: View {
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
         .refreshable {
-            try? await viewModel.fetchProducts(forceRefresh: true)
+            try? await viewModel.fetchItems(forceRefresh: true)
             try? await viewModel.fetchBrands()
         }
         .onAppear {
             print("homeView appeared")
             Task {
-                try await viewModel.fetchProducts()
+                await viewModel.fetchCategories()
+                try await viewModel.fetchItems()
                 try await viewModel.fetchBrands()
+                await favoritesStore.loadFavorites()
             }
         }
     }

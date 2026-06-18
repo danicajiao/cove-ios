@@ -13,6 +13,7 @@ opt_in_rules:
 disabled_rules:
   - trailing_whitespace
   - redundant_discardable_let
+  - opening_brace
 
 identifier_name:
   excluded:

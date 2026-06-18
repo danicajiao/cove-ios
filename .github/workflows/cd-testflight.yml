@@ -38,7 +38,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Import Code Signing Certificates
-        uses: apple-actions/import-codesign-certs@v6
+        uses: apple-actions/import-codesign-certs@v7
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_PASSWORD }}
@@ -87,7 +87,7 @@ jobs:
           echo "✓ Tag v${VERSION}-${BUILD} is unique and ready to be created"
 
       - name: Create GitHub Release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           VERSION: ${{ steps.version-info.outputs.version }}
           BUILD: ${{ steps.version-info.outputs.build }}
@@ -110,7 +110,7 @@ jobs:
             });
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: build-logs

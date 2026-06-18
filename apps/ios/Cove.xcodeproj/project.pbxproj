@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		D00DB72B2FAB015100D56700 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB72A2FAB015100D56700 /* FirebaseAuth */; };
 		D00DB72D2FAB015100D56700 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB72C2FAB015100D56700 /* FirebaseCore */; };
-		D00DB72F2FAB015100D56700 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB72E2FAB015100D56700 /* FirebaseFirestore */; };
 		D00DB7342FAB02D000D56700 /* FacebookCore in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB7332FAB02D000D56700 /* FacebookCore */; };
 		D00DB7362FAB02D000D56700 /* FacebookLogin in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB7352FAB02D000D56700 /* FacebookLogin */; };
 		D00DB7392FAB034900D56700 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D00DB7382FAB034900D56700 /* GoogleSignIn */; };
@@ -56,7 +55,6 @@
 				D00DB7362FAB02D000D56700 /* FacebookLogin in Frameworks */,
 				D00DB73B2FAB034900D56700 /* GoogleSignInSwift in Frameworks */,
 				D00DB72B2FAB015100D56700 /* FirebaseAuth in Frameworks */,
-				D00DB72F2FAB015100D56700 /* FirebaseFirestore in Frameworks */,
 				D00DB7392FAB034900D56700 /* GoogleSignIn in Frameworks */,
 			);
 		};
@@ -103,7 +101,6 @@
 			packageProductDependencies = (
 				D00DB72A2FAB015100D56700 /* FirebaseAuth */,
 				D00DB72C2FAB015100D56700 /* FirebaseCore */,
-				D00DB72E2FAB015100D56700 /* FirebaseFirestore */,
 				D00DB7332FAB02D000D56700 /* FacebookCore */,
 				D00DB7352FAB02D000D56700 /* FacebookLogin */,
 				D00DB7382FAB034900D56700 /* GoogleSignIn */,
@@ -475,11 +472,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D00DB7292FAB015100D56700 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
-		};
-		D00DB72E2FAB015100D56700 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D00DB7292FAB015100D56700 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
 		};
 		D00DB7332FAB02D000D56700 /* FacebookCore */ = {
 			isa = XCSwiftPackageProductDependency;

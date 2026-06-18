@@ -16,13 +16,13 @@ import Foundation
 /// 3. Returns the URL — caller passes it to `AsyncImage(url:)` or fetches data via `URLSession`.
 ///
 /// ## Key format
-/// Callers pass the Garage key directly from the model (`product.defaultImageURL`,
+/// Callers pass the Garage key directly from the model (`item.defaultImageURL`,
 /// `brand.imageURL`). Keys have the form `"images/<sha256>.webp"`. The `images/` prefix is
 /// stripped here before forwarding to cove-api — no transformation needed at the call site.
 ///
 /// ## Dimensions
 /// `imageURL(for:)` requests 800 × 800 `cover` by default — a reasonable size for
-/// all current product and brand image contexts. Call `imageURL(for:width:height:)` directly
+/// all current item and brand image contexts. Call `imageURL(for:width:height:)` directly
 /// for a specific size. Per-view dimension support will be formalised in a future issue.
 final class CoveAPIImageRepository: ImageRepository {
     // MARK: - Properties

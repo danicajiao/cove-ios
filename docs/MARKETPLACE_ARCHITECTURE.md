@@ -6,11 +6,12 @@
 
 - [Overview](#overview)
 - [The core reframe: the trust layer is the product](#the-core-reframe-the-trust-layer-is-the-product)
-- [Entity model: maker, storefront, product](#entity-model-maker-storefront-product)
+- [Entity model: maker, storefront, item](#entity-model-maker-storefront-item)
 - [Services](#services)
 - [Single Postgres cluster, schemas per service](#single-postgres-cluster-schemas-per-service)
 - [The trust signal system](#the-trust-signal-system)
 - [Composite trust scoring](#composite-trust-scoring)
+- [Personalized ranking via signal-preference alignment](#personalized-ranking-via-signal-preference-alignment)
 - [Geospatial: the local availability gate](#geospatial-the-local-availability-gate)
 - [Categories and facets](#categories-and-facets)
 - [Database schema](#database-schema)
@@ -63,7 +64,7 @@ This is why the model below centers the *maker + place graph and trust layer* ra
 
 ---
 
-## Entity model: maker, storefront, product
+## Entity model: maker, storefront, item
 
 Cove separates **who makes** a thing from **where you find it** — *"Cove tells you who near you makes or sells it."*
 
@@ -71,7 +72,7 @@ Cove separates **who makes** a thing from **where you find it** — *"Cove tells
 |---|---|---|---|
 | **maker** | Who produces it — a company *or* an individual | Provenance signals (B Corp, 1% for the Planet) + **tier** (Verified Business / Individual Lister) | No — can be national |
 | **storefront** | Where to find it — `type`: shop / gallery / studio / market / taproom | Local signals (Living Wage, Community Verified) + **location** | **Yes — must be local** |
-| **product** | What a user searches for | Its own signals (USDA Organic); **made by** one maker, **available at** many storefronts | Via its storefronts |
+| **item** | What a user searches for | Its own signals (USDA Organic); **made by** one maker, **available at** many storefronts | Via its storefronts |
 
 "Storefront" is the internal entity name; a `type` enum carries the specifics (a market stall and a gallery are both storefronts of different types). The consumer-facing label is **"Where to find it,"** so the word never has to read as warm marketing copy.
 
@@ -79,8 +80,8 @@ Cove separates **who makes** a thing from **where you find it** — *"Cove tells
 
 It correctly handles real cases and reframes the "national chains" concern:
 
-- **A local boutique selling Patagonia.** Storefront = the boutique (`type: shop`, local, its own signals). Maker = Patagonia (B Corp, national). The product carries Patagonia's maker trust *on top of* the boutique's local trust.
-- **An individual potter.** Maker = the potter (Individual Lister tier, her provenance signals). She's available at her **studio** (`type: studio`, by appointment), a **gallery** (`type: gallery`, someone else's), and the **Saturday market** (`type: market`, a shared place). One maker, one product, many storefronts.
+- **A local boutique selling Patagonia.** Storefront = the boutique (`type: shop`, local, its own signals). Maker = Patagonia (B Corp, national). The item carries Patagonia's maker trust *on top of* the boutique's local trust.
+- **An individual potter.** Maker = the potter (Individual Lister tier, her provenance signals). She's available at her **studio** (`type: studio`, by appointment), a **gallery** (`type: gallery`, someone else's), and the **Saturday market** (`type: market`, a shared place). One maker, one item, many storefronts.
 - **Patagonia's own RiNo store.** Surfaces *because* it has a local storefront AND genuine signals — not excluded for being national.
 - **Walmart.** Has local stores too, but no meaningful trust signals, so the ranking buries it.
 
@@ -233,6 +234,107 @@ The brief's "rewards breadth and diversity of trust signals rather than any sing
 
 ---
 
+## Personalized ranking via signal-preference alignment
+
+> **Status: post-v1 ideation.** The schema scaffolding (`profile.interests`, `catalog.signals.weight`) is already in place. The preference→signal mapping and the boosted scoring formula are not yet implemented.
+
+### The problem
+
+Two users search for the same thing — "specialty coffee near me." One cares deeply about ethical supply chains; the other cares about environmental certifications. The flat trust score returns the same ranked list for both. Personalized ranking amplifies signals that match a user's stated values, surfacing more relevant results without changing the underlying verification system.
+
+### Signal dimensions
+
+B Corp is a holistic cert — it covers Workers, Community, Environment, Customers, and Governance. It is **not** an "ethical trading" signal specifically. Fair Trade is the most direct signal for ethical supply chains (fair prices to producers, no exploitative sourcing). Mapping user preferences to signals requires understanding what each signal actually certifies:
+
+| User preference | Most relevant signals | Partially relevant |
+|---|---|---|
+| Ethical trading / fair sourcing | `fair_trade` | `b_corp` (community/customers dimension) |
+| Environmental | `usda_organic`, `one_pct_planet` | `b_corp` (environment dimension) |
+| Supports workers / living wages | `living_wage` | `b_corp` (workers dimension) |
+| Community / local impact | `colorado_proud` | `b_corp` (community dimension), `one_pct_planet` |
+
+B Corp overlaps with many preferences because it is multi-dimensional. A user who says "I care about everything" gets the same boost from B Corp as someone who says "I care about environment" — until the mapping is made preference-specific.
+
+### Approach A — Preference → signal relevance table (recommended for v1 personalization)
+
+A lookup table maps each user preference tag to signal codes with a relevance weight (0–1). The personalized score replaces the flat `signal.weight` with `signal.weight × relevance`:
+
+```sql
+CREATE TABLE catalog.preference_signal_weights (
+    preference_tag  text    NOT NULL,  -- matches values in profile.interests
+    signal_code     text    NOT NULL REFERENCES catalog.signals(code),
+    relevance       numeric NOT NULL CHECK (relevance BETWEEN 0 AND 1),
+    PRIMARY KEY (preference_tag, signal_code)
+);
+
+-- Example rows
+INSERT INTO catalog.preference_signal_weights VALUES
+    ('ethical_trading', 'fair_trade',   1.0),
+    ('ethical_trading', 'b_corp',       0.7),
+    ('ethical_trading', 'one_pct_planet', 0.4),
+    ('environmental',   'usda_organic', 1.0),
+    ('environmental',   'one_pct_planet', 0.9),
+    ('environmental',   'b_corp',       0.8),
+    ('supports_workers','living_wage',  1.0),
+    ('supports_workers','b_corp',       0.6);
+```
+
+Scoring formula at query time:
+
+```sql
+-- Personalized trust score for a maker, given a user's preference tags
+SELECT
+    m.name,
+    SUM(s.weight * COALESCE(psw.relevance, 0)) AS personalized_score
+FROM directory.makers m
+JOIN catalog.entity_signals es ON es.maker_id = m.id AND es.status = 'verified'
+JOIN catalog.signals s ON s.id = es.signal_id
+LEFT JOIN catalog.preference_signal_weights psw
+    ON psw.signal_code = s.code
+    AND psw.preference_tag = ANY($user_preference_tags)
+WHERE m.id = $maker_id
+GROUP BY m.id;
+```
+
+Onyx Coffee Lab example with user preference `ethical_trading`:
+- B Corp (weight 3) × relevance 0.7 = **2.1** personalized score
+- If Onyx also had Fair Trade (weight 2) × relevance 1.0 = +2.0 → **4.1 total**
+
+### Approach B — Signal dimensions array (more scalable, no per-pair maintenance)
+
+Tag each signal with the values dimensions it covers. User preferences select dimensions; scoring is the overlap between user-selected dimensions and signal dimensions. New signals automatically fit when tagged correctly — no mapping table update needed.
+
+```sql
+ALTER TABLE catalog.signals ADD COLUMN dimensions text[] NOT NULL DEFAULT '{}';
+
+-- B Corp covers all five dimensions
+UPDATE catalog.signals SET dimensions = '{environmental, labor, community, governance, ethical_trading}' WHERE code = 'b_corp';
+UPDATE catalog.signals SET dimensions = '{ethical_trading, labor}' WHERE code = 'fair_trade';
+UPDATE catalog.signals SET dimensions = '{labor}'                   WHERE code = 'living_wage';
+UPDATE catalog.signals SET dimensions = '{environmental}'          WHERE code = 'usda_organic';
+UPDATE catalog.signals SET dimensions = '{environmental, community}' WHERE code = 'one_pct_planet';
+UPDATE catalog.signals SET dimensions = '{community}'              WHERE code = 'colorado_proud';
+```
+
+Tradeoff vs. Approach A: simpler to maintain, but loses the per-pair relevance granularity (you can't say "fair_trade is more directly 'ethical trading' than b_corp is").
+
+### How other companies handle this
+
+- **Good On You** (fashion sustainability app — closest analog to Cove): Rates brands on Labor, Environment, and Animal. Users can filter or sort by dimension. Simple tag-overlap scoring at small catalog scale — no ML.
+- **Etsy**: Tag matching + engagement signals. Personalization is additive on top of a base relevance score; explicit preferences seed it, behavior refines it.
+- **Spotify/Netflix**: Collaborative filtering — "users like you also liked X." Only meaningful once behavioral data exists (what makers users viewed, saved, purchased from). Overkill until Cove has that data.
+
+### Evolution path
+
+1. **Now (v1):** flat additive trust score — `SUM(signal.weight)` for verified signals. No preference amplification.
+2. **v1 personalization:** add `catalog.preference_signal_weights`; score the discovery query with `signal.weight × relevance` against `profile.interests`. The discovery query gains a `$user_preference_tags` param.
+3. **Behavioral blend:** add `profile.events` attention signals (item views, dwell time, saves) as implicit preference data. Blend explicit `profile.interests` weight + implicit engagement count.
+4. **Eventually:** ML ranking layer — collaborative filtering on the blended signal. Only worthwhile when the catalog and user base are large enough to produce meaningful co-engagement data.
+
+Steps 2–4 are additive — no existing tables change.
+
+---
+
 ## Geospatial: the local availability gate
 
 Location is the proximity dimension of discovery and the integrity gate for physical listings: storefronts with a verifiable local address within the Denver metro area appear in radius search; online-only storefronts (`type: 'online'`) set no location and are excluded from proximity queries. This prevents national chains from self-listing as local and diluting the trust layer.
@@ -277,6 +379,25 @@ CREATE INDEX ON catalog.categories USING BTREE (path);
 ```
 
 Labels must be `[A-Za-z0-9_]+`, so a display name like "Cheese & Dairy" maps to `cheese_and_dairy` for the path while the user-facing label lives in `name`. `ltree` gives one column the work of a `parent_id`/`ancestors`/`level` denormalization, with built-in operators for every traversal (`<@` descendants, `@>` ancestors, `~` lquery patterns). See [Postgres Primer](POSTGRES_PRIMER.md) for the operator reference.
+
+### Leaf enforcement
+
+Items may only be assigned to **leaf categories** — nodes with no children. This is enforced at three layers:
+
+| Layer | Mechanism | What it catches |
+|---|---|---|
+| `catalog.items.category_id` FK | `REFERENCES catalog.categories(id)` (default `RESTRICT`) | Deletion of a category that has items |
+| `items_enforce_leaf_category` trigger | `BEFORE INSERT OR UPDATE` on `catalog.items` | Assignment to a non-leaf category |
+| `categories_prevent_non_leaf_delete` trigger | `BEFORE DELETE` on `catalog.categories` | Deletion of a category that still has children |
+
+Two maintenance triggers keep `is_leaf` accurate automatically:
+
+- **`categories_mark_parent_non_leaf`** (`AFTER INSERT`) — when a new category is inserted, its direct parent is marked `is_leaf = false`.
+- **`categories_recheck_parent_leaf`** (`AFTER DELETE`) — when a leaf category is deleted, its parent is re-evaluated; if no siblings remain it flips back to `is_leaf = true`.
+
+These are defined in migrations `000005` and `000006`. The v1 seed (`000004`) inserts all 242 nodes; the backfill in `000005` sets `is_leaf = false` on all non-leaf nodes so the column is consistent from the start.
+
+See [Category Taxonomy](CATEGORY_TAXONOMY.md) for the full v1 tree and operational runbook.
 
 ### Category cards and personalization
 
@@ -600,12 +721,40 @@ See [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for cluster topology and
 ## What is deliberately not modeled
 
 - **Orders, payments, inventory, fulfillment** — Cove connects, it does not transact (v1 scope)
-- **Product variants / SKUs** — over-built for a no-transaction discovery app; a product is "what a maker makes," not a purchasable SKU
+- **Item variants / SKUs** — over-built for a no-transaction discovery app; an item is "what a maker makes," not a purchasable SKU
 - **Sophisticated trust scoring** — start flat-additive; add diversity/diminishing-returns tuning later
 - **pgvector / semantic search** — Postgres full-text (`tsvector`/GIN) is sufficient for v1 keyword discovery; vector embeddings become relevant when AI-assisted discovery is scoped (leave room, don't build now)
-- **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the product↔storefront link in v1, schedule metadata comes later
+- **Availability signals** (market schedules, gallery hours, studio pop-up dates) — brief v3; `availability` carries only the item↔storefront link in v1, schedule metadata comes later
 - **Reviews, ratings, social feed** — out of scope
 - **Multi-currency, historical pricing** — `price_cents` is informational USD
+- **Maker/storefront admin roles** — v1 data is seeded manually; self-serve ownership and role management ships with `cove-directory`. See below.
+
+### Maker/storefront ownership and admin roles (future: `cove-directory`)
+
+In mature marketplaces (DoorDash for Merchants, Etsy seller portal, Airbnb host dashboard), the supply side is managed by the makers and storefront operators themselves — not by the platform team. A restaurant owner logs into a merchant portal and manages their own menu, photos, and hours. Cove follows the same model: `cove-directory` is the maker/storefront management portal.
+
+In v1, `directory` data is seeded once via migrations and managed by Cove internally. When `cove-directory` ships, the following additive migration lands:
+
+```sql
+-- Links a platform user to a maker or storefront with a named role.
+-- Exclusive arc: a membership is to either a maker or a storefront, not both.
+CREATE TABLE profile.memberships (
+    uid           text        NOT NULL REFERENCES profile.users(uid)        ON DELETE CASCADE,
+    maker_id      uuid REFERENCES directory.makers(id)                      ON DELETE CASCADE,
+    storefront_id uuid REFERENCES directory.storefronts(id)                 ON DELETE CASCADE,
+    role          text        NOT NULL, -- 'owner' | 'admin' | 'staff'
+    created_at    timestamptz NOT NULL DEFAULT now(),
+    CHECK (num_nonnulls(maker_id, storefront_id) = 1)
+);
+
+CREATE INDEX ON profile.memberships (uid);
+CREATE INDEX ON profile.memberships (maker_id);
+CREATE INDEX ON profile.memberships (storefront_id);
+```
+
+This is additive — no existing tables change. `cove-directory` gets `SELECT, INSERT, UPDATE, DELETE` on `profile.memberships` and write access to `directory` (the permissions flip described in the services table above).
+
+Platform-level admin (Cove internal staff who can manage any listing) is handled separately via a `is_platform_admin` flag on `profile.users` or a dedicated internal tooling layer — not via `profile.memberships`.
 
 ---
 
@@ -632,6 +781,7 @@ Items still open:
 - [Postgres Primer](POSTGRES_PRIMER.md) — indexes (B-tree, GIN, GiST), JSONB, FTS, ltree, PostGIS
 - [Media Architecture](MEDIA_ARCHITECTURE.md) — image storage, transformation, serving, signed URLs
 - [iOS App Architecture](IOS_APP_ARCHITECTURE.md) — iOS app structure, ViewModels, repository layer
+- [Category Taxonomy](CATEGORY_TAXONOMY.md) — full v1 tree, design principles, add/remove runbook
 - Product Brief v1.0 — the trust layer, the wedge, the signal taxonomy
 
 ---
@@ -640,7 +790,7 @@ Items still open:
 
 - **Version 1.0** (Nov 2025) — Initial architecture. Hybrid SQL + NoSQL with a GraphQL API layer.
 - **Version 2.0** (May 2026) — Locked stack from Phase 0 epic. REST over GraphQL, all data to Postgres, repository abstraction, v1 entities.
-- **Version 3.0** (May 2026) — Phase 0 alignment. Garage (not MinIO) object storage, monorepo service locations, `product_variants`/`product_details`, removed Visit List.
+- **Version 3.0** (May 2026) — Phase 0 alignment. Garage (not MinIO) object storage, monorepo service locations, `item_variants`/`item_details`, removed Visit List.
 - **Version 3.1** (May 2026) — Single shared cluster (`cove-db`) with schemas-per-service; cross-schema FKs.
 - **Version 3.2** (May 2026) — `vendor` schema pre-positioned for a future `cove-vendor` service.
 - **Version 3.3** (May 2026) — Product media split into a `product_media` child table.

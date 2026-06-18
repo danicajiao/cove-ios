@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoritesView: View {
     @StateObject private var viewModel = FavoritesViewModel()
+    @EnvironmentObject private var favoritesStore: FavoritesStore
 
     private var columns = Array(repeating: GridItem(.flexible(), spacing: Spacing.xl), count: 2)
 
@@ -30,7 +31,7 @@ struct FavoritesView: View {
                     RoundedRectangle(cornerRadius: Radius.lg)
                         .fill(Color.Colors.Fills.inverse)
                         .overlay {
-                            Text("Products you save will appear here")
+                            Text("Items you save will appear here")
                                 .multilineTextAlignment(.center)
                                 .font(Font.custom("Lato-Regular", size: 16))
                                 .foregroundStyle(Color.Colors.Text.primary)
@@ -45,8 +46,8 @@ struct FavoritesView: View {
                         alignment: .center,
                         spacing: Spacing.xl
                     ) {
-                        ForEach(viewModel.favorites, id: \.id) { product in
-                            ProductCard(product: product)
+                        ForEach(viewModel.favorites, id: \.id) { item in
+                            ItemCard(item: item)
                         }
                     }
                     .padding(.horizontal, Spacing.xl)
@@ -55,10 +56,8 @@ struct FavoritesView: View {
             .padding(.top, Spacing.xxxl)
         }
         .background(Color.Colors.Backgrounds.primary.ignoresSafeArea(.all))
-        .onAppear {
-            Task {
-                try await viewModel.fetchFavorites()
-            }
+        .task(id: favoritesStore.favoriteIds) {
+            try? await viewModel.fetchFavorites()
         }
     }
 }

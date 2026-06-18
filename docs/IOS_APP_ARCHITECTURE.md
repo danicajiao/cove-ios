@@ -394,34 +394,6 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 
 ---
 
-## Phase 3 migration: what changes
-
-Phase 3 replaces Firestore with the Postgres-backed `cove-api` gateway for all structured data. The repository abstraction (`ProductRepository`, `UserRepository`, `FavoritesRepository`) exists precisely to make this swap a one-line DI change per repository, with no ViewModel changes.
-
-### What the migration looks like
-
-| Layer | Before (current) | After (Phase 3) |
-|---|---|---|
-| Products/brands | `FirebaseProductRepository` (Firestore) | `CoveAPIProductRepository` (cove-api REST) |
-| User profiles | `FirebaseUserRepository` (Firestore) | `CoveAPIUserRepository` (cove-user REST) |
-| Favorites | `FirebaseFavoritesRepository` (Firestore) | `CoveAPIFavoritesRepository` (cove-user REST) |
-| Images | `CoveAPIImageRepository` (already migrated) | No change |
-| Categories | Hardcoded in `HomeViewModel.categories` + `SmallCategoryButton` | `GET /categories` from cove-api; `CategoryCard` component replaces `SmallCategoryButton` |
-| Product types | `ProductTypes.swift` (Firestore document IDs) | ✅ Removed in Phase 3; categories served as data from `GET /categories` |
-
-### Stub implementations
-
-`CoveAPIProductRepository`, `CoveAPIUserRepository`, and `CoveAPIFavoritesRepository` are stubbed out in `Networking/Repositories/CoveAPI/` — every method currently throws `RepositoryError.decodingFailed` with a "lands in Phase 3" message. They exist to prove the DI seams work and to give Phase 3 implementers a clear target.
-
-### Interest onboarding and personalized category cards (Phase 3)
-
-The Phase 3 iOS scope also includes:
-- **`InterestOnboardingView`** — shown at first launch after sign-in; user picks interest categories that are stored as `user.interests` rows via `POST /users/me/interests`
-- **`CategoryCard`** — replaces `SmallCategoryButton`; rendered from data returned by `GET /recommendations/categories`; tapping a card triggers `GET /discovery?category=<path>&lat=...`
-- **`CategoryResultsView`** — destination for category card taps; renders discovery results for a category
-- **`POST /users/me/events`** — attention events (`category_tap`, `product_view`, etc.) sent after each user interaction to power behavioral recommendation ranking
-
----
 
 ## Firebase Data Model (historical)
 

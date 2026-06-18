@@ -340,11 +340,12 @@ ViewModels and repositories work against `any Item` and `any ItemDetails`. Views
 ```
 1. CoveApp checks authState → .loggedIn
 2. MainView shown with HomeView in first tab
-3. HomeView.onAppear → viewModel.fetchProducts() + viewModel.fetchBrands()
-4. FirebaseProductRepository → Firestore collection("products").getDocuments()
-5. Each doc decoded by categoryId → CoffeeProduct / MusicProduct / ApparelProduct
-6. products array published → HomeView renders ProductCard grid
+3. HomeView.onAppear → viewModel.fetchProducts() + viewModel.fetchBrands() + viewModel.fetchCategories()
+4. CoveAPIItemRepository → GET /items (via CoveAPIClient)
+5. Each item decoded by type → CoffeeItem / MusicItem / ApparelItem
+6. items array published → HomeView renders ItemCard grid
 7. brands array published → HomeView renders brand logo row
+8. categories array published → HomeView renders CategoryCard scroll row
 ```
 
 ### Product Tap → Detail View

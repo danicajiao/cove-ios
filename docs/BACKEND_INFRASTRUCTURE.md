@@ -1,10 +1,9 @@
 # Backend Infrastructure
 
-> **Status:** Phases 0, 1, and 2 complete. The cluster is fully bootstrapped and running. `cove-api` and `cove-image` are deployed to `cove-staging` and `cove-prod` behind the Cloudflare Tunnel. The iOS app routes all image requests through `CoveAPIClient` → `cove-api` → `cove-image`; Firebase Storage has been retired. Firebase Auth and Firestore remain in use until Phase 3.
+> **Status:** Phases 0–3 complete. The cluster is fully bootstrapped and running. All four services run in `cove-staging` behind the Cloudflare Tunnel. `cove-api` and `cove-image` are also live in `cove-prod`; `cove-item` and `cove-user` are still pinned to `sha-placeholder` in the prod overlay and promote to `cove-prod` automatically once the Phase 3 integration branch merges to `main` (`ci-services.yml` opens a homelab PR bumping the prod tags). Firebase Storage and Firestore have been retired; all structured data is served from Postgres via the cove-api gateway.
 
 ## Contents
 
-- [Goals](#goals)
 - [Architecture](#architecture)
 - [Platform layer (installed, Phase 0)](#platform-layer-installed-phase-0)
 - [Repo structure](#repo-structure)
@@ -17,35 +16,19 @@
 
 ---
 
-## Goals
-
-- Remove reliance on Firebase for data and storage (Auth stays — it's the hardest to replace and provides the most value)
-- Host compute on a personal K3s machine to eliminate backend costs during development
-- GitOps everything — every infrastructure change is a PR, Argo CD reconciles from `main`
-- Manifests written for K3s run on GKE unchanged if the cluster ever needs to move to the cloud
-
----
-
 ## Architecture
 
-```
-iOS App
-    │
-    │  Firebase Auth SDK (kept throughout all phases)
-    │  Firebase ID Token in Authorization: Bearer header
-    │
-    ▼
-api.coveapp.dev  (Cloudflare Tunnel — no open ports on the home machine)
-    │
-    ▼
-cove-api  (K3s pod, cove-staging / cove-prod namespace)
-    │  Validates Firebase ID Token via Firebase Admin SDK
-    │  Routes to backend services by path prefix
-    │
-    ├── /images/*  ──►  cove-image   (Phase 2, deployed)
-    ├── /i/*       ──►  imgproxy     (Phase 2, deployed — image transforms)
-    ├── /items/* ──►  cove-item (Phase 3)
-    └── /users/*   ──►  cove-user    (Phase 3)
+> The backend runs on a personal K3s cluster (zero hosting cost), exposed via Cloudflare Tunnel, managed GitOps with Argo CD. Manifests are written to run on GKE unchanged if the cluster needs to move to the cloud.
+
+```mermaid
+flowchart TD
+    iOS["iOS App"]
+    iOS -->|"Firebase ID token<br/>Authorization: Bearer"| CF["api.coveapp.dev<br/>Cloudflare Tunnel — no open ports"]
+    CF --> API["cove-api · K3s pod<br/>cove-staging / cove-prod<br/>validates ID token via Firebase Admin SDK,<br/>routes by path prefix"]
+    API -->|"/images/*"| IMG["cove-image"]
+    API -->|"/i/*"| IMGPROXY["imgproxy<br/>image transforms"]
+    API -->|"/discovery · /categories<br/>/items/* · /makers/* · /storefronts/*"| ITEM["cove-item"]
+    API -->|"/users/* · /recommendations/*"| USER["cove-user"]
 ```
 
 Firebase Auth is the only GCP dependency in the request path. There is no GCP API Gateway, no Cloud Run, no Cloud SQL.
@@ -94,8 +77,8 @@ danicajiao/cove                 ← all source code and docs
 ├── services/
 │   ├── cove-api/               ← cove-api gateway service (Phase 1, deployed)
 │   ├── cove-image/             ← cove-image service (Phase 2, deployed)
-│   ├── cove-item/           ← cove-item service (Phase 3)
-│   └── cove-user/              ← cove-user service (Phase 3)
+│   ├── cove-item/              ← item discovery service (Phase 3, complete)
+│   └── cove-user/              ← user profiles + recommendations service (Phase 3, complete)
 │
 ├── packages/                   ← shared code (API schema, types — as needed)
 └── docs/
@@ -128,31 +111,7 @@ Each service is built independently — no unified build tool required at this s
 - **Each service has its own `Dockerfile`** at `services/cove-<service>/Dockerfile`
 - **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/ci-services.yml`)
 - **iOS** keeps its existing Fastlane CI lane
-- **A root `Makefile`** provides convenience targets for local use. The commit SHA is injected via `--build-arg` so the `/health` endpoint can report the running build:
-
-```makefile
-COMMIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
-
-build-cove-api: ## Build the cove-api Docker image
-    docker build \
-        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
-        -t cove-api:$(COMMIT_SHA) \
-        services/cove-api/
-
-build-cove-image: ## Build the cove-image Docker image
-    docker build \
-        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
-        -t cove-image:$(COMMIT_SHA) \
-        services/cove-image/
-
-build-all: build-cove-api build-cove-image ## Build Docker images for all services
-```
-
-As `cove-item` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`.
-
-This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
-
-The key property a unified build system would buy is incremental builds (only rebuild what changed) and a single CI invocation across all languages. GitHub Actions path filters give you the former cheaply; the latter can be added later.
+- **Local development** runs the Go binary directly (`go run ./cmd/...`) — no Docker builds required locally
 
 ---
 
@@ -164,8 +123,8 @@ Services drop the `-svc` suffix. The pod, K8s Service, and image name are all th
 |---|---|---|
 | `cove-api` | BFF gateway — validates Firebase token, routes to backend services | Phase 1 (deployed) |
 | `cove-image` | Image upload (`POST /images`), signed-URL serving (`GET /images/{filename}/url`), normalization to WebP, content-addressed storage in Garage | Phase 2 (deployed) |
-| `cove-item` | Item catalog, categories, search | Phase 3 |
-| `cove-user` | User profiles, follows, producer accounts | Phase 3 |
+| `cove-item` | Item ingestion, category catalog, `GET /discovery` endpoint | Phase 3 (complete) |
+| `cove-user` | User profiles, interests, `GET /recommendations/categories`, `POST /users/me/events` | Phase 3 (complete) |
 
 In Kubernetes, each service runs as a `Deployment` in `cove-staging` or `cove-prod`, with a matching `Service` of the same name.
 
@@ -257,7 +216,7 @@ These go in **Variables** (not Secrets) in GitHub → Settings → Secrets and v
 
 ## Token validation strategy
 
-**Decision: Option A — trust the gateway, propagate UID via header.**
+**Decision: trust the gateway, propagate UID via header.**
 
 `cove-api` is the only service that validates Firebase ID tokens. After successful validation it forwards the caller's UID to downstream services as an `X-Cove-Uid` HTTP header. Downstream services (`cove-image`, `cove-item`, `cove-user`) read the header and trust it — they do not re-validate the Bearer token.
 
@@ -281,22 +240,30 @@ NetworkPolicy manifests (added in `danicajiao/homelab#25`) enforce this at the c
 
 ### Implementation pattern
 
-`cove-api` reverse-proxy handler (added when routing is wired in Phase 2+):
+`cove-api` — `uidProxy` wraps `httputil.NewSingleHostReverseProxy` and injects the UID from context (set by auth middleware) before forwarding. Any client-supplied `X-Cove-Uid` is overwritten by the `Set` call:
 
 ```go
-// Strip any client-supplied X-Cove-Uid header to prevent spoofing,
-// then inject the validated UID before forwarding the request.
-outboundReq.Header.Del("X-Cove-Uid")
-outboundReq.Header.Set("X-Cove-Uid", uid)
+return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if uid, ok := covauth.UIDFromContext(r.Context()); ok {
+        r.Header.Set("X-Cove-Uid", uid)
+    }
+    proxy.ServeHTTP(w, r)
+})
 ```
 
-Downstream service middleware (each service implements this instead of the Firebase Admin SDK):
+Downstream service middleware (`UIDMiddleware` in each service — replaces Firebase Admin SDK token validation):
 
 ```go
-uid := r.Header.Get("X-Cove-Uid")
-if uid == "" {
-    http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-    return
+func UIDMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if r.Header.Get("X-Cove-Uid") == "" {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusUnauthorized)
+            _, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
 }
 ```
 
@@ -308,7 +275,7 @@ Revisit if any of the following change:
 - The cluster moves to multi-tenant infrastructure (GKE, shared node pools)
 - A security audit flags lateral movement risk within the cluster
 
-At that point Option C (internal JWT signed with a cluster secret) provides defence-in-depth without the Firebase Admin SDK cost of Option B.
+At that point, replacing the `X-Cove-Uid` header with an internal JWT signed by a cluster secret provides defence-in-depth without requiring the Firebase Admin SDK in every downstream service.
 
 ---
 
@@ -356,15 +323,16 @@ Each phase is independently shippable. The iOS app is updated incrementally — 
 - Firebase Storage fully retired; `FirebaseStorage` unlinked from the iOS Xcode target
 - Firestore `products.defaultImageURL` and `brands.imageURL` now store Garage keys (`images/<sha256>.webp`) instead of `gs://` URLs
 
-### Phase 3 — Data services
+### Phase 3 — Data services ✅ complete
 
-> Being re-planned against the trust-layer data model — see [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals).
+See [Marketplace Architecture](MARKETPLACE_ARCHITECTURE.md) for the canonical schema (maker / storefront / item / signals) and full data model.
 
-- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `catalog`, and `user`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3; `cove-item` and `cove-user` get read-only + FK reference grants.
-- Deploy `cove-item` and `cove-user` to `cove-staging`
-- Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows)
-- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/items/*`, and `api.coveapp.dev/users/*`
-- Firestore retired
+- Provision a single CNPG `Cluster` (`cove-db`, with PostGIS + ltree) hosting the `cove` database with three schemas: `directory`, `catalog`, and `profile`. The `directory` schema (makers + storefronts) is pre-positioned for a future `cove-directory` service — no service owns it in Phase 3. PostGIS enables radius-based discovery queries.
+- `profile.user_flags` migration added to `cove-db`
+- Deploy `cove-item` (item ingestion, `GET /discovery` endpoint) and `cove-user` (user profiles, interests, `GET /recommendations/categories`, `POST /users/me/events`) to `cove-staging`; the prod overlay keeps both at `sha-placeholder` until the integration branch merges to `main`, at which point `ci-services.yml` promotes them to `cove-prod`
+- Postgres replaces Firestore for all structured data; cross-schema foreign keys preserve referential integrity for user-centric features (favorites, follows, interests)
+- iOS app calls `api.coveapp.dev/discovery`, `api.coveapp.dev/recommendations/*`, `api.coveapp.dev/users/*`, and `api.coveapp.dev/categories`
+- Firestore retired upon completion
 
 ### Phase 4 (planned) — Directory service
 

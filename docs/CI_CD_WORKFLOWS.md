@@ -1,37 +1,46 @@
-# iOS CI/CD Workflows Documentation
+# CI/CD Workflows Documentation
 
-This document describes the CI/CD workflows configured for the Cove iOS app, including deployment to TestFlight and App Store.
+This document describes the CI/CD workflows configured for the Cove project — iOS app deployment to TestFlight and App Store, backend service builds and image pushes to Google Artifact Registry (GAR), OpenAPI spec linting, and an on-demand Claude Code assistant.
 
 ## Architecture
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                       GitHub Repository                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  PR Created  │  │ Push to Main │  │  Manual Deployment   │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-│         ▼                 ▼                     ▼              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  CI - iOS    │  │  CI - iOS    │  │  CD - TestFlight     │  │
-│  │  (Lint only) │  │  (Build/Test)│  │  CD - App Store      │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-└─────────┼─────────────────┼─────────────────────┼──────────────┘
-          ▼                 ▼                     ▼
-   ┌─────────────┐    ┌─────────────┐      ┌─────────────┐
-   │  PR Status  │    │  Build/Test │      │  TestFlight │
-   │  Check      │    │  Results    │      │  App Store  │
-   └─────────────┘    └─────────────┘      └─────────────┘
+```mermaid
+flowchart TD
+    subgraph repo["GitHub Repository"]
+        direction LR
+        PR([PR Created])
+        PUSH([Push to main])
+        MANUAL([Manual dispatch])
+    end
+
+    PR --> IOS_PR["CI · iOS<br/>lint-and-validate"]
+    PR --> SVCS_PR["CI · Services<br/>build only"]
+    PR --> OPENAPI["CI · OpenAPI lint"]
+
+    PUSH --> IOS_MAIN["CI · iOS<br/>build-and-test"]
+    PUSH --> SVCS_MAIN["CI · Services<br/>build + push to GAR"]
+
+    MANUAL --> CD_TF["CD · TestFlight"]
+    MANUAL --> CD_AS["CD · App Store"]
+
+    IOS_PR & SVCS_PR & OPENAPI --> STATUS(["PR status checks"])
+
+    SVCS_MAIN --> HOMELAB(["GAR image push<br/>+ homelab PR"])
+
+    CD_TF --> TF(["TestFlight"])
+    CD_AS --> AS(["App Store Connect"])
 ```
 
 ## Overview
 
-The Cove iOS app uses GitHub Actions for continuous integration and deployment following mobile development best practices:
+The Cove project uses GitHub Actions for continuous integration and deployment:
 
 - **Manual TestFlight deployments** via workflow dispatch
 - **Manual App Store submissions** via workflow dispatch
-- **Automated quality checks** on pull requests (linting only)
-- **Automated build and test** on main branch pushes
-- **Auto-incrementing build numbers** for each deployment
+- **Automated iOS quality checks** on pull requests (linting only)
+- **Automated iOS build and test** on main branch pushes
+- **Automated backend service builds** on path-filtered PRs and main pushes
+- **Auto-incrementing build numbers** for each iOS deployment
 - **Manual marketing version bumps** only when releasing to App Store
 
 ## Workflows
@@ -137,9 +146,69 @@ To release to App Store, manually trigger the workflow from GitHub Actions UI.
 
 **Required Secrets:** All 8 secrets (see Required Secrets section below)
 
+### 5. CI - Services (`ci-services.yml`)
+
+**Triggers:**
+- Pull requests touching `services/cove-api/**`, `services/cove-image/**`, `services/cove-item/**`, `services/cove-user/**`, or `packages/imgproxy/**`
+- Pushes to `main` touching those paths
+- Manual `workflow_dispatch` (useful for bootstrapping GAR before an integration branch merges)
+
+**Concurrency:** Cancels in-progress runs for the same workflow + ref on new pushes.
+
+**Jobs:** Five jobs run in parallel — one per service (`cove-api`, `cove-image`, `cove-item`, `cove-user`) plus one for the shared `packages/imgproxy` module.
+
+**What each service job does (`cove-api`, `cove-image`, `cove-item`, `cove-user`):**
+
+1. Set up Go (version from `go.mod`)
+2. Run `go test ./...` and `go vet ./...`
+3. **On main / `workflow_dispatch` only:** Authenticate to GCP via Workload Identity Federation, configure Docker, build and push image to Google Artifact Registry (GAR) as `sha-<full-commit-sha>`
+4. **On PRs:** Build only (no push) — verifies the Dockerfile and that the service compiles
+
+**`packages/imgproxy` job:** Runs `go test ./...` and `go vet ./...` on the shared imgproxy signing library. No Docker build or GAR push — `packages/imgproxy` is a Go module included in the build context of `cove-image` and `cove-item`, not a deployed service.
+
+After all five jobs succeed on main or `workflow_dispatch`, a sixth job (`bump-overlay-tags`) opens a PR against `danicajiao/homelab` that bumps the Kustomize overlay image tags to the new SHA. On main it updates both staging and prod overlays; on other branches (e.g. integration branch `workflow_dispatch`) it updates staging only.
+
+**Required variables (not secrets):** `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT` — see [Backend Infrastructure](BACKEND_INFRASTRUCTURE.md) for the one-time GCP setup.
+
+**Required secrets:** `HOMELAB_PAT` — GitHub PAT with write access to `danicajiao/homelab` (used by `bump-overlay-tags` to push and open the homelab PR).
+
+---
+
+### 6. CI - OpenAPI Lint (`ci-openapi.yml`)
+
+**Trigger:** Pull requests touching `services/cove-api/api/**`, `services/cove-image/api/**`, `services/cove-item/api/**`, or `services/cove-user/api/**`
+
+**Purpose:** Lint all OpenAPI specs for validity and style using [Redocly CLI](https://redocly.com/docs/cli/).
+
+**Steps:**
+1. Install `@redocly/cli` (latest)
+2. Lint `services/cove-api/api/openapi.yaml` using `services/cove-api/redocly.yaml`
+3. Lint `services/cove-image/api/openapi.yaml` using `services/cove-image/redocly.yaml`
+4. Lint `services/cove-item/api/openapi.yaml` using `services/cove-item/redocly.yaml`
+5. Lint `services/cove-user/api/openapi.yaml` using `services/cove-user/redocly.yaml`
+
+This workflow runs on PRs only — there is no main-push gate for spec linting. All four service specs (`cove-api`, `cove-image`, `cove-item`, `cove-user`) are in the path filter and linted.
+
+---
+
+### 7. Claude Code (`claude.yml`)
+
+**Trigger:** New issue comments and pull-request review comments — the job runs only when the comment body contains `@claude`.
+
+**Purpose:** On-demand AI assistant. Mentioning `@claude` in an issue or PR comment runs [`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action), which can read the repo and CI results and respond on the thread.
+
+**Configuration:**
+- Runs on `ubuntu-latest`
+- Read-only repo permissions (`contents`, `pull-requests`, `issues`) plus `actions: read` so Claude can read CI results on PRs
+- Authenticates via the `CLAUDE_CODE_OAUTH_TOKEN` secret
+
+This is a developer-assistance workflow — it is not part of the build, test, or deploy path.
+
+---
+
 ## Required Secrets
 
-**Total: 9 secrets (8 required, 1 unused)**
+**Total: 10 secrets (9 required, 1 unused)**
 
 The following secrets must be configured in your GitHub repository settings:
 
@@ -155,9 +224,18 @@ The following secrets must be configured in your GitHub repository settings:
 - `APP_STORE_CONNECT_API_KEY`: Base64-encoded API Key (.p8 file)
 
 ### GitHub
-- `GH_PAT`: GitHub Personal Access Token with repo permissions (for pushing commits)
+- `GH_PAT`: GitHub Personal Access Token with repo permissions (used by iOS CD workflows for pushing version bump commits)
+- `HOMELAB_PAT`: GitHub Personal Access Token with write access to `danicajiao/homelab` (used by `ci-services.yml` `bump-overlay-tags` job to push branches and open PRs in the homelab repo)
 
-**Note:** The `APPLE_TEAM_ID` secret mentioned in documentation is not currently used by the workflows.
+### Claude Code
+- `CLAUDE_CODE_OAUTH_TOKEN`: OAuth token for the `@claude` GitHub action (`claude.yml`)
+
+### GCP (services CI only)
+These are **variables** (not secrets) — non-sensitive identifiers stored under GitHub → Settings → Secrets and variables → Actions → **Variables** tab:
+- `WIF_PROVIDER`: Workload Identity Federation pool/provider path for GCP auth
+- `WIF_SERVICE_ACCOUNT`: Service account email that CI impersonates to push images to Google Artifact Registry (GAR)
+
+**Note:** The `APPLE_TEAM_ID` secret mentioned in earlier documentation is not currently used by the workflows.
 
 ## Versioning Strategy
 

@@ -152,7 +152,7 @@ cp services/cove-api/api/openapi.yaml apps/ios/Cove/Networking/Generated/openapi
 - **Views** (`apps/ios/Cove/Views/`, `apps/ios/Cove/Components/`): SwiftUI only, no business logic
 - **ViewModels** (`apps/ios/Cove/View Models/`): `ObservableObject`, marked `@MainActor`, one per major view
 - **Models** (`apps/ios/Cove/Models/`): Data structures and global state (e.g. `AppState`, `Bag`)
-- **Enums** (`apps/ios/Cove/Enums/`): Shared enum types (`ProductTypes`); note that `AuthState`, `AuthMethod`, and `Path` are currently defined in `Models/AppState.swift`
+- **Enums** (`apps/ios/Cove/Enums/`): Shared enum types (`ProductTypes` — Firestore era, removed in Phase 3; `AuthPath`); note that `AuthState`, `AuthMethod`, and `Path` are defined in `Models/AppState.swift`
 - **Styles** (`apps/ios/Cove/Styles/`): Custom `PrimitiveButtonStyle` implementations
 
 ### Naming

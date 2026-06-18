@@ -58,6 +58,17 @@ Three pieces, each doing one thing well:
 
 The principle that ties them together: **one source of truth, infinite derived views.** Vendors upload once. imgproxy turns that one source into whatever shape a screen needs. Cloudflare remembers every shape and serves it from the edge. The cluster pays the transformation cost exactly once per (image, variant) combination.
 
+```mermaid
+flowchart LR
+    Vendor["Vendor app"] -->|"POST /images (bytes)"| CImg["cove-image<br/>rotate · strip EXIF<br/>WebP q90 · SHA-256"]
+    CImg -->|"images/{sha256}.webp"| Garage[("Garage · cove-media<br/>canonical original")]
+    Client["iOS app"] -->|"signed variant URL"| CF{"Cloudflare edge<br/>cache hit?"}
+    CF -->|hit| Client
+    CF -->|miss| IMG["imgproxy<br/>resize / re-encode on the fly"]
+    IMG -->|"fetch original"| Garage
+    IMG -->|"variant bytes · cached ~1 yr"| CF
+```
+
 ---
 
 ## Data model

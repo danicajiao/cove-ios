@@ -128,31 +128,7 @@ Each service is built independently — no unified build tool required at this s
 - **Each service has its own `Dockerfile`** at `services/cove-<service>/Dockerfile`
 - **GitHub Actions** builds and pushes each service's image on changes to its path (path filters prevent rebuilding unrelated services — see `.github/workflows/ci-services.yml`)
 - **iOS** keeps its existing Fastlane CI lane
-- **A root `Makefile`** provides convenience targets for local use. The commit SHA is injected via `--build-arg` so the `/health` endpoint can report the running build:
-
-```makefile
-COMMIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
-
-build-cove-api: ## Build the cove-api Docker image
-    docker build \
-        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
-        -t cove-api:$(COMMIT_SHA) \
-        services/cove-api/
-
-build-cove-image: ## Build the cove-image Docker image
-    docker build \
-        --build-arg COMMIT_SHA=$(COMMIT_SHA) \
-        -t cove-image:$(COMMIT_SHA) \
-        services/cove-image/
-
-build-all: build-cove-api build-cove-image ## Build Docker images for all services
-```
-
-As `cove-item` and `cove-user` land in Phase 3, each gets its own `build-cove-<service>` target wired into `build-all`. The `ci-services.yml` workflow gains matching path filters for `services/cove-item/**` and `services/cove-user/**` when those services are added.
-
-This avoids the significant setup cost of a polyglot build system (Bazel, etc.) while keeping the door open — if build times become a problem as the repo grows, the groundwork is already in place to adopt one.
-
-The key property a unified build system would buy is incremental builds (only rebuild what changed) and a single CI invocation across all languages. GitHub Actions path filters give you the former cheaply; the latter can be added later.
+- **Local development** runs the Go binary directly (`go run ./cmd/...`) — no Docker builds required locally
 
 ---
 

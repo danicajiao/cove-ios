@@ -257,22 +257,30 @@ NetworkPolicy manifests (added in `danicajiao/homelab#25`) enforce this at the c
 
 ### Implementation pattern
 
-`cove-api` reverse-proxy handler (added when routing is wired in Phase 2+):
+`cove-api` — `uidProxy` wraps `httputil.NewSingleHostReverseProxy` and injects the UID from context (set by auth middleware) before forwarding. Any client-supplied `X-Cove-Uid` is overwritten by the `Set` call:
 
 ```go
-// Strip any client-supplied X-Cove-Uid header to prevent spoofing,
-// then inject the validated UID before forwarding the request.
-outboundReq.Header.Del("X-Cove-Uid")
-outboundReq.Header.Set("X-Cove-Uid", uid)
+return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if uid, ok := covauth.UIDFromContext(r.Context()); ok {
+        r.Header.Set("X-Cove-Uid", uid)
+    }
+    proxy.ServeHTTP(w, r)
+})
 ```
 
-Downstream service middleware (each service implements this instead of the Firebase Admin SDK):
+Downstream service middleware (`UIDMiddleware` in each service — replaces Firebase Admin SDK token validation):
 
 ```go
-uid := r.Header.Get("X-Cove-Uid")
-if uid == "" {
-    http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-    return
+func UIDMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if r.Header.Get("X-Cove-Uid") == "" {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusUnauthorized)
+            _, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
 }
 ```
 

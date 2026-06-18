@@ -221,13 +221,13 @@ Adding a new signal type (e.g. "Certified Plastic Negative") is a single `INSERT
 A discovery result aggregates trust across the three levels:
 
 ```
-result_trust_score(product, maker, storefront) =
+result_trust_score(item, maker, storefront) =
       maker.trust_score          -- materialized from maker signals (B Corp, etc.)
     + storefront.trust_score     -- materialized from storefront signals (Living Wage, etc.)
-    + Σ product's own signals    -- USDA Organic, etc. — usually 0–2, added at query time
+    + Σ item's own signals       -- USDA Organic, etc. — usually 0–2, added at query time
 ```
 
-**Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the product's own signals live.
+**Materialize** `maker.trust_score` and `storefront.trust_score` (recompute when their signals change — rare; for v1, computed once at seed time) and B-tree index them so the discovery `ORDER BY` is cheap. Add the item's own signals live.
 
 The brief's "rewards breadth and diversity of trust signals rather than any single credential" is a refinement of *how* the sum works — diminishing returns on stacking similar signals, a bonus for spanning categories — and the `maker.tier` (Individual Lister vs Verified Business) shifts the weighting (Individual Listers lean more on community vouching). **Start with flat additive weights**; tune the function later. This does not block the schema.
 

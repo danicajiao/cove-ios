@@ -4,25 +4,31 @@ This document describes the CI/CD workflows configured for the Cove project — 
 
 ## Architecture
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                       GitHub Repository                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  PR Created  │  │ Push to Main │  │  Manual Deployment   │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-│         ▼                 ▼                     ▼              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  CI - iOS    │  │  CI - iOS    │  │  CD - TestFlight     │  │
-│  │  CI - Svcs   │  │  CI - Svcs   │  │  CD - App Store      │  │
-│  │  CI - OpenAPI│  │  (Build/Push)│  │                      │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-└─────────┼─────────────────┼─────────────────────┼──────────────┘
-          ▼                 ▼                     ▼
-   ┌─────────────┐    ┌─────────────┐      ┌─────────────┐
-   │  PR Status  │    │  GAR Image  │      │  TestFlight │
-   │  Checks     │    │  Push +     │      │  App Store  │
-   │             │    │  homelab PR │      │             │
-   └─────────────┘    └─────────────┘      └─────────────┘
+```mermaid
+flowchart TD
+    subgraph repo["GitHub Repository"]
+        direction LR
+        PR([PR Created])
+        PUSH([Push to main])
+        MANUAL([Manual dispatch])
+    end
+
+    PR --> IOS_PR["CI · iOS\nlint-and-validate"]
+    PR --> SVCS_PR["CI · Services\nbuild only"]
+    PR --> OPENAPI["CI · OpenAPI lint"]
+
+    PUSH --> IOS_MAIN["CI · iOS\nbuild-and-test"]
+    PUSH --> SVCS_MAIN["CI · Services\nbuild + push to GAR"]
+
+    MANUAL --> CD_TF["CD · TestFlight"]
+    MANUAL --> CD_AS["CD · App Store"]
+
+    IOS_PR & SVCS_PR & OPENAPI --> STATUS(["PR status checks"])
+
+    SVCS_MAIN --> HOMELAB(["GAR image push\n+ homelab PR"])
+
+    CD_TF --> TF(["TestFlight"])
+    CD_AS --> AS(["App Store Connect"])
 ```
 
 ## Overview

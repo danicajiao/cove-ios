@@ -127,14 +127,42 @@ The microservices orthodoxy is "one database per service" for failure isolation 
 
 The relational graph spans all three schemas, enforced by real FKs with `ON DELETE CASCADE`:
 
-```
-catalog.items.maker_id                              ──►  directory.makers(id)
-catalog.availability.item_id                        ──►  catalog.items(id)
-catalog.availability.storefront_id                  ──►  directory.storefronts(id)
-directory.storefronts.operated_by_maker_id          ──►  directory.makers(id)
-catalog.entity_signals.{maker_id|storefront_id|item_id}  ──►  the referenced entity
-profile.favorites.item_id                           ──►  catalog.items(id)
-profile.follows.{maker_id|storefront_id}            ──►  the referenced entity
+```mermaid
+flowchart LR
+    subgraph directory["directory schema"]
+        makers[(makers)]
+        storefronts[(storefronts)]
+    end
+    subgraph catalog["catalog schema"]
+        items[(items)]
+        availability[(availability)]
+        categories[(categories)]
+        signals[(signals)]
+        entity_signals[(entity_signals)]
+    end
+    subgraph profile["profile schema"]
+        users[(users)]
+        favorites[(favorites)]
+        follows[(follows)]
+        interests[(interests)]
+    end
+
+    items -->|maker_id| makers
+    items -->|category_id| categories
+    storefronts -->|"operated_by_maker_id (nullable)"| makers
+    availability -->|item_id| items
+    availability -->|storefront_id| storefronts
+    entity_signals -->|signal_id| signals
+    entity_signals -.->|"polymorphic: exactly one of<br/>maker_id / storefront_id / item_id"| makers
+    entity_signals -.-> storefronts
+    entity_signals -.-> items
+    favorites -->|user_id| users
+    favorites -->|item_id| items
+    follows -->|user_id| users
+    follows -.->|"one of maker_id / storefront_id"| makers
+    follows -.-> storefronts
+    interests -->|user_id| users
+    interests -->|category_id| categories
 ```
 
 ---
@@ -654,21 +682,22 @@ That blended score is Cove's secret sauce. Yelp ranks by ad spend, Google by rev
 
 ## Request flow
 
+```mermaid
+sequenceDiagram
+    participant iOS as iOS app
+    participant CF as Cloudflare Tunnel<br/>api.coveapp.dev
+    participant API as cove-api
+    participant Item as cove-item
+    iOS->>CF: GET /discovery?q=ceramics&lat=..&lon=..&radius=20mi<br/>Authorization: Bearer {Firebase ID Token}
+    CF->>API: forward request
+    API->>API: validate Firebase ID token
+    API->>Item: route /discovery · inject X-Cove-Uid
+    Item->>Item: discovery query<br/>items ⋈ makers ⋈ availability ⋈ storefronts<br/>(trust + proximity + relevance)
+    Item->>Item: resolve signals · sign imgproxy URLs for media
+    Item-->>iOS: HTTP 200 — results
 ```
-iOS app
-   │  GET /discovery?q=ceramics&lat=..&lon=..&radius=20mi
-   │  Authorization: Bearer <Firebase ID Token>
-   ▼
-api.coveapp.dev  (Cloudflare Tunnel)
-   ▼
-cove-api  (validates token, injects X-Cove-Uid, routes /discovery, /categories, /items/* → cove-item)
-   ▼
-cove-item
-   │  Runs the discovery query (products ⋈ makers ⋈ availability ⋈ storefronts; trust + proximity + relevance)
-   │  Resolves each result's signals; signs imgproxy URLs for media (see MEDIA_ARCHITECTURE.md)
-   ▼
-HTTP 200 → iOS app
-```
+
+Media URLs in the response are short-lived signed imgproxy URLs — see [Media Architecture](MEDIA_ARCHITECTURE.md).
 
 ```swift
 // ViewModels never see this layer. The generated client is consumed by

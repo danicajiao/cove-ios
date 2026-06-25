@@ -1,35 +1,43 @@
 openapi: "3.1.0"
 
 info:
-  title: cove-item
-  version: "0.1.0"
+  title: cove-api
+  version: "0.2.0"
   description: |
-    Discovery surface for the Cove platform.
-    Handles category browsing, item/maker/storefront detail, and the core
-    trust+proximity+relevance discovery query.
+    Backend-for-frontend gateway for the Cove iOS app.
+    Validates Firebase ID tokens and routes traffic to internal services:
+      - cove-image  →  /images/*
+      - cove-item   →  /discovery, /categories, /items/*, /makers/*, /storefronts/*
+      - cove-user   →  /users/me*, /recommendations/*
 
-    Authentication: this service does NOT validate Firebase tokens directly.
-    It trusts the X-Cove-Uid header injected by the upstream cove-api gateway.
-    All endpoints (except /health) reject requests missing this header.
-
-    Image URLs in responses are pre-signed imgproxy URLs. Each URL embeds an
-    exp: processing option and is valid for 1 hour (configurable via
-    IMGPROXY_URL_TTL). Clients should not cache these URLs beyond their expiry.
+    The gateway injects the verified Firebase UID as X-Cove-Uid on every
+    forwarded request. Downstream services trust this header without
+    re-validating the Firebase token.
 
 servers:
-  - url: http://cove-item.cove-item.svc.cluster.local:8080
-    description: In-cluster (default)
+  - url: https://api.coveapp.dev
+    description: Production (Cloudflare Tunnel)
+  - url: https://staging-api.coveapp.dev
+    description: Staging (Cloudflare Tunnel)
   - url: http://localhost:8080
     description: Local development
 
+# All routes require a Firebase ID token by default.
+# Individual operations can opt out with security: [].
+security:
+  - bearerAuth: []
+
 paths:
+  # ── Gateway ──────────────────────────────────────────────────────────────
+
   /health:
     get:
       operationId: getHealth
       summary: Health check
       description: |
-        Returns service name, status, and Git commit SHA.
-        Unauthenticated — used by Kubernetes liveness/readiness probes.
+        Returns the service name, status, and Git commit SHA of the running
+        build. Intentionally unauthenticated — used by Kubernetes
+        liveness/readiness probes and the iOS launch smoke test.
       security: []
       responses:
         "200":
@@ -38,13 +46,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /images/{filename}/url:
+    get:
+      operationId: getImageURL
+      summary: Get a signed imgproxy URL for a stored image
+      description: |
+        Proxied to cove-image. Returns a short-lived signed URL the iOS client
+        can pass directly to AsyncImage. The URL routes through the /i/*
+        reverse proxy to imgproxy, which resizes and re-encodes the image on
+        first request; Cloudflare caches subsequent transforms at the edge.
+
+        The URL embeds an `exp:` imgproxy processing option and is only valid
+        until `expires_at` (default TTL: 1 hour, configurable via
+        IMGPROXY_URL_TTL on cove-image).
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: |
+            Filename segment of the Garage object key, e.g.
+            `5069715ed40e20d8736d6d48ef9f84da8b240e1ead5ba28fdeb110d3d534105c.webp`.
+          schema:
+            type: string
+        - name: w
+          in: query
+          required: true
+          description: Output width in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: h
+          in: query
+          required: true
+          description: Output height in pixels (1–4096).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4096
+        - name: fit
+          in: query
+          required: false
+          description: |
+            Resize mode. `cover` (default) crops to fill the exact dimensions.
+            `contain` fits within the dimensions preserving aspect ratio.
+          schema:
+            type: string
+            enum: [cover, contain]
+            default: cover
+      responses:
+        "200":
+          description: Signed imgproxy URL generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageURLResponse"
+        "400":
+          description: Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Image not found in Garage.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Discovery (cove-item) ─────────────────────────────────────────────────
 
   /discovery:
     get:
       operationId: getDiscovery
       summary: Discover items
       description: |
-        The core discovery query. Ranks items by a blended score:
+        Proxied to cove-item. The core discovery query. Ranks items by a
+        blended score:
           score = 0.40 × trust + 0.30 × text_relevance + 0.30 × proximity
 
         All query parameters are optional. When none are provided, returns all
@@ -56,12 +147,6 @@ paths:
         Storefronts with a null location (e.g. online stores) are excluded
         when a geo filter is active but are included in text-only queries.
       parameters:
-        - name: X-Cove-Uid
-          in: header
-          required: true
-          description: Firebase UID injected by the upstream cove-api gateway.
-          schema:
-            type: string
         - name: q
           in: query
           required: false
@@ -113,7 +198,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
-          description: Missing or empty X-Cove-Uid header
+          description: Unauthorized — Firebase token missing or invalid.
           content:
             application/json:
               schema:
@@ -124,14 +209,9 @@ paths:
       operationId: getCategories
       summary: Get category tree
       description: |
-        Returns the full category tree (id, name, path, children) for the
-        onboarding picker and browse surface. Results are ordered by ltree path.
-      parameters:
-        - name: X-Cove-Uid
-          in: header
-          required: true
-          schema:
-            type: string
+        Proxied to cove-item. Returns the full category tree (id, name, path,
+        children) for the onboarding picker and browse surface. Results are
+        ordered by ltree path.
       responses:
         "200":
           description: Category tree
@@ -140,7 +220,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CategoriesResponse"
         "401":
-          description: Missing or empty X-Cove-Uid header
+          description: Unauthorized — Firebase token missing or invalid.
           content:
             application/json:
               schema:
@@ -151,16 +231,11 @@ paths:
       operationId: getItem
       summary: Get item detail
       description: |
-        Returns full item detail including: all fields, trust signals
-        (item-level + maker-level + storefront-level), all storefronts that
-        carry the item, and signed imgproxy URLs for all five image variants
-        across all media rows.
+        Proxied to cove-item. Returns full item detail including: all fields,
+        trust signals (item-level + maker-level + storefront-level), all
+        storefronts that carry the item, and signed imgproxy URLs for all five
+        image variants across all media rows.
       parameters:
-        - name: X-Cove-Uid
-          in: header
-          required: true
-          schema:
-            type: string
         - name: id
           in: path
           required: true
@@ -176,7 +251,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ItemDetail"
         "401":
-          description: Missing or empty X-Cove-Uid header
+          description: Unauthorized — Firebase token missing or invalid.
           content:
             application/json:
               schema:
@@ -193,14 +268,9 @@ paths:
       operationId: getMaker
       summary: Get maker detail
       description: |
-        Returns maker detail including: profile fields, trust signals,
-        and the list of storefronts operated by this maker.
+        Proxied to cove-item. Returns maker detail including: profile fields,
+        trust signals, and the list of storefronts operated by this maker.
       parameters:
-        - name: X-Cove-Uid
-          in: header
-          required: true
-          schema:
-            type: string
         - name: id
           in: path
           required: true
@@ -216,7 +286,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakerDetail"
         "401":
-          description: Missing or empty X-Cove-Uid header
+          description: Unauthorized — Firebase token missing or invalid.
           content:
             application/json:
               schema:
@@ -233,14 +303,9 @@ paths:
       operationId: getStorefront
       summary: Get storefront detail
       description: |
-        Returns storefront detail including: location, trust signals,
-        and the list of items available at this storefront.
+        Proxied to cove-item. Returns storefront detail including: location,
+        trust signals, and the list of items available at this storefront.
       parameters:
-        - name: X-Cove-Uid
-          in: header
-          required: true
-          schema:
-            type: string
         - name: id
           in: path
           required: true
@@ -256,7 +321,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/StorefrontDetail"
         "401":
-          description: Missing or empty X-Cove-Uid header
+          description: Unauthorized — Firebase token missing or invalid.
           content:
             application/json:
               schema:
@@ -268,20 +333,454 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  # ── User profile (cove-user) ──────────────────────────────────────────────
+
+  /users/me:
+    get:
+      operationId: getMe
+      summary: Get authenticated user profile
+      description: |
+        Proxied to cove-user. Returns the profile for the authenticated user.
+        Returns 404 if the user has not yet been created via POST /users/me.
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMe
+      summary: Create authenticated user profile
+      description: |
+        Proxied to cove-user. Creates a profile row for the authenticated user.
+        Called once after Firebase Auth creates the account — the client
+        supplies only the username; the UID comes from the validated token.
+        Returns 409 if the profile already exists (safe to retry).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Missing or empty username
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: User profile already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/favorites:
+    get:
+      operationId: getFavorites
+      summary: List favorited items
+      description: |
+        Proxied to cove-user. Returns a paginated list of items the
+        authenticated user has favorited.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results to return. Defaults to 25, max 100.
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+            minimum: 1
+        - name: offset
+          in: query
+          required: false
+          description: Number of results to skip. Defaults to 0.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: Paginated favorites list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoritesResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/favorites/{itemId}:
+    post:
+      operationId: addFavorite
+      summary: Add item to favorites
+      description: |
+        Proxied to cove-user. Adds an item to the authenticated user's
+        favorites. Returns 409 if the item is already favorited.
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Item UUID to favorite.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Item added to favorites
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Item already favorited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: removeFavorite
+      summary: Remove item from favorites
+      description: |
+        Proxied to cove-user. Removes an item from the authenticated user's
+        favorites. Returns 404 if the item is not currently favorited.
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: Item UUID to unfavorite.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Item removed from favorites
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Favorite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/follows:
+    get:
+      operationId: getFollows
+      summary: List followed makers and storefronts
+      description: |
+        Proxied to cove-user. Returns the list of makers and storefronts the
+        authenticated user follows.
+      responses:
+        "200":
+          description: Follows list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowsResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addFollow
+      summary: Follow a maker or storefront
+      description: |
+        Proxied to cove-user. Follows a maker or storefront. Exactly one of
+        maker_id or storefront_id must be provided. Returns 409 if already
+        following.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFollowRequest"
+      responses:
+        "204":
+          description: Now following
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Already following
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/follows/{entityId}:
+    delete:
+      operationId: removeFollow
+      summary: Unfollow a maker or storefront
+      description: |
+        Proxied to cove-user. Unfollows an entity by UUID. Checks both maker
+        and storefront tables. Returns 404 if not currently following.
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          description: Maker or storefront UUID to unfollow.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Unfollowed
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Follow not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/interests:
+    get:
+      operationId: getInterests
+      summary: List interest categories
+      description: |
+        Proxied to cove-user. Returns the authenticated user's selected
+        interest categories.
+      responses:
+        "200":
+          description: Interests list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterestsResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: replaceInterests
+      summary: Replace interest categories
+      description: |
+        Proxied to cove-user. Replaces the full set of interest categories for
+        the authenticated user. Wraps DELETE + INSERT in a transaction.
+        An empty array clears all interests. Returns 204 on success.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceInterestsRequest"
+      responses:
+        "204":
+          description: Interests replaced
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me/events:
+    post:
+      operationId: ingestEvent
+      summary: Ingest an attention event
+      description: |
+        Proxied to cove-user. Records a behavioral attention event for the
+        authenticated user. Used as signal input for personalized category
+        recommendations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestEventRequest"
+      responses:
+        "204":
+          description: Event recorded
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Recommendations (cove-user) ───────────────────────────────────────────
+
+  /recommendations/categories:
+    get:
+      operationId: getRecommendedCategories
+      summary: Get personalized category recommendations
+      description: |
+        Proxied to cove-user. Returns personalized category cards for the
+        authenticated user.
+
+        Algorithm:
+        1. If the user has interests, return those categories ordered by
+           engagement count in profile.events (last 30 days) descending.
+        2. If the user has no interests, fall back to all leaf categories
+           ordered by total event count across all users (last 30 days).
+        3. If no events exist at all, order alphabetically by name.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of category cards to return. Defaults to 25, max 100.
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+            minimum: 1
+      responses:
+        "200":
+          description: Recommended categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendedCategoriesResponse"
+        "401":
+          description: Unauthorized — Firebase token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Firebase ID token obtained from the Firebase Auth SDK.
+        Attach as "Authorization: Bearer <token>" on all requests except /health.
+
   schemas:
+    # ── Gateway schemas ───────────────────────────────────────────────────────
+
     HealthResponse:
       type: object
+      required:
+        - service
+        - status
+        - commit
       properties:
         service:
           type: string
-          example: cove-item
+          description: Service identifier.
+          example: cove-api
         status:
           type: string
+          description: Current status of the service.
           example: ok
         commit:
           type: string
-          example: abc1234
+          description: |
+            Git commit SHA of the running build.
+            Returns "dev" for local builds without ldflags injection.
+          example: a3f8c12
 
     ErrorResponse:
       type: object
@@ -290,9 +789,27 @@ components:
       properties:
         error:
           type: string
+          description: Human-readable description of what went wrong.
           example: item not found
 
-    # ── Image schemas ────────────────────────────────────────────────────────
+    ImageURLResponse:
+      type: object
+      required:
+        - url
+        - expires_at
+      properties:
+        url:
+          type: string
+          description: |
+            Signed imgproxy URL valid until expires_at. Pass directly to
+            AsyncImage(url:) or URLSession — do not cache beyond expires_at.
+          example: "https://api.coveapp.dev/i/abc123.../exp:1748129400/rs:fill:800:800/plain/s3://cove-media/images/5069...webp@webp"
+        expires_at:
+          type: string
+          description: RFC 3339 timestamp after which imgproxy rejects the URL.
+          example: "2026-05-26T04:36:37Z"
+
+    # ── Image schemas (cove-item) ─────────────────────────────────────────────
 
     ImageVariants:
       description: |
@@ -359,7 +876,7 @@ components:
           format: uri
           description: 3200×3200 fill crop — retina desktop / future web client.
 
-    # ── Shared sub-schemas ───────────────────────────────────────────────────
+    # ── Shared sub-schemas (cove-item) ────────────────────────────────────────
 
     Signal:
       description: A trust signal attached to a maker, storefront, or item.
@@ -422,7 +939,7 @@ components:
           type: string
           format: uri
 
-    # ── Discovery ────────────────────────────────────────────────────────────
+    # ── Discovery schemas (cove-item) ─────────────────────────────────────────
 
     DiscoveryResult:
       required: [id, name, maker, nearest_storefront, storefronts, base_trust, score]
@@ -466,7 +983,7 @@ components:
           items:
             $ref: "#/components/schemas/DiscoveryResult"
 
-    # ── Categories ───────────────────────────────────────────────────────────
+    # ── Category schemas (cove-item) ──────────────────────────────────────────
 
     CategoryNode:
       required: [id, name, path]
@@ -502,7 +1019,7 @@ components:
           items:
             $ref: "#/components/schemas/CategoryNode"
 
-    # ── Item detail ──────────────────────────────────────────────────────────
+    # ── Item detail schemas (cove-item) ───────────────────────────────────────
 
     StorefrontDetailSummary:
       required: [id, name, type]
@@ -519,7 +1036,7 @@ components:
           format: uri
 
     ItemDetail:
-      required: [id, name, category_id, maker, signals, storefronts, media]
+      required: [id, name, category_id, maker, media]
       properties:
         id:
           type: string
@@ -544,12 +1061,12 @@ components:
         maker:
           $ref: "#/components/schemas/MakerSummary"
         signals:
-          type: array
+          type: [array, "null"]
           description: Trust signals from all three levels (item, maker, storefront).
           items:
             $ref: "#/components/schemas/Signal"
         storefronts:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/StorefrontDetailSummary"
         media:
@@ -558,7 +1075,7 @@ components:
           items:
             $ref: "#/components/schemas/ItemMedia"
 
-    # ── Maker detail ─────────────────────────────────────────────────────────
+    # ── Maker detail schemas (cove-item) ──────────────────────────────────────
 
     MakerStorefront:
       required: [id, name, type]
@@ -574,7 +1091,7 @@ components:
           type: string
 
     MakerDetail:
-      required: [id, name, tier, trust_score, signals, storefronts]
+      required: [id, name, tier, trust_score]
       properties:
         id:
           type: string
@@ -598,15 +1115,15 @@ components:
           type: string
           format: uri
         signals:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/Signal"
         storefronts:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/MakerStorefront"
 
-    # ── Storefront detail ────────────────────────────────────────────────────
+    # ── Storefront detail schemas (cove-item) ─────────────────────────────────
 
     StorefrontItem:
       required: [id, name]
@@ -625,7 +1142,7 @@ components:
           $ref: "#/components/schemas/ImageVariants"
 
     StorefrontDetail:
-      required: [id, name, type, trust_score, signals, items]
+      required: [id, name, type, trust_score]
       properties:
         id:
           type: string
@@ -654,10 +1171,196 @@ components:
         maker_name:
           type: string
         signals:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/Signal"
         items:
-          type: array
+          type: [array, "null"]
           items:
             $ref: "#/components/schemas/StorefrontItem"
+
+    # ── User profile schemas (cove-user) ──────────────────────────────────────
+
+    UserProfile:
+      type: object
+      required: [uid, username, created_at, interests_onboarded]
+      properties:
+        uid:
+          type: string
+          description: Auth UID (provider-agnostic; Firebase UID in Phase 1+).
+          example: abc123
+        username:
+          type: string
+          example: johndoe
+        created_at:
+          type: string
+          format: date-time
+        interests_onboarded:
+          type: boolean
+          description: True once PUT /users/me/interests has been called at least once (even with an empty array). Used to gate the interest-picker onboarding screen.
+
+    CreateUserRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: Desired display username. Must be non-empty after trimming whitespace.
+          example: johndoe
+
+    # ── Favorites schemas (cove-user) ─────────────────────────────────────────
+
+    FavoriteItem:
+      type: object
+      required: [item_id, item_name, favorited_at]
+      properties:
+        item_id:
+          type: string
+          format: uuid
+        item_name:
+          type: string
+        price_cents:
+          type: integer
+          example: 2300
+        favorited_at:
+          type: string
+          format: date-time
+
+    FavoritesResponse:
+      type: object
+      required: [favorites, total]
+      properties:
+        favorites:
+          type: array
+          items:
+            $ref: "#/components/schemas/FavoriteItem"
+        total:
+          type: integer
+          description: Total number of favorites (before pagination).
+          example: 42
+
+    # ── Follows schemas (cove-user) ───────────────────────────────────────────
+
+    Follow:
+      type: object
+      required: [entity_type, entity_id, entity_name, followed_at]
+      properties:
+        entity_type:
+          type: string
+          enum: [maker, storefront]
+        entity_id:
+          type: string
+          format: uuid
+        entity_name:
+          type: string
+        followed_at:
+          type: string
+          format: date-time
+
+    FollowsResponse:
+      type: object
+      required: [follows]
+      properties:
+        follows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Follow"
+
+    AddFollowRequest:
+      type: object
+      description: |
+        Exactly one of maker_id or storefront_id must be provided.
+      properties:
+        maker_id:
+          type: string
+          format: uuid
+        storefront_id:
+          type: string
+          format: uuid
+
+    # ── Interests schemas (cove-user) ─────────────────────────────────────────
+
+    Interest:
+      type: object
+      required: [category_id, category_path, category_name, created_at]
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        category_path:
+          type: string
+          description: ltree path (dot-delimited).
+          example: food.coffee.whole_bean
+        category_name:
+          type: string
+          example: Whole Bean Coffee
+        created_at:
+          type: string
+          format: date-time
+
+    InterestsResponse:
+      type: object
+      required: [interests]
+      properties:
+        interests:
+          type: array
+          items:
+            $ref: "#/components/schemas/Interest"
+
+    ReplaceInterestsRequest:
+      type: object
+      required: [category_ids]
+      properties:
+        category_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ── Events schemas (cove-user) ────────────────────────────────────────────
+
+    IngestEventRequest:
+      type: object
+      required: [event_type]
+      properties:
+        event_type:
+          type: string
+          enum: [category_tap, item_view, result_dwell, search]
+        category_id:
+          type: string
+          format: uuid
+          description: Category involved in the event (optional).
+        item_id:
+          type: string
+          format: uuid
+          description: Item involved in the event (optional).
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Arbitrary event metadata.
+
+    # ── Recommendations schemas (cove-user) ───────────────────────────────────
+
+    RecommendedCategory:
+      type: object
+      required: [id, name, path]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Whole Bean Coffee
+        path:
+          type: string
+          description: ltree path (dot-delimited).
+          example: food.coffee.whole_bean
+
+    RecommendedCategoriesResponse:
+      type: object
+      required: [categories]
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecommendedCategory"

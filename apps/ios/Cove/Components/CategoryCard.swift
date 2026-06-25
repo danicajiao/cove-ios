@@ -33,8 +33,8 @@ struct CategoryCard: View {
     @State private var imageURL: URL?
     @State private var imageLoaded = false
 
-    private let width: CGFloat = 140
-    private let height: CGFloat = 92
+    private let width: CGFloat = 130
+    private let height: CGFloat = 60
 
     var body: some View {
         NavigationLink(value: Path.categoryResults(path: category.path, name: category.name)) {
@@ -179,7 +179,7 @@ struct CategoryCard: View {
         let key = derivedImageKey
         imageLoaded = false
         imageURL = nil
-        imageURL = try? await imageRepository.imageURL(for: key)
+        imageURL = try? await imageRepository.imageURL(for: key, width: 390, height: 180)
     }
 }
 
